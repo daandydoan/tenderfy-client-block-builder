@@ -23,7 +23,7 @@ function pgTenders(){
 function folderRail(names, sel, setter){
   return `<div class="frail" id="railFolders"><span class="ms car" onclick="railToggle('railFolders')">expand_more</span> Folders
       <button class="lbtn pri sm" data-toast="Add folder"><span class="ms">add</span> Add Folder</button></div>
-    <div class="fchips">${names.map((f,i)=>`<div class="fchip ${f===sel?'on':''}" onclick="${setter}('${esc(f)}')">${esc(f)}${i?'<span class="ms" data-toast="Folder options">more_vert</span>':''}</div>`).join('')}</div>`;
+    <div class="fchips">${names.map((f,i)=>`<div class="fchip ${f===sel?'on':''}" onclick="${setter}('${esc(f)}')">${esc(f)}${i?`<span class="ms" onclick="folderMenu(event,'${esc(f)}')" title="Folder options">more_vert</span>`:''}</div>`).join('')}</div>`;
 }
 function tnRows(){
   const query = tnQuery.trim().toLowerCase();
@@ -39,7 +39,7 @@ function tnGrid(){
     <div class="lcard" onclick="go('/tenders/tender-details/?tender=${encodeURIComponent(t.name)}')">
       <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
         ${t.who?`<span class="chip"><span class="ms" style="font-size:14px">person</span>${esc(t.who)}</span>`:''}
-        <span class="ms" data-toast="Tender options" onclick="event.stopPropagation()">more_vert</span></div>
+        <span class="ms" onclick="tenderMenu(event,'${esc(t.name)}')" title="Tender options">more_vert</span></div>
       <div class="k">Name</div><div class="v" style="font-weight:700">${esc(t.name)}</div>
       <div class="k">Organization</div><div class="v">${esc(t.org)||'&nbsp;'}</div>
       <div class="k">Contact Name</div><div class="v">${esc(t.contact)||'&nbsp;'}</div>
@@ -79,7 +79,7 @@ function pgTenderDetail(){
         <button class="lbtn" data-toast="Start time tracking"><span class="ms" style="color:#F95246">play_circle</span> Start Time</button>
         <button class="lbtn pri" onclick="go('/tenders/build-tender/?tender=${encodeURIComponent(name)}')">Build Tender</button>
         <button class="lbtn gold" data-toast="Update tender">Update Tender</button>
-        <span class="ms" data-toast="Tender options" style="color:#7C8886">more_vert</span>
+        <span class="ms" onclick="tenderMenu(event,'${esc(name)}')" style="color:#7C8886;cursor:pointer" title="Tender options">more_vert</span>
       </div>
     </div>
     <div class="pbody">
@@ -230,7 +230,7 @@ function pgBuildTender(){
         <span class="ltop-ava" style="width:38px;height:38px;border-radius:50%;background:#5C6BC0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700" title="Andrew Williams">AW</span>
         <button class="lbtn" data-toast="Choose a saved tender template"><span class="ms">library_books</span> Select Template <span class="ms">keyboard_arrow_down</span></button>
         <button class="lbtn" data-toast="Saved as a reusable tender template"><span class="ms">flag</span> Save as Template</button>
-        <button class="lbtn pri icon" data-toast="Download the submission package"><span class="ms">download</span></button>
+        <button class="lbtn pri icon" data-toast="Download the submission package" title="Download"><span class="ms">download</span></button>
       </div>
     </div>
     <div class="bt2">

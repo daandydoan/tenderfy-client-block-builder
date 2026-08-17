@@ -31,6 +31,7 @@ PARTS = [
     'part6-docpages.js',    # document seeds, editor routes, Block Library
     'part7-simple.js',      # Simple mode (live's editors) + exit guard
     'part8-blockeditor.js', # Block Builder
+    'part9-mockups.js',     # Ray, tender menu, Time Sheet (mocked from live)
 ]
 CSS = [
     ('styles/fonts-all.css', 'embedded fonts (Outfit, Manrope, Material Symbols subset)'),

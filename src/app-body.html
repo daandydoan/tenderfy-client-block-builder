@@ -375,6 +375,39 @@ textarea.fin{resize:vertical;line-height:1.5}
 .cf-drop:hover{border-color:var(--live-cta);color:var(--live-cta)}
 .cf-drop .ms{font-size:24px;display:block;margin-bottom:4px}
 
+/* ═══ Ray + Time Sheet (mocked, matched to live) ═══════════════════════════ */
+.ray-fab{position:fixed;right:24px;bottom:24px;width:62px;height:62px;border-radius:50%;border:none;
+  background:#7BAEA0;color:#fff;cursor:pointer;box-shadow:0 10px 28px rgba(20,45,38,.32);
+  display:flex;align-items:center;justify-content:center;z-index:120}
+.ray-fab:hover{background:var(--live-cta)}
+.ray-fab .ms{font-size:30px}
+.sm.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
+.ray-panel{position:fixed;right:24px;bottom:24px;width:423px;max-width:92vw;height:576px;max-height:86vh;
+  background:#fff;z-index:125;border-radius:12px;box-shadow:0 18px 50px rgba(20,45,38,.28);
+  display:none;flex-direction:column;overflow:hidden}
+.ray-panel.open{display:flex}
+.ray-head{display:flex;align-items:center;gap:11px;padding:14px 16px;background:var(--live-cta);color:#fff;flex-shrink:0}
+.ray-head b{display:block;font-size:16px;line-height:1.2}
+.ray-head>div span{font-size:12.5px;opacity:.9}
+.ray-head .ms{cursor:pointer;font-size:19px}
+.ray-head .x{margin-left:2px}
+.ray-head>.ms:nth-of-type(1){margin-left:auto}
+.ray-ava{width:34px;height:34px;border-radius:50%;background:#5E7F76;color:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center}
+.ray-ava .ms{font-size:19px;cursor:default}
+.ray-ava.lg{width:38px;height:38px;background:rgba(255,255,255,.22)}
+.ray-body{flex:1;overflow:auto;padding:18px 16px;background:#FAFCFB}
+.ray-msg{display:flex;gap:10px;align-items:flex-start}
+.ray-bubble{background:#EDF3F1;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.55;color:#2E3C3B}
+.ray-bubble p{margin:0 0 10px}
+.ray-bubble p:last-of-type{margin-bottom:12px}
+.ray-cta{width:100%}
+.ts-head{display:flex;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.5px;
+  color:#8B9694;padding-bottom:10px;border-bottom:1px solid #E3E8E7}
+.ts-empty{padding:26px 0;text-align:center;color:#A9B4B2;font-size:13px}
+.ts-total{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E3E8E7;
+  padding-top:12px;font-size:13px;color:#6B7674}
+.ts-total b{color:#2E3C3B;font-size:14px}
 /* ═══ Shared editor header — identical in Simple, Advanced and Block Builder,
    so switching modes never shifts the chrome. ══════════════════════════════ */
 .ed-top{flex-shrink:0;background:#fff;border-bottom:1px solid #E3E8E7;padding:13px 24px;
@@ -730,7 +763,7 @@ textarea.fin{resize:vertical;line-height:1.5}
     <div class="ltop">
       <div class="crumb" id="crumb"></div>
       <div class="r">
-        <span class="ms" data-toast="Ray — your AI co-pilot" title="Ray">auto_awesome</span>
+        <span class="ms" onclick="rayOpen()" title="Ray - your AI co-pilot">auto_awesome</span>
         <span class="ms" data-toast="Help &amp; support" title="Help">campaign</span>
         <span class="ms" data-toast="Settings" title="Settings">settings</span>
         <span class="bell" data-toast="No new notifications"><span class="ms">notifications</span><span class="n">0</span></span>
@@ -888,6 +921,31 @@ textarea.fin{resize:vertical;line-height:1.5}
       <button class="lbtn" onclick="exitKeep()">Keep editing</button>
       <button class="lbtn danger" onclick="exitDiscard()">Discard</button>
       <button class="lbtn pri" onclick="exitSave()">Save &amp; close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ray, the Tenderfy Co-Pilot (copied from live) -->
+<button class="ray-fab" id="rayFab" onclick="rayOpen()" title="Ray - Tenderfy Co-Pilot">
+  <span class="ms">pets</span></button>
+<div class="ray-panel" id="rayPanel">
+  <div class="ray-head">
+    <span class="ray-ava lg"><span class="ms">pets</span></span>
+    <div><b>Ray</b><span>Tenderfy Co-Pilot</span></div>
+    <span class="ms" data-toast="Expand Ray" title="Expand">open_in_full</span>
+    <span class="ms x" onclick="rayClose()">close</span>
+  </div>
+  <div class="ray-body" id="rayBody"></div>
+</div>
+
+<!-- Time Sheet (copied from live: empty, total 00h 00m) -->
+<div class="ov" id="tsOv">
+  <div class="dlg" style="width:520px">
+    <div class="dlg-h">Time Sheet <span class="ms x" onclick="tsClose()">close</span></div>
+    <div style="padding:20px 24px">
+      <div class="ts-head"><span>EMPLOYEE</span><span>TIME SPENT</span></div>
+      <div class="ts-empty">No time recorded against this tender.</div>
+      <div class="ts-total"><span>TOTAL TIME:</span><b>00h 00m</b></div>
     </div>
   </div>
 </div>
