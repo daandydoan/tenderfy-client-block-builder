@@ -14,7 +14,7 @@ const RAY_GREETING = [
 window.rayOpen = () => {
   document.getElementById('rayBody').innerHTML = `
     <div class="ray-msg">
-      <span class="ray-ava"><span class="ms">pets</span></span>
+      <span class="ray-ava"><img src="${RAY_IMG}" alt=""></span>
       <div class="ray-bubble">${RAY_GREETING.map(p => `<p>${p}</p>`).join('')}
         <button class="lbtn pri sm ray-cta" data-toast="Response Library - mocked for this prototype">View Responses</button>
       </div>
@@ -55,3 +55,11 @@ function timeSheet(){
   document.getElementById('tsOv').classList.add('open');
 }
 window.tsClose = () => document.getElementById('tsOv').classList.remove('open');
+
+// Paint Ray's artwork into the chrome once the assets are in scope.
+(function(){
+  const set = (id, src) => { const el = document.getElementById(id); if(el) el.src = src; };
+  set('rayFabImg', RAY_IMG);
+  set('rayHeadImg', RAY_IMG);
+  set('rayToolImg', RAY_TOOLBAR_IMG);
+})();

@@ -376,11 +376,11 @@ textarea.fin{resize:vertical;line-height:1.5}
 .cf-drop .ms{font-size:24px;display:block;margin-bottom:4px}
 
 /* ═══ Ray + Time Sheet (mocked, matched to live) ═══════════════════════════ */
-.ray-fab{position:fixed;right:24px;bottom:24px;width:62px;height:62px;border-radius:50%;border:none;
-  background:#7BAEA0;color:#fff;cursor:pointer;box-shadow:0 10px 28px rgba(20,45,38,.32);
-  display:flex;align-items:center;justify-content:center;z-index:120}
-.ray-fab:hover{background:var(--live-cta)}
-.ray-fab .ms{font-size:30px}
+.ray-fab{position:fixed;right:24px;bottom:24px;width:92px;height:92px;border-radius:9999px;border:none;
+  background:#6ADDB5;cursor:pointer;box-shadow:0 10px 28px rgba(20,45,38,.28);
+  display:flex;align-items:center;justify-content:center;z-index:120;padding:0}
+.ray-fab:hover{filter:brightness(1.04)}
+.ray-fab img{width:60px;height:60px;display:block}
 .sm.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
 .ray-panel{position:fixed;right:24px;bottom:24px;width:423px;max-width:92vw;height:576px;max-height:86vh;
   background:#fff;z-index:125;border-radius:12px;box-shadow:0 18px 50px rgba(20,45,38,.28);
@@ -392,10 +392,12 @@ textarea.fin{resize:vertical;line-height:1.5}
 .ray-head .ms{cursor:pointer;font-size:19px}
 .ray-head .x{margin-left:2px}
 .ray-head>.ms:nth-of-type(1){margin-left:auto}
-.ray-ava{width:34px;height:34px;border-radius:50%;background:#5E7F76;color:#fff;flex:none;
-  display:flex;align-items:center;justify-content:center}
-.ray-ava .ms{font-size:19px;cursor:default}
-.ray-ava.lg{width:38px;height:38px;background:rgba(255,255,255,.22)}
+.ray-ava{width:36px;height:36px;border-radius:9999px;background:#6ADDB5;flex:none;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ray-ava img{width:26px;height:26px;display:block}
+.ray-ava.lg{width:40px;height:40px}
+.ray-ava.lg img{width:29px;height:29px}
+.ltop-ray{width:24px;height:24px;cursor:pointer;display:block}
 .ray-body{flex:1;overflow:auto;padding:18px 16px;background:#FAFCFB}
 .ray-msg{display:flex;gap:10px;align-items:flex-start}
 .ray-bubble{background:#EDF3F1;border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.55;color:#2E3C3B}
@@ -763,7 +765,7 @@ textarea.fin{resize:vertical;line-height:1.5}
     <div class="ltop">
       <div class="crumb" id="crumb"></div>
       <div class="r">
-        <span class="ms" onclick="rayOpen()" title="Ray - your AI co-pilot">auto_awesome</span>
+        <img class="ltop-ray" id="rayToolImg" onclick="rayOpen()" title="Ray - Tenderfy Co-Pilot" alt="Ray">
         <span class="ms" data-toast="Help &amp; support" title="Help">campaign</span>
         <span class="ms" data-toast="Settings" title="Settings">settings</span>
         <span class="bell" data-toast="No new notifications"><span class="ms">notifications</span><span class="n">0</span></span>
@@ -927,10 +929,10 @@ textarea.fin{resize:vertical;line-height:1.5}
 
 <!-- Ray, the Tenderfy Co-Pilot (copied from live) -->
 <button class="ray-fab" id="rayFab" onclick="rayOpen()" title="Ray - Tenderfy Co-Pilot">
-  <span class="ms">pets</span></button>
+  <img id="rayFabImg" alt="Ray"></button>
 <div class="ray-panel" id="rayPanel">
   <div class="ray-head">
-    <span class="ray-ava lg"><span class="ms">pets</span></span>
+    <span class="ray-ava lg"><img id="rayHeadImg" alt=""></span>
     <div><b>Ray</b><span>Tenderfy Co-Pilot</span></div>
     <span class="ms" data-toast="Expand Ray" title="Expand">open_in_full</span>
     <span class="ms x" onclick="rayClose()">close</span>
