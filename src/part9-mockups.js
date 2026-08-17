@@ -62,4 +62,6 @@ window.tsClose = () => document.getElementById('tsOv').classList.remove('open');
   set('rayFabImg', RAY_IMG);
   set('rayHeadImg', RAY_IMG);
   set('rayToolImg', RAY_TOOLBAR_IMG);
+  set('rayExpandImg', RAY_EXPAND_IMG);
+  set('rayDownImg', RAY_DOWN_IMG);
 })();
