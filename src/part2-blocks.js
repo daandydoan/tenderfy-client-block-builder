@@ -10,39 +10,45 @@ const PRIM_ICON = {heading:'title',subheading:'subtitles',paragraph:'notes',list
   divider:'horizontal_rule',spacer:'height',field:'data_object',callout:'campaign',stat:'trending_up',
   button:'smart_button',cover:'title',toc:'toc',pagebreak:'insert_page_break'};
 
+// Fields marked `data-f` are editable straight on the canvas and are stored as
+// rich text, so they render raw rather than escaped. (A real implementation
+// would sanitise on the way in; here the author is editing their own document.)
 function renderPrimitive(id, b, c){
   b = b || {primary:'#27535C', secondary:'#38988A', background:'#F7F9F8', font:'Outfit', bodyFont:'Outfit'};
   c = c || {};
   const H = `font-family:'${b.font}',sans-serif`, T = `font-family:'${b.bodyFont}',sans-serif`;
   const soft = '#3A4442', e = v => esc(v == null ? '' : v);
+  // rich value: use the stored markup when present, else the escaped default
+  const r = (v, def) => (v != null && v !== '') ? String(v) : esc(def);
+  const F = f => `data-f="${f}"`;
   switch(id){
     case 'heading':
-      return `<h3 style="${H};margin:0;color:${b.primary};font-size:20px;font-weight:700;border-bottom:2px solid ${b.secondary};padding-bottom:6px">${e(c.title||'Project Overview')}</h3>`;
+      return `<h3 ${F('title')} style="${H};margin:0;color:${b.primary};font-size:20px;font-weight:700;border-bottom:2px solid ${b.secondary};padding-bottom:6px">${r(c.title,'Project Overview')}</h3>`;
     case 'subheading':
-      return `<h4 style="${H};margin:0;color:${b.primary};font-size:15px;font-weight:600">${e(c.title||'Scope of works')}</h4>`;
+      return `<h4 ${F('title')} style="${H};margin:0;color:${b.primary};font-size:15px;font-weight:600">${r(c.title,'Scope of works')}</h4>`;
     case 'paragraph':
-      return `<p style="${T};margin:0;color:${soft};font-size:13px;line-height:1.6">${e(c.body||'Our team delivered the full civil works package on time and on budget - coordinating traffic management, bulk earthworks and drainage across a live site.')}</p>`;
+      return `<p ${F('body')} style="${T};margin:0;color:${soft};font-size:13px;line-height:1.6">${r(c.body,'Our team delivered the full civil works package on time and on budget - coordinating traffic management, bulk earthworks and drainage across a live site.')}</p>`;
     case 'list':{
       const items = c.items || ['Traffic management plan','Bulk earthworks & drainage','Reinstatement & handover'];
-      return `<ul style="${T};margin:0;padding-left:18px;color:${soft};font-size:13px;line-height:1.7">${items.map(i=>`<li>${e(i)}</li>`).join('')}</ul>`;
+      return `<ul style="${T};margin:0;padding-left:18px;color:${soft};font-size:13px;line-height:1.7">${items.map((i,n)=>`<li ${F('items')} data-i="${n}">${r(i,'')}</li>`).join('')}</ul>`;
     }
     case 'quote':
-      return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"${e(c.body||'Delivered ahead of schedule with zero safety incidents.')}"</blockquote>`;
+      return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"<span ${F('body')}>${r(c.body,'Delivered ahead of schedule with zero safety incidents.')}</span>"</blockquote>`;
     case 'image':
       return `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
     case 'table':{
       const headers = c.headers || ['Item','Qty','Rate'];
       const rows = c.rows || [['Traffic management','1','$8,400'],['Earthworks','320 m3','$46/m3'],['Drainage','1','$21,750']];
       return `<table style="${T};width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr style="background:${b.primary};color:#fff">${headers.map((h,i)=>`<th style="text-align:${i?'right':'left'};padding:6px 10px;font-weight:600">${e(h)}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid #E6EAE9;color:${soft}">${r.map((cell,i)=>`<td style="padding:6px 10px;text-align:${i?'right':'left'}">${e(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        <thead><tr style="background:${b.primary};color:#fff">${headers.map((h,i)=>`<th ${F('headers')} data-i="${i}" style="text-align:${i?'right':'left'};padding:6px 10px;font-weight:600">${e(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map((row,ri)=>`<tr style="border-bottom:1px solid #E6EAE9;color:${soft}">${row.map((cell,i)=>`<td ${F('rows')} data-r="${ri}" data-c="${i}" style="padding:6px 10px;text-align:${i?'right':'left'}">${e(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     }
     case 'keyvalue':{
       const pairs = c.pairs || [['Client','Department of Transport'],['Value','$553,560'],['Sector','Civil / Roads'],['Duration','18 weeks']];
-      return `<div style="${T}">${pairs.map(kv=>`<div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid #EEF1F0;font-size:12.5px"><span style="color:#7A8583;width:120px;flex-shrink:0">${e(kv[0])}</span><span style="color:${soft};font-weight:600">${e(kv[1])}</span></div>`).join('')}</div>`;
+      return `<div style="${T}">${pairs.map((kv,n)=>`<div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid #EEF1F0;font-size:12.5px"><span ${F('pairs')} data-r="${n}" data-c="0" style="color:#7A8583;width:120px;flex-shrink:0">${e(kv[0])}</span><span ${F('pairs')} data-r="${n}" data-c="1" style="color:${soft};font-weight:600">${e(kv[1])}</span></div>`).join('')}</div>`;
     }
     case 'signature':
-      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong style="color:${b.primary}">${e(c.name||'Kenzie May')}</strong> - ${e(c.role||'Project Director')}</div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: ${e(c.date||'30 Jul 2026')}</div></div>`;
+      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong ${F('name')} style="color:${b.primary}">${r(c.name,'Kenzie May')}</strong> - <span ${F('role')}>${r(c.role,'Project Director')}</span></div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: <span ${F('date')}>${r(c.date,'30 Jul 2026')}</span></div></div>`;
     case 'divider':
       return `<hr style="border:none;border-top:1px solid ${b.secondary}66;margin:0">`;
     case 'spacer':
@@ -50,20 +56,20 @@ function renderPrimitive(id, b, c){
     case 'field':
       return `<span style="${T};background:${b.secondary}1f;color:${b.primary};border:1px solid ${b.secondary}55;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${e(c.field||'Client name')} }}</span>`;
     case 'callout':
-      return `<div style="${T};background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-left:4px solid ${b.secondary};border-radius:8px;padding:12px 14px;color:${soft};font-size:13px;line-height:1.55"><strong style="color:${b.primary}">${e(c.label||'Note')}</strong> - ${e(c.body||'key information the reader should not miss.')}</div>`;
+      return `<div style="${T};background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-left:4px solid ${b.secondary};border-radius:8px;padding:12px 14px;color:${soft};font-size:13px;line-height:1.55"><strong ${F('label')} style="color:${b.primary}">${r(c.label,'Note')}</strong> - <span ${F('body')}>${r(c.body,'key information the reader should not miss.')}</span></div>`;
     case 'stat':
-      return `<div style="${T}"><div style="${H};color:${b.primary};font-size:30px;font-weight:700;line-height:1">${e(c.value||'98%')}</div><div style="color:#7A8583;font-size:12px;margin-top:2px">${e(c.label||'On-time completion')}</div></div>`;
+      return `<div style="${T}"><div ${F('value')} style="${H};color:${b.primary};font-size:30px;font-weight:700;line-height:1">${r(c.value,'98%')}</div><div ${F('label')} style="color:#7A8583;font-size:12px;margin-top:2px">${r(c.label,'On-time completion')}</div></div>`;
     case 'button':
-      return `<a style="${T};display:inline-block;background:${b.primary};color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:7px;text-decoration:none">${e(c.label||'View full submission')}</a>`;
+      return `<a style="${T};display:inline-block;background:${b.primary};color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:7px;text-decoration:none"><span ${F('label')}>${r(c.label,'View full submission')}</span></a>`;
     case 'cover':
       return `<div style="${H};background:${b.primary};color:#fff;border-radius:8px;padding:38px 34px 32px">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${b.secondary};font-weight:600">${e(c.kicker||'Tender Response')}</div>
-        <div style="font-size:30px;font-weight:700;margin-top:12px;line-height:1.12">${e(c.title||'Project Overview')}</div>
+        <div ${F('kicker')} style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${b.secondary};font-weight:600">${r(c.kicker,'Tender Response')}</div>
+        <div ${F('title')} style="font-size:30px;font-weight:700;margin-top:12px;line-height:1.12">${r(c.title,'Project Overview')}</div>
         <div style="width:56px;height:4px;background:${b.secondary};margin:18px 0"></div>
-        <div style="font-size:12.5px;opacity:.85">${e(c.meta||'Prepared for the client - Submission')}</div></div>`;
+        <div ${F('meta')} style="font-size:12.5px;opacity:.85">${r(c.meta,'Prepared for the client - Submission')}</div></div>`;
     case 'toc':{
       const rows = c.rows || [['1. Executive summary','2'],['2. Company profile','4'],['3. Methodology','7'],['4. Pricing','12']];
-      return `<div style="${T};font-size:13px;color:${soft}">${rows.map(r=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #cfd6d4"><span>${e(r[0])}</span><span style="color:#7A8583">${e(r[1])}</span></div>`).join('')}</div>`;
+      return `<div style="${T};font-size:13px;color:${soft}">${rows.map((row,n)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #cfd6d4"><span ${F('rows')} data-r="${n}" data-c="0">${e(row[0])}</span><span ${F('rows')} data-r="${n}" data-c="1" style="color:#7A8583">${e(row[1])}</span></div>`).join('')}</div>`;
     }
     case 'pagebreak':
       return `<div style="${T};display:flex;align-items:center;gap:10px;color:#9aa5a3;font-size:11px;text-transform:uppercase;letter-spacing:.4px"><span style="flex:1;border-top:1.5px dashed #c2ccc9"></span>Page break<span style="flex:1;border-top:1.5px dashed #c2ccc9"></span></div>`;
@@ -168,7 +174,7 @@ function composeBlock(block, brand, content){
   const doc = P2DOC[block.p] || [{cols:[[block.p]]}];
   let n = -1;
   return doc.map(row => {
-    const render = col => col.map(id => { n++; return renderPrimitive(id, brand, (content||{})[n]); }).join('');
+    const render = col => col.map(id => { n++; return `<span class="dp" data-pi="${n}">${renderPrimitive(id, brand, (content||{})[n])}</span>`; }).join('');
     if(row.cols.length > 1){
       return `<div style="display:flex;gap:24px;margin-bottom:18px">${row.cols.map(col=>`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">${render(col)}</div>`).join('')}</div>`;
     }

@@ -2858,6 +2858,15 @@ textarea.fin{resize:vertical;line-height:1.5}
 .lbtn.icon-sm{padding:8px;width:34px;height:34px;border-radius:7px}
 .lbtn.icon-sm .ms{font-size:17px}
 
+/* The middle canvas is always A4: 620px wide, 877px tall (210x297 at the same
+   scale), with a guide line at each page boundary as the document grows. */
+.db .vb-page{width:620px;max-width:100%;min-height:877px;margin:0 auto;padding:0;background:#fff;
+  border-radius:3px;box-shadow:0 12px 40px rgba(20,45,38,.18);display:flex;flex-direction:column;
+  position:relative;text-align:left;box-sizing:border-box}
+.db .vb-page:after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:3px;
+  background:repeating-linear-gradient(to bottom,transparent 0 876px,#E3E8E7 876px 877px)}
+.db .vb-stage{padding-bottom:26px}
+
 /* === Document Builder shell =============================================== */
 .db{position:fixed;inset:0;background:var(--live-page);z-index:140;display:none;flex-direction:column}
 .db.open{display:flex}
@@ -2884,11 +2893,11 @@ textarea.fin{resize:vertical;line-height:1.5}
 .pal-prev{height:58px;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:8px;pointer-events:none}
 .pal-prev>*{max-width:100%;flex:none}
 /* canvas items */
-.db-body{padding:44px 46px 40px;flex:1;display:flex;flex-direction:column}
-.db-item{position:relative;border:1.5px solid transparent;border-radius:6px;cursor:pointer}
-.db-item:hover{border-color:#BFE3D8;background:rgba(56,152,138,.03)}
-.db-item.sel{border-color:var(--live-cta);background:rgba(56,152,138,.055)}
-.db-item .db-inner{margin-bottom:0!important}
+.db-body{padding:40px 46px 36px;flex:1;display:flex;flex-direction:column}
+.db-item{position:relative;border-radius:6px;cursor:pointer;
+  outline:1.5px solid transparent;outline-offset:3px}
+.db-item:hover{outline-color:#BFE3D8;background:rgba(56,152,138,.03)}
+.db-item.sel{outline-color:var(--live-cta);background:rgba(56,152,138,.055)}
 .db-tag{position:absolute;bottom:calc(100% + 3px);right:6px;display:none;font-size:9px;font-weight:700;letter-spacing:.4px;
   text-transform:uppercase;background:var(--live-cta);color:#fff;border-radius:4px;padding:2px 6px;z-index:4}
 .db-item.sel .db-tag{display:block}
@@ -2898,14 +2907,14 @@ textarea.fin{resize:vertical;line-height:1.5}
 .db-bar .ms:hover{background:rgba(255,255,255,.24)}
 .db-line{height:3px;background:var(--live-cta);border-radius:3px;margin:2px 0;display:none}
 .db-line.on{display:block}
-.db-pv{cursor:pointer;border:1.5px solid transparent;border-radius:6px}
-.db-pv:hover{border-color:#BFE3D8}
-.db-pv.sel{border-color:var(--live-cta)}
-.db-slot{position:relative;padding:20px 46px;border-bottom:1px dashed #E7ECEA}
+.db-pv{cursor:pointer;border-radius:6px;outline:1.5px solid transparent;outline-offset:3px}
+.db-pv:hover{outline-color:#BFE3D8}
+.db-pv.sel{outline-color:var(--live-cta)}
+.db-slot{position:relative;padding:22px 46px;border-bottom:1px dashed #E7ECEA}
 .db-slot:last-child{border-bottom:none;border-top:1px dashed #E7ECEA}
 .db-slot-x{position:absolute;top:6px;right:8px;font-size:16px;color:#B8C2C0;cursor:pointer;display:none}
 .db-slot:hover .db-slot-x{display:block}
-.db-slot.empty{color:#AEB9B6;font-size:11.5px;text-align:center;cursor:pointer;padding:14px}
+.db-slot.empty{color:#AEB9B6;font-size:11.5px;text-align:center;cursor:pointer;padding:16px 46px}
 .db-slot.empty:hover{color:var(--live-cta)}
 .dbc-grp{border:1px solid #EDF1F0;border-radius:8px;padding:9px 10px;margin-bottom:8px;background:#FBFCFC}
 .dbc-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.4px;
@@ -3072,6 +3081,25 @@ textarea.fin{resize:vertical;line-height:1.5}
 .cs-opt .ms{font-size:26px}
 .cs-or{font-size:12.5px;color:#8B9694;text-align:center}
 @media(max-width:1180px){ .sm-grid{grid-template-columns:1fr} .sm-col.side{position:static} }
+
+/* Inline editing on the canvas + the inspector's rich-text fields */
+.dp{display:contents}
+.inline-ed{outline:none;border-radius:3px;transition:box-shadow .12s,background .12s}
+.inline-ed:hover{box-shadow:0 0 0 1px #BFE3D8}
+.inline-ed:focus{box-shadow:0 0 0 2px var(--live-cta);background:rgba(56,152,138,.05)}
+.inline-ed:empty:before{content:attr(data-ph);color:#B4BEBC}
+.db-item .inline-ed,.db-pv .inline-ed{cursor:text}
+.srte{border:1px solid #E3E8E7;border-radius:7px;overflow:hidden;background:#fff}
+.srte-bar{display:flex;align-items:center;gap:1px;padding:4px 5px;border-bottom:1px solid #EDF1F0;background:#FBFCFC}
+.srte-b{border:none;background:none;cursor:pointer;padding:3px;border-radius:4px;color:#5E6968;display:flex}
+.srte-b:hover{background:#EDF1F0;color:var(--live-cta)}
+.srte-b .ms{font-size:16px}
+.srte-sep{width:1px;height:15px;background:#E3E8E7;margin:0 3px}
+.srte-ed{padding:7px 9px;font-size:13px;line-height:1.5;outline:none;color:var(--ink);min-height:20px;
+  max-height:150px;overflow:auto}
+.srte-ed.tall{min-height:58px}
+.srte-ed:empty:before{content:attr(data-ph);color:#B4BEBC}
+.srte-ed ul{margin:4px 0;padding-left:18px}
 
 /* === Block Builder ======================================================== */
 .be{position:fixed;inset:0;background:var(--live-page);z-index:138;display:none;flex-direction:column}
@@ -3700,39 +3728,45 @@ const PRIM_ICON = {heading:'title',subheading:'subtitles',paragraph:'notes',list
   divider:'horizontal_rule',spacer:'height',field:'data_object',callout:'campaign',stat:'trending_up',
   button:'smart_button',cover:'title',toc:'toc',pagebreak:'insert_page_break'};
 
+// Fields marked `data-f` are editable straight on the canvas and are stored as
+// rich text, so they render raw rather than escaped. (A real implementation
+// would sanitise on the way in; here the author is editing their own document.)
 function renderPrimitive(id, b, c){
   b = b || {primary:'#27535C', secondary:'#38988A', background:'#F7F9F8', font:'Outfit', bodyFont:'Outfit'};
   c = c || {};
   const H = `font-family:'${b.font}',sans-serif`, T = `font-family:'${b.bodyFont}',sans-serif`;
   const soft = '#3A4442', e = v => esc(v == null ? '' : v);
+  // rich value: use the stored markup when present, else the escaped default
+  const r = (v, def) => (v != null && v !== '') ? String(v) : esc(def);
+  const F = f => `data-f="${f}"`;
   switch(id){
     case 'heading':
-      return `<h3 style="${H};margin:0;color:${b.primary};font-size:20px;font-weight:700;border-bottom:2px solid ${b.secondary};padding-bottom:6px">${e(c.title||'Project Overview')}</h3>`;
+      return `<h3 ${F('title')} style="${H};margin:0;color:${b.primary};font-size:20px;font-weight:700;border-bottom:2px solid ${b.secondary};padding-bottom:6px">${r(c.title,'Project Overview')}</h3>`;
     case 'subheading':
-      return `<h4 style="${H};margin:0;color:${b.primary};font-size:15px;font-weight:600">${e(c.title||'Scope of works')}</h4>`;
+      return `<h4 ${F('title')} style="${H};margin:0;color:${b.primary};font-size:15px;font-weight:600">${r(c.title,'Scope of works')}</h4>`;
     case 'paragraph':
-      return `<p style="${T};margin:0;color:${soft};font-size:13px;line-height:1.6">${e(c.body||'Our team delivered the full civil works package on time and on budget - coordinating traffic management, bulk earthworks and drainage across a live site.')}</p>`;
+      return `<p ${F('body')} style="${T};margin:0;color:${soft};font-size:13px;line-height:1.6">${r(c.body,'Our team delivered the full civil works package on time and on budget - coordinating traffic management, bulk earthworks and drainage across a live site.')}</p>`;
     case 'list':{
       const items = c.items || ['Traffic management plan','Bulk earthworks & drainage','Reinstatement & handover'];
-      return `<ul style="${T};margin:0;padding-left:18px;color:${soft};font-size:13px;line-height:1.7">${items.map(i=>`<li>${e(i)}</li>`).join('')}</ul>`;
+      return `<ul style="${T};margin:0;padding-left:18px;color:${soft};font-size:13px;line-height:1.7">${items.map((i,n)=>`<li ${F('items')} data-i="${n}">${r(i,'')}</li>`).join('')}</ul>`;
     }
     case 'quote':
-      return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"${e(c.body||'Delivered ahead of schedule with zero safety incidents.')}"</blockquote>`;
+      return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"<span ${F('body')}>${r(c.body,'Delivered ahead of schedule with zero safety incidents.')}</span>"</blockquote>`;
     case 'image':
       return `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
     case 'table':{
       const headers = c.headers || ['Item','Qty','Rate'];
       const rows = c.rows || [['Traffic management','1','$8,400'],['Earthworks','320 m3','$46/m3'],['Drainage','1','$21,750']];
       return `<table style="${T};width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr style="background:${b.primary};color:#fff">${headers.map((h,i)=>`<th style="text-align:${i?'right':'left'};padding:6px 10px;font-weight:600">${e(h)}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid #E6EAE9;color:${soft}">${r.map((cell,i)=>`<td style="padding:6px 10px;text-align:${i?'right':'left'}">${e(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        <thead><tr style="background:${b.primary};color:#fff">${headers.map((h,i)=>`<th ${F('headers')} data-i="${i}" style="text-align:${i?'right':'left'};padding:6px 10px;font-weight:600">${e(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map((row,ri)=>`<tr style="border-bottom:1px solid #E6EAE9;color:${soft}">${row.map((cell,i)=>`<td ${F('rows')} data-r="${ri}" data-c="${i}" style="padding:6px 10px;text-align:${i?'right':'left'}">${e(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     }
     case 'keyvalue':{
       const pairs = c.pairs || [['Client','Department of Transport'],['Value','$553,560'],['Sector','Civil / Roads'],['Duration','18 weeks']];
-      return `<div style="${T}">${pairs.map(kv=>`<div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid #EEF1F0;font-size:12.5px"><span style="color:#7A8583;width:120px;flex-shrink:0">${e(kv[0])}</span><span style="color:${soft};font-weight:600">${e(kv[1])}</span></div>`).join('')}</div>`;
+      return `<div style="${T}">${pairs.map((kv,n)=>`<div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid #EEF1F0;font-size:12.5px"><span ${F('pairs')} data-r="${n}" data-c="0" style="color:#7A8583;width:120px;flex-shrink:0">${e(kv[0])}</span><span ${F('pairs')} data-r="${n}" data-c="1" style="color:${soft};font-weight:600">${e(kv[1])}</span></div>`).join('')}</div>`;
     }
     case 'signature':
-      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong style="color:${b.primary}">${e(c.name||'Kenzie May')}</strong> - ${e(c.role||'Project Director')}</div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: ${e(c.date||'30 Jul 2026')}</div></div>`;
+      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong ${F('name')} style="color:${b.primary}">${r(c.name,'Kenzie May')}</strong> - <span ${F('role')}>${r(c.role,'Project Director')}</span></div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: <span ${F('date')}>${r(c.date,'30 Jul 2026')}</span></div></div>`;
     case 'divider':
       return `<hr style="border:none;border-top:1px solid ${b.secondary}66;margin:0">`;
     case 'spacer':
@@ -3740,20 +3774,20 @@ function renderPrimitive(id, b, c){
     case 'field':
       return `<span style="${T};background:${b.secondary}1f;color:${b.primary};border:1px solid ${b.secondary}55;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${e(c.field||'Client name')} }}</span>`;
     case 'callout':
-      return `<div style="${T};background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-left:4px solid ${b.secondary};border-radius:8px;padding:12px 14px;color:${soft};font-size:13px;line-height:1.55"><strong style="color:${b.primary}">${e(c.label||'Note')}</strong> - ${e(c.body||'key information the reader should not miss.')}</div>`;
+      return `<div style="${T};background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-left:4px solid ${b.secondary};border-radius:8px;padding:12px 14px;color:${soft};font-size:13px;line-height:1.55"><strong ${F('label')} style="color:${b.primary}">${r(c.label,'Note')}</strong> - <span ${F('body')}>${r(c.body,'key information the reader should not miss.')}</span></div>`;
     case 'stat':
-      return `<div style="${T}"><div style="${H};color:${b.primary};font-size:30px;font-weight:700;line-height:1">${e(c.value||'98%')}</div><div style="color:#7A8583;font-size:12px;margin-top:2px">${e(c.label||'On-time completion')}</div></div>`;
+      return `<div style="${T}"><div ${F('value')} style="${H};color:${b.primary};font-size:30px;font-weight:700;line-height:1">${r(c.value,'98%')}</div><div ${F('label')} style="color:#7A8583;font-size:12px;margin-top:2px">${r(c.label,'On-time completion')}</div></div>`;
     case 'button':
-      return `<a style="${T};display:inline-block;background:${b.primary};color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:7px;text-decoration:none">${e(c.label||'View full submission')}</a>`;
+      return `<a style="${T};display:inline-block;background:${b.primary};color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:7px;text-decoration:none"><span ${F('label')}>${r(c.label,'View full submission')}</span></a>`;
     case 'cover':
       return `<div style="${H};background:${b.primary};color:#fff;border-radius:8px;padding:38px 34px 32px">
-        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${b.secondary};font-weight:600">${e(c.kicker||'Tender Response')}</div>
-        <div style="font-size:30px;font-weight:700;margin-top:12px;line-height:1.12">${e(c.title||'Project Overview')}</div>
+        <div ${F('kicker')} style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${b.secondary};font-weight:600">${r(c.kicker,'Tender Response')}</div>
+        <div ${F('title')} style="font-size:30px;font-weight:700;margin-top:12px;line-height:1.12">${r(c.title,'Project Overview')}</div>
         <div style="width:56px;height:4px;background:${b.secondary};margin:18px 0"></div>
-        <div style="font-size:12.5px;opacity:.85">${e(c.meta||'Prepared for the client - Submission')}</div></div>`;
+        <div ${F('meta')} style="font-size:12.5px;opacity:.85">${r(c.meta,'Prepared for the client - Submission')}</div></div>`;
     case 'toc':{
       const rows = c.rows || [['1. Executive summary','2'],['2. Company profile','4'],['3. Methodology','7'],['4. Pricing','12']];
-      return `<div style="${T};font-size:13px;color:${soft}">${rows.map(r=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #cfd6d4"><span>${e(r[0])}</span><span style="color:#7A8583">${e(r[1])}</span></div>`).join('')}</div>`;
+      return `<div style="${T};font-size:13px;color:${soft}">${rows.map((row,n)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #cfd6d4"><span ${F('rows')} data-r="${n}" data-c="0">${e(row[0])}</span><span ${F('rows')} data-r="${n}" data-c="1" style="color:#7A8583">${e(row[1])}</span></div>`).join('')}</div>`;
     }
     case 'pagebreak':
       return `<div style="${T};display:flex;align-items:center;gap:10px;color:#9aa5a3;font-size:11px;text-transform:uppercase;letter-spacing:.4px"><span style="flex:1;border-top:1.5px dashed #c2ccc9"></span>Page break<span style="flex:1;border-top:1.5px dashed #c2ccc9"></span></div>`;
@@ -3858,7 +3892,7 @@ function composeBlock(block, brand, content){
   const doc = P2DOC[block.p] || [{cols:[[block.p]]}];
   let n = -1;
   return doc.map(row => {
-    const render = col => col.map(id => { n++; return renderPrimitive(id, brand, (content||{})[n]); }).join('');
+    const render = col => col.map(id => { n++; return `<span class="dp" data-pi="${n}">${renderPrimitive(id, brand, (content||{})[n])}</span>`; }).join('');
     if(row.cols.length > 1){
       return `<div style="display:flex;gap:24px;margin-bottom:18px">${row.cols.map(col=>`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">${render(col)}</div>`).join('')}</div>`;
     }
@@ -4836,7 +4870,7 @@ function docItemHtml(it, brand, cls, extra){
   let inner = '';
   const content = it.content || {};
   if(it.t === 'element'){
-    inner = renderPrimitive(it.id, brand, content[0] || content);
+    inner = `<span class="dp" data-pi="0">${renderPrimitive(it.id, brand, content[0] || {})}</span>`;
   } else {
     const b = BLOCK_BY_ID[it.id];
     inner = b ? composeBlock(b, brand, content) : '';
@@ -5031,7 +5065,14 @@ function dbAdd(id, at){
   DB.sel = typeof at === 'number' ? at : DB.doc.items.length - 1;
   dbRenderAll(); showToast('Added: ' + b.label);
 }
-window.dbSel = i => { DB.sel = i; dbCanvas(); dbInspector(); if(DB.tab==='layers') dbLeft(); };
+window.dbSel = (i, keepCaret) => {
+  if(DB.sel === i && keepCaret) return;    // already selected; don't re-render mid-edit
+  DB.sel = i;
+  if(keepCaret){ document.querySelectorAll('#dbCanvas .db-item, #dbCanvas .db-pv')
+      .forEach(el => el.classList.toggle('sel', +el.dataset.i === i)); }
+  else dbCanvas();
+  dbInspector(); if(DB.tab==='layers') dbLeft();
+};
 window.dbDel = i => { markDirty(DB.doc); DB.doc.items.splice(i,1); if(DB.sel===i) DB.sel=null; else if(DB.sel>i) DB.sel--; dbRenderAll(); };
 window.dbDup = i => { markDirty(DB.doc); const c = JSON.parse(JSON.stringify(DB.doc.items[i])); DB.doc.items.splice(i+1,0,c); DB.sel=i+1; dbRenderAll(); };
 window.dbMove = (i,dir) => { markDirty(DB.doc); const j=i+dir; if(j<0||j>=DB.doc.items.length) return; const [x]=DB.doc.items.splice(i,1); DB.doc.items.splice(j,0,x); DB.sel=j; dbRenderAll(); };
@@ -5062,8 +5103,8 @@ function dbCanvas(){
     // Blocks stay clickable in Preview and the selection survives both ways.
     const body = d.items.map((it,i) =>
       docItemHtml(it, d.brand, 'doc-blk-r db-pv' + (DB.sel===i?' sel':''), `data-i="${i}" onclick="dbSel(${i})"`)).join('');
-    const band = id => id ? `<div style="padding:28px 50px">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
-    page = `<div class="vb-page">${band(d.header)}<div style="padding:46px 50px;flex:1">${body}</div>${band(d.footer)}</div>`;
+    const band = id => id ? `<div class="db-slot">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
+    page = `<div class="vb-page">${band(d.header)}<div class="db-body">${body}</div>${band(d.footer)}</div>`;
   } else {
     const slot = (which,label) => d[which]
       ? `<div class="db-slot" title="${label}">${renderStationery(BLOCK_BY_ID[d[which]].p, d.brand)}
@@ -5088,7 +5129,43 @@ function dbCanvas(){
   document.getElementById('dbCanvas').innerHTML = bar + `<div class="vb-stage">${page}</div>`;
   dbWireCanvas();
 }
+/* Content is editable straight on the page, in Layout and Preview alike. Each
+   rendered field carries data-f (and the primitive index via .dp[data-pi]), so
+   a keystroke writes back to exactly the right slot. */
+function dbWireInline(root){
+  root.querySelectorAll('[data-f]').forEach(el => {
+    const holder = el.closest('.db-item, .db-pv');
+    const wrap = el.closest('.dp');
+    if(!holder || !wrap) return;
+    const it = DB.doc.items[+holder.dataset.i];
+    if(!it) return;
+    const pi = +wrap.dataset.pi, f = el.dataset.f;
+    el.setAttribute('contenteditable', 'true');
+    el.classList.add('inline-ed');
+    el.addEventListener('click', e => e.stopPropagation());   // editing shouldn't re-render
+    el.addEventListener('focus', () => dbSel(+holder.dataset.i, true));
+    el.addEventListener('input', () => {
+      markDirty(DB.doc);
+      const c = (it.content[pi] = it.content[pi] || {});
+      if(f === 'items'){
+        c.items = [...wrap.querySelectorAll('[data-f="items"]')].map(li => li.innerHTML);
+      } else if(f === 'headers'){
+        c.headers = [...wrap.querySelectorAll('[data-f="headers"]')].map(th => th.textContent);
+      } else if(f === 'rows' || f === 'pairs'){
+        const grid = [];
+        wrap.querySelectorAll(`[data-f="${f}"]`).forEach(cell => {
+          const r = +cell.dataset.r; (grid[r] = grid[r] || [])[+cell.dataset.c] = cell.textContent;
+        });
+        c[f] = grid;
+      } else {
+        c[f] = el.innerHTML;
+      }
+      dbInspector();          // keep the sidebar in step
+    });
+  });
+}
 function dbWireCanvas(){
+  dbWireInline(document.getElementById('dbCanvas'));
   const body = document.getElementById('dbBody');
   if(!body) return;
   const lines = [...body.querySelectorAll('.db-line')];
@@ -5199,21 +5276,25 @@ function dbContentFields(it, def){
   (P2DOC[def.p] || [{cols:[[def.p]]}]).forEach(r => r.cols.forEach(c => c.forEach(p => prims.push(p))));
   return prims.map((p,n) => {
     const c = (it.content[n] = it.content[n] || {});
-    const f = (label,k,v,ph) => `<div class="ds-lbl" style="margin-top:8px">${label}</div><input class="fin" data-c="${n}" data-k="${k}" value="${esc(v==null?'':v)}" placeholder="${esc(ph||'')}">`;
-    const ta = (label,k,v,rows) => `<div class="ds-lbl" style="margin-top:8px">${label}</div><textarea class="fin" rows="${rows||3}" data-c="${n}" data-k="${k}">${esc(v==null?'':v)}</textarea>`;
+    // Rich text where the field is prose; plain textareas where it's structure.
+    const rte = (label,k,v,tall) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
+      ${rteHtml(`c${n}-${k}`, v, n, k, tall)}`;
+    const ta = (label,k,v,rows) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
+      <textarea class="fin" rows="${rows||3}" data-c="${n}" data-k="${k}">${esc(v==null?'':v)}</textarea>`;
     let body;
     switch(p){
-      case 'heading': case 'subheading': body = f('Text','title',c.title); break;
-      case 'paragraph': body = ta('Body','body',c.body,3); break;
-      case 'quote': body = ta('Quote','body',c.body,2); break;
+      case 'heading': case 'subheading': body = rte('Text','title',c.title); break;
+      case 'paragraph': body = rte('Body','body',c.body,1); break;
+      case 'quote': body = rte('Quote','body',c.body,1); break;
       case 'list': body = ta('Items (one per line)','items',(c.items||[]).join('\n'),3); break;
-      case 'callout': body = f('Label','label',c.label) + ta('Body','body',c.body,2); break;
-      case 'stat': body = f('Value','value',c.value) + f('Label','label',c.label); break;
-      case 'button': body = f('Label','label',c.label); break;
-      case 'field': body = f('Merge field','field',c.field); break;
-      case 'signature': body = f('Name','name',c.name) + f('Role','role',c.role) + f('Date','date',c.date); break;
-      case 'cover': body = f('Kicker','kicker',c.kicker) + f('Title','title',c.title) + f('Meta','meta',c.meta); break;
-      case 'table': body = f('Headers (comma separated)','headers',(c.headers||[]).join(', ')) + ta('Rows (one per line)','rows',(c.rows||[]).map(r=>r.join(', ')).join('\n'),3); break;
+      case 'callout': body = rte('Label','label',c.label) + rte('Body','body',c.body,1); break;
+      case 'stat': body = rte('Value','value',c.value) + rte('Label','label',c.label); break;
+      case 'button': body = rte('Label','label',c.label); break;
+      case 'field': body = ta('Merge field','field',c.field,1); break;
+      case 'signature': body = rte('Name','name',c.name) + rte('Role','role',c.role) + rte('Date','date',c.date); break;
+      case 'cover': body = rte('Kicker','kicker',c.kicker) + rte('Title','title',c.title) + rte('Meta','meta',c.meta); break;
+      case 'table': body = ta('Headers (comma separated)','headers',(c.headers||[]).join(', '),1)
+        + ta('Rows (one per line)','rows',(c.rows||[]).map(r=>r.join(', ')).join('\n'),3); break;
       case 'keyvalue': body = ta('Pairs ("label | value" per line)','pairs',(c.pairs||[]).map(r=>r.join(' | ')).join('\n'),4); break;
       case 'toc': body = ta('Entries ("title | page" per line)','rows',(c.rows||[]).map(r=>r.join(' | ')).join('\n'),4); break;
       case 'image': body = `<div class="cf-drop" data-toast="Upload an image" style="margin-top:8px"><span class="ms">photo_camera</span>Upload image</div>`; break;
@@ -5222,6 +5303,24 @@ function dbContentFields(it, def){
     return `<div class="dbc-grp"><span class="dbc-h"><span class="ms">${PRIM_ICON[p]||'article'}</span>${p}</span>${body}</div>`;
   }).join('') || '<div class="fhint">No editable content.</div>';
 }
+
+/* A small rich-text field for the inspector \u2014 the same formatting the canvas
+   accepts, so the two stay interchangeable. */
+function rteHtml(id, value, pi, field, tall){
+  const b = (ic,t,cmd) => `<button class="srte-b" title="${t}" onmousedown="event.preventDefault()" onclick="document.execCommand('${cmd}')"><span class="ms">${ic}</span></button>`;
+  return `<div class="srte">
+    <div class="srte-bar">
+      ${b('format_bold','Bold','bold')}${b('format_italic','Italic','italic')}${b('format_underlined','Underline','underline')}
+      <span class="srte-sep"></span>
+      <button class="srte-b" title="Bulleted list" onmousedown="event.preventDefault()" onclick="document.execCommand('insertUnorderedList')"><span class="ms">format_list_bulleted</span></button>
+      <button class="srte-b" title="Accent colour" onmousedown="event.preventDefault()" onclick="document.execCommand('foreColor',false,DB.doc.brand.secondary)"><span class="ms" style="color:var(--live-cta)">format_color_text</span></button>
+      <button class="srte-b" title="Clear formatting" onmousedown="event.preventDefault()" onclick="document.execCommand('removeFormat')"><span class="ms">format_clear</span></button>
+    </div>
+    <div class="srte-ed${tall?' tall':''}" contenteditable="true" data-rte="${pi}" data-k="${field}"
+         data-ph="Type here...">${value == null ? '' : value}</div>
+  </div>`;
+}
+
 function dbWireInspector(){
   const root = document.getElementById('dbRight');
   const it = DB.doc.items[DB.sel];
@@ -5250,6 +5349,12 @@ function dbWireInspector(){
     const k = b.dataset.vis;
     it.style[k] = it.style[k] === false;
     dbInspector(); dbCanvas();
+  }));
+  root.querySelectorAll('[data-rte]').forEach(el => el.addEventListener('input', () => {
+    markDirty(DB.doc);
+    const c = (it.content[+el.dataset.rte] = it.content[+el.dataset.rte] || {});
+    c[el.dataset.k] = el.innerHTML;
+    dbCanvas();
   }));
   root.querySelectorAll('[data-c]').forEach(el => el.addEventListener('input', () => {
     markDirty(DB.doc);

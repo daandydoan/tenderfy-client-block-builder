@@ -43,7 +43,7 @@ function docItemHtml(it, brand, cls, extra){
   let inner = '';
   const content = it.content || {};
   if(it.t === 'element'){
-    inner = renderPrimitive(it.id, brand, content[0] || content);
+    inner = `<span class="dp" data-pi="0">${renderPrimitive(it.id, brand, content[0] || {})}</span>`;
   } else {
     const b = BLOCK_BY_ID[it.id];
     inner = b ? composeBlock(b, brand, content) : '';
@@ -238,7 +238,14 @@ function dbAdd(id, at){
   DB.sel = typeof at === 'number' ? at : DB.doc.items.length - 1;
   dbRenderAll(); showToast('Added: ' + b.label);
 }
-window.dbSel = i => { DB.sel = i; dbCanvas(); dbInspector(); if(DB.tab==='layers') dbLeft(); };
+window.dbSel = (i, keepCaret) => {
+  if(DB.sel === i && keepCaret) return;    // already selected; don't re-render mid-edit
+  DB.sel = i;
+  if(keepCaret){ document.querySelectorAll('#dbCanvas .db-item, #dbCanvas .db-pv')
+      .forEach(el => el.classList.toggle('sel', +el.dataset.i === i)); }
+  else dbCanvas();
+  dbInspector(); if(DB.tab==='layers') dbLeft();
+};
 window.dbDel = i => { markDirty(DB.doc); DB.doc.items.splice(i,1); if(DB.sel===i) DB.sel=null; else if(DB.sel>i) DB.sel--; dbRenderAll(); };
 window.dbDup = i => { markDirty(DB.doc); const c = JSON.parse(JSON.stringify(DB.doc.items[i])); DB.doc.items.splice(i+1,0,c); DB.sel=i+1; dbRenderAll(); };
 window.dbMove = (i,dir) => { markDirty(DB.doc); const j=i+dir; if(j<0||j>=DB.doc.items.length) return; const [x]=DB.doc.items.splice(i,1); DB.doc.items.splice(j,0,x); DB.sel=j; dbRenderAll(); };
@@ -269,8 +276,8 @@ function dbCanvas(){
     // Blocks stay clickable in Preview and the selection survives both ways.
     const body = d.items.map((it,i) =>
       docItemHtml(it, d.brand, 'doc-blk-r db-pv' + (DB.sel===i?' sel':''), `data-i="${i}" onclick="dbSel(${i})"`)).join('');
-    const band = id => id ? `<div style="padding:28px 50px">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
-    page = `<div class="vb-page">${band(d.header)}<div style="padding:46px 50px;flex:1">${body}</div>${band(d.footer)}</div>`;
+    const band = id => id ? `<div class="db-slot">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
+    page = `<div class="vb-page">${band(d.header)}<div class="db-body">${body}</div>${band(d.footer)}</div>`;
   } else {
     const slot = (which,label) => d[which]
       ? `<div class="db-slot" title="${label}">${renderStationery(BLOCK_BY_ID[d[which]].p, d.brand)}
@@ -295,7 +302,43 @@ function dbCanvas(){
   document.getElementById('dbCanvas').innerHTML = bar + `<div class="vb-stage">${page}</div>`;
   dbWireCanvas();
 }
+/* Content is editable straight on the page, in Layout and Preview alike. Each
+   rendered field carries data-f (and the primitive index via .dp[data-pi]), so
+   a keystroke writes back to exactly the right slot. */
+function dbWireInline(root){
+  root.querySelectorAll('[data-f]').forEach(el => {
+    const holder = el.closest('.db-item, .db-pv');
+    const wrap = el.closest('.dp');
+    if(!holder || !wrap) return;
+    const it = DB.doc.items[+holder.dataset.i];
+    if(!it) return;
+    const pi = +wrap.dataset.pi, f = el.dataset.f;
+    el.setAttribute('contenteditable', 'true');
+    el.classList.add('inline-ed');
+    el.addEventListener('click', e => e.stopPropagation());   // editing shouldn't re-render
+    el.addEventListener('focus', () => dbSel(+holder.dataset.i, true));
+    el.addEventListener('input', () => {
+      markDirty(DB.doc);
+      const c = (it.content[pi] = it.content[pi] || {});
+      if(f === 'items'){
+        c.items = [...wrap.querySelectorAll('[data-f="items"]')].map(li => li.innerHTML);
+      } else if(f === 'headers'){
+        c.headers = [...wrap.querySelectorAll('[data-f="headers"]')].map(th => th.textContent);
+      } else if(f === 'rows' || f === 'pairs'){
+        const grid = [];
+        wrap.querySelectorAll(`[data-f="${f}"]`).forEach(cell => {
+          const r = +cell.dataset.r; (grid[r] = grid[r] || [])[+cell.dataset.c] = cell.textContent;
+        });
+        c[f] = grid;
+      } else {
+        c[f] = el.innerHTML;
+      }
+      dbInspector();          // keep the sidebar in step
+    });
+  });
+}
 function dbWireCanvas(){
+  dbWireInline(document.getElementById('dbCanvas'));
   const body = document.getElementById('dbBody');
   if(!body) return;
   const lines = [...body.querySelectorAll('.db-line')];
@@ -406,21 +449,25 @@ function dbContentFields(it, def){
   (P2DOC[def.p] || [{cols:[[def.p]]}]).forEach(r => r.cols.forEach(c => c.forEach(p => prims.push(p))));
   return prims.map((p,n) => {
     const c = (it.content[n] = it.content[n] || {});
-    const f = (label,k,v,ph) => `<div class="ds-lbl" style="margin-top:8px">${label}</div><input class="fin" data-c="${n}" data-k="${k}" value="${esc(v==null?'':v)}" placeholder="${esc(ph||'')}">`;
-    const ta = (label,k,v,rows) => `<div class="ds-lbl" style="margin-top:8px">${label}</div><textarea class="fin" rows="${rows||3}" data-c="${n}" data-k="${k}">${esc(v==null?'':v)}</textarea>`;
+    // Rich text where the field is prose; plain textareas where it's structure.
+    const rte = (label,k,v,tall) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
+      ${rteHtml(`c${n}-${k}`, v, n, k, tall)}`;
+    const ta = (label,k,v,rows) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
+      <textarea class="fin" rows="${rows||3}" data-c="${n}" data-k="${k}">${esc(v==null?'':v)}</textarea>`;
     let body;
     switch(p){
-      case 'heading': case 'subheading': body = f('Text','title',c.title); break;
-      case 'paragraph': body = ta('Body','body',c.body,3); break;
-      case 'quote': body = ta('Quote','body',c.body,2); break;
+      case 'heading': case 'subheading': body = rte('Text','title',c.title); break;
+      case 'paragraph': body = rte('Body','body',c.body,1); break;
+      case 'quote': body = rte('Quote','body',c.body,1); break;
       case 'list': body = ta('Items (one per line)','items',(c.items||[]).join('\n'),3); break;
-      case 'callout': body = f('Label','label',c.label) + ta('Body','body',c.body,2); break;
-      case 'stat': body = f('Value','value',c.value) + f('Label','label',c.label); break;
-      case 'button': body = f('Label','label',c.label); break;
-      case 'field': body = f('Merge field','field',c.field); break;
-      case 'signature': body = f('Name','name',c.name) + f('Role','role',c.role) + f('Date','date',c.date); break;
-      case 'cover': body = f('Kicker','kicker',c.kicker) + f('Title','title',c.title) + f('Meta','meta',c.meta); break;
-      case 'table': body = f('Headers (comma separated)','headers',(c.headers||[]).join(', ')) + ta('Rows (one per line)','rows',(c.rows||[]).map(r=>r.join(', ')).join('\n'),3); break;
+      case 'callout': body = rte('Label','label',c.label) + rte('Body','body',c.body,1); break;
+      case 'stat': body = rte('Value','value',c.value) + rte('Label','label',c.label); break;
+      case 'button': body = rte('Label','label',c.label); break;
+      case 'field': body = ta('Merge field','field',c.field,1); break;
+      case 'signature': body = rte('Name','name',c.name) + rte('Role','role',c.role) + rte('Date','date',c.date); break;
+      case 'cover': body = rte('Kicker','kicker',c.kicker) + rte('Title','title',c.title) + rte('Meta','meta',c.meta); break;
+      case 'table': body = ta('Headers (comma separated)','headers',(c.headers||[]).join(', '),1)
+        + ta('Rows (one per line)','rows',(c.rows||[]).map(r=>r.join(', ')).join('\n'),3); break;
       case 'keyvalue': body = ta('Pairs ("label | value" per line)','pairs',(c.pairs||[]).map(r=>r.join(' | ')).join('\n'),4); break;
       case 'toc': body = ta('Entries ("title | page" per line)','rows',(c.rows||[]).map(r=>r.join(' | ')).join('\n'),4); break;
       case 'image': body = `<div class="cf-drop" data-toast="Upload an image" style="margin-top:8px"><span class="ms">photo_camera</span>Upload image</div>`; break;
@@ -429,6 +476,24 @@ function dbContentFields(it, def){
     return `<div class="dbc-grp"><span class="dbc-h"><span class="ms">${PRIM_ICON[p]||'article'}</span>${p}</span>${body}</div>`;
   }).join('') || '<div class="fhint">No editable content.</div>';
 }
+
+/* A small rich-text field for the inspector — the same formatting the canvas
+   accepts, so the two stay interchangeable. */
+function rteHtml(id, value, pi, field, tall){
+  const b = (ic,t,cmd) => `<button class="srte-b" title="${t}" onmousedown="event.preventDefault()" onclick="document.execCommand('${cmd}')"><span class="ms">${ic}</span></button>`;
+  return `<div class="srte">
+    <div class="srte-bar">
+      ${b('format_bold','Bold','bold')}${b('format_italic','Italic','italic')}${b('format_underlined','Underline','underline')}
+      <span class="srte-sep"></span>
+      <button class="srte-b" title="Bulleted list" onmousedown="event.preventDefault()" onclick="document.execCommand('insertUnorderedList')"><span class="ms">format_list_bulleted</span></button>
+      <button class="srte-b" title="Accent colour" onmousedown="event.preventDefault()" onclick="document.execCommand('foreColor',false,DB.doc.brand.secondary)"><span class="ms" style="color:var(--live-cta)">format_color_text</span></button>
+      <button class="srte-b" title="Clear formatting" onmousedown="event.preventDefault()" onclick="document.execCommand('removeFormat')"><span class="ms">format_clear</span></button>
+    </div>
+    <div class="srte-ed${tall?' tall':''}" contenteditable="true" data-rte="${pi}" data-k="${field}"
+         data-ph="Type here...">${value == null ? '' : value}</div>
+  </div>`;
+}
+
 function dbWireInspector(){
   const root = document.getElementById('dbRight');
   const it = DB.doc.items[DB.sel];
@@ -457,6 +522,12 @@ function dbWireInspector(){
     const k = b.dataset.vis;
     it.style[k] = it.style[k] === false;
     dbInspector(); dbCanvas();
+  }));
+  root.querySelectorAll('[data-rte]').forEach(el => el.addEventListener('input', () => {
+    markDirty(DB.doc);
+    const c = (it.content[+el.dataset.rte] = it.content[+el.dataset.rte] || {});
+    c[el.dataset.k] = el.innerHTML;
+    dbCanvas();
   }));
   root.querySelectorAll('[data-c]').forEach(el => el.addEventListener('input', () => {
     markDirty(DB.doc);
