@@ -344,11 +344,11 @@ function smBlocksHtml(){
   // slim affordance that only appears when you hover the gap, so the page isn't
   // a ladder of buttons.
   const gap = at => `<div class="sm-gap" onclick="smAddOpen(${at})" title="Insert a block here"><span class="ms">add</span></div>`;
-  return `<div class="sm-canvas">
+  return `<div class="sm-canvas"><div class="sm-col">
     ${d.items.length
       ? d.items.map((it,i) => (i ? gap(i) : '') + block(it,i)).join('') + plus(d.items.length)
       : plus(0)}
-  </div>`;
+  </div></div>`;
 }
 function smWireBlocks(){
   document.querySelectorAll('.sm-canvas .smb-ed').forEach(el => {

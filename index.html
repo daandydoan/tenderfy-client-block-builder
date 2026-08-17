@@ -2949,7 +2949,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* === Simple mode ========================================================== */
 .sm{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 .sm.open{display:flex}
-.sm-body{flex:1;min-height:0;overflow:auto;padding:22px 24px 40px}
+.sm-body{flex:1;min-height:0;overflow:auto;padding:24px 54px 40px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
 .sm-col.side{position:sticky;top:0}
@@ -2994,11 +2994,13 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* preview */
 .sm-prev{display:flex;justify-content:center}
 .sm-a4{width:100%;max-width:430px;min-height:0;box-shadow:0 4px 18px rgba(20,45,38,.12)}
-/* block canvas (case study) -- live is a WYSIWYG inline editor:
-   drag handle, per-block rich-text toolbar, confirm/delete circles, "+" bars. */
-.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:12px;padding:26px 34px 40px;
-  max-width:1340px;margin:0 auto;min-height:calc(100vh - 170px)}
-.smb{display:flex;align-items:flex-start;gap:10px;margin:0 auto;max-width:660px}
+/* block canvas (case study) -- measured from live: a full-width white card
+   (radius 12, 1px #C3C3C3) holding a 900px centred column with 20px padding, so
+   the working width is 860px. "+" bars are 72px tall, radius 8, 20px apart. */
+.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:12px;padding:0;
+  margin:0;min-height:calc(100vh - 178px)}
+.sm-col{width:900px;max-width:100%;margin:0 auto;padding:20px;box-sizing:border-box}
+.smb{display:flex;align-items:flex-start;gap:10px}
 .smb-grip{color:#B8C2C0;font-size:19px;cursor:grab;margin-top:12px;flex:none}
 .smb-body{flex:1;min-width:0;border:1px solid #E3E8E7;border-radius:4px;overflow:hidden;background:#fff}
 .smb-bar{display:flex;align-items:center;gap:1px;padding:6px 9px;background:#FAFBFB;
@@ -3015,7 +3017,6 @@ textarea.fin{resize:vertical;line-height:1.5}
 .smb-ed{outline:none;color:var(--ink);min-height:1em}
 .smb-ed:empty:before{content:attr(data-ph);color:#A1ADAB;pointer-events:none}
 .smb-h{font-size:44px;font-weight:700;line-height:1.12;font-family:'Outfit',sans-serif}
-.smb-h:empty:before{font-weight:700}
 .smb-sh{font-size:26px;font-weight:700;line-height:1.2;font-family:'Outfit',sans-serif}
 .smb-p{font-size:15px;line-height:1.65}
 .smb-img{height:150px;border:1.5px dashed #D5DCDA;border-radius:6px;display:flex;flex-direction:column;
@@ -3023,22 +3024,21 @@ textarea.fin{resize:vertical;line-height:1.5}
 .smb-img .ms{font-size:30px}
 .smb-img:hover{border-color:var(--live-cta);color:var(--live-cta)}
 .smb-side{display:flex;flex-direction:column;gap:7px;flex:none;margin-top:10px}
-.smb-ok,.smb-del2{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;color:#fff}
-.smb-ok{background:var(--live-cta)}
+.smb-ok{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;background:var(--live-cta)}
 .smb-del{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   cursor:pointer;color:#fff;background:#E04A3F}
 .smb-ok .ms,.smb-del .ms{font-size:16px}
-.sm-gap{max-width:660px;margin:0 auto;height:14px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;position:relative;opacity:0;transition:opacity .12s}
+.sm-plus{height:72px;border-radius:8px;background:var(--live-cta);color:#fff;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;margin:20px 0}
+.sm-plus:hover{background:var(--live-cta-dark)}
+.sm-plus .ms{font-size:24px}
+.sm-gap{height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  position:relative;opacity:0;transition:opacity .12s;margin:2px 0}
 .sm-gap:hover{opacity:1}
 .sm-gap:before{content:'';position:absolute;left:0;right:0;height:2px;background:var(--live-cta);border-radius:2px;opacity:.45}
 .sm-gap .ms{position:relative;font-size:15px;width:20px;height:20px;border-radius:50%;background:var(--live-cta);
   color:#fff;display:flex;align-items:center;justify-content:center}
-.sm-plus{height:54px;border-radius:6px;background:#4E9C87;color:#fff;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;margin:16px auto;max-width:660px}
-.sm-plus:hover{background:var(--live-cta-dark)}
-.sm-plus .ms{font-size:22px}
 /* Add Block dialog */
 .sm-add-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 26px;padding:20px 26px;overflow:auto;max-height:54vh}
 .sm-tile{cursor:pointer}
@@ -5895,11 +5895,11 @@ function smBlocksHtml(){
   // slim affordance that only appears when you hover the gap, so the page isn't
   // a ladder of buttons.
   const gap = at => `<div class="sm-gap" onclick="smAddOpen(${at})" title="Insert a block here"><span class="ms">add</span></div>`;
-  return `<div class="sm-canvas">
+  return `<div class="sm-canvas"><div class="sm-col">
     ${d.items.length
       ? d.items.map((it,i) => (i ? gap(i) : '') + block(it,i)).join('') + plus(d.items.length)
       : plus(0)}
-  </div>`;
+  </div></div>`;
 }
 function smWireBlocks(){
   document.querySelectorAll('.sm-canvas .smb-ed').forEach(el => {
