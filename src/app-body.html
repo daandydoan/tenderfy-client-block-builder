@@ -170,7 +170,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .lcard .k{font-size:12px;color:var(--live-cta);margin-top:9px}
 .lcard .v{font-size:14px;color:#3A4442}
 .lcard .shot{height:104px;border-radius:6px;overflow:hidden;position:relative;background:#F1F4F3;border:1px solid #EDF1F0}
-.lcard .shot>.shrink{position:absolute;top:0;left:0;width:620px;transform-origin:top left;pointer-events:none}
+.lcard .shot>.shrink{position:absolute;top:0;left:0;transform-origin:top left;pointer-events:none}
 .lcard .ava-lg{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:22px;font-weight:700;margin-bottom:9px}
 .lcard .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--live-cta);color:var(--live-cta);
@@ -248,7 +248,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .ov{position:fixed;inset:0;background:rgba(20,28,27,.5);display:none;align-items:center;justify-content:center;z-index:150;padding:24px}
 .ov.open{display:flex}
 .dlg{background:#fff;border-radius:6px;width:892px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-.dlg-h{background:#4A5654;color:#fff;padding:16px 24px;display:flex;align-items:center;font-size:19px;font-weight:600}
+.dlg-h{background:#596262;color:#fff;padding:16px 24px;display:flex;align-items:center;font-size:19px;font-weight:600}
 .dlg-h .x{margin-left:auto;cursor:pointer;font-size:22px}
 .dlg-b{display:grid;grid-template-columns:268px 1fr;gap:30px;padding:24px;overflow:auto;flex:1}
 .dlg-f{padding:16px 24px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #EDF1F0}
@@ -263,9 +263,31 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .sws{display:flex;gap:12px;flex-wrap:wrap}
 .swb{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;box-shadow:0 0 0 1px #E3E8E7}
 .swb.on{border-color:#fff;box-shadow:0 0 0 2px var(--live-cta)}
-.note{background:#FBE9C6;color:#6B4B12;border-radius:5px;padding:13px 16px;font-size:13.5px;
+.note{background:#FFBC4A;color:#2E3C3B;border-radius:8px;padding:12px 16px;font-size:14px;
   display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
 .note .ms{font-size:18px;flex:none}
+
+.dlg-f .revert{margin-right:auto;background:#F95246;border-color:#F95246;color:#fff}
+.dlg-f .revert:hover{background:#E23B2F;border-color:#E23B2F;color:#fff}
+.logorow{display:flex;align-items:center;gap:10px;border:1px solid #D5DCDA;border-radius:5px;padding:11px 13px}
+.logorow .fn{flex:1;min-width:0;font-size:13.5px;color:#3A4442;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logorow .ms{font-size:19px;color:#6B7674;cursor:pointer}
+.logorow .ms:hover{color:var(--live-cta)}
+/* Contents page - styled by Edit Table of Contents Style */
+.tocp{position:relative;width:100%;box-sizing:border-box;overflow:hidden;border-radius:2px;aspect-ratio:1/1.28;padding:34px 30px;display:flex;flex-direction:column}
+.tocp-h{display:flex;align-items:baseline;gap:12px}
+.tocp-h .t{font-size:34px;font-weight:600;letter-spacing:-.5px}
+.tocp-h .lg{margin-left:auto;font-size:13px;font-weight:700;letter-spacing:-.2px}
+.tocp-k{display:flex;gap:10px;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-top:6px}
+.tocp-b{margin-top:26px}
+.tocp-rule{height:1px;margin:12px 0}
+.tocp-r{display:flex;gap:14px;align-items:baseline;margin-bottom:5px}
+.tocp-r .no{font-size:15px;font-weight:700;width:34px;flex:none}
+.tocp-r .nm{font-size:15px;font-weight:600}
+.tocp-r.sub .no{font-size:11px;font-weight:600;padding-left:14px}
+.tocp-r.sub .nm{font-size:12px;font-weight:400}
+.lcard.bare .ctop{margin-bottom:12px}
+.lcard.bare .shot{height:160px}
 .cvr{position:relative;overflow:hidden;border-radius:2px;aspect-ratio:1/1.28;display:flex;flex-direction:column;justify-content:flex-end}
 .cvr .art{position:absolute;inset:0;background:linear-gradient(150deg,#6B7C74,#3F4E4A 55%,#232C29);opacity:.96}
 .cvr .art:after{content:'';position:absolute;inset:0;
@@ -867,15 +889,59 @@ textarea.fin{resize:vertical;line-height:1.5}
           <div class="sub">Custom Text Color</div>
           <div class="hexwrap"><input class="hexin" id="csTxHex" oninput="csHex('tx',this.value)"><span class="ms">palette</span></div>
         </div>
+        <div class="fld"><label>Cover Logo</label>
+          <div class="logorow"><span class="fn" id="csLogo"></span>
+            <span class="ms" data-toast="Replace the cover logo" title="Replace">edit</span>
+            <span class="ms" data-toast="Remove the cover logo" title="Remove">delete</span></div>
+        </div>
       </div>
       <div>
-        <div class="note"><span class="ms">notes</span> Update key details such as title, date, and author when building your tender.</div>
+        <div class="note"><span class="ms">info</span> Update key details such as title, date, and author when building your tender.</div>
         <div id="csPrev"></div>
       </div>
     </div>
     <div class="dlg-f">
+      <button class="lbtn revert" onclick="csRevert()">Revert to Original</button>
       <button class="lbtn" onclick="csClose()">Cancel</button>
       <button class="lbtn pri" onclick="csSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Table of Contents Style - live's twin of Edit Cover Style -->
+<div class="ov" id="tcOv">
+  <div class="dlg">
+    <div class="dlg-h">Edit Table of Contents Style <span class="ms x" onclick="tcClose()">close</span></div>
+    <div class="dlg-b">
+      <div>
+        <div class="fld"><label>Table of Content Font</label>
+          <select class="selin" id="tcFont" onchange="tcSync()"></select></div>
+        <div class="fld"><label>Background Color</label>
+          <div class="sub">Vibrant</div><div class="sws" id="tcBgV"></div>
+          <div class="sub">Earthy</div><div class="sws" id="tcBgE"></div>
+          <div class="sub">Custom Background Color</div>
+          <div class="hexwrap"><input class="hexin" id="tcBgHex" oninput="tcHex('bg',this.value)"><span class="ms">palette</span></div>
+        </div>
+        <div class="fld"><label>Secondary Color</label>
+          <div class="sub">Vibrant</div><div class="sws" id="tcSecV"></div>
+          <div class="sub">Earthy</div><div class="sws" id="tcSecE"></div>
+          <div class="sub">Custom Secondary Color</div>
+          <div class="hexwrap"><input class="hexin" id="tcSecHex" oninput="tcHex('sec',this.value)"><span class="ms">palette</span></div>
+        </div>
+        <div class="fld"><label>Table of Content Logo</label>
+          <div class="logorow"><span class="fn" id="tcLogo"></span>
+            <span class="ms" data-toast="Replace the contents logo" title="Replace">edit</span>
+            <span class="ms" data-toast="Remove the contents logo" title="Remove">delete</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="note"><span class="ms">info</span> The Table of Contents will dynamically populate as you build your tender. You can also edit it if needed</div>
+        <div id="tcPrev"></div>
+      </div>
+    </div>
+    <div class="dlg-f">
+      <button class="lbtn" onclick="tcClose()">Cancel</button>
+      <button class="lbtn pri" onclick="tcSave()">Save</button>
     </div>
   </div>
 </div>

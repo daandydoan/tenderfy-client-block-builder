@@ -2668,7 +2668,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .lcard .k{font-size:12px;color:var(--live-cta);margin-top:9px}
 .lcard .v{font-size:14px;color:#3A4442}
 .lcard .shot{height:104px;border-radius:6px;overflow:hidden;position:relative;background:#F1F4F3;border:1px solid #EDF1F0}
-.lcard .shot>.shrink{position:absolute;top:0;left:0;width:620px;transform-origin:top left;pointer-events:none}
+.lcard .shot>.shrink{position:absolute;top:0;left:0;transform-origin:top left;pointer-events:none}
 .lcard .ava-lg{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:22px;font-weight:700;margin-bottom:9px}
 .lcard .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--live-cta);color:var(--live-cta);
@@ -2746,7 +2746,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .ov{position:fixed;inset:0;background:rgba(20,28,27,.5);display:none;align-items:center;justify-content:center;z-index:150;padding:24px}
 .ov.open{display:flex}
 .dlg{background:#fff;border-radius:6px;width:892px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-.dlg-h{background:#4A5654;color:#fff;padding:16px 24px;display:flex;align-items:center;font-size:19px;font-weight:600}
+.dlg-h{background:#596262;color:#fff;padding:16px 24px;display:flex;align-items:center;font-size:19px;font-weight:600}
 .dlg-h .x{margin-left:auto;cursor:pointer;font-size:22px}
 .dlg-b{display:grid;grid-template-columns:268px 1fr;gap:30px;padding:24px;overflow:auto;flex:1}
 .dlg-f{padding:16px 24px;display:flex;justify-content:flex-end;gap:12px;border-top:1px solid #EDF1F0}
@@ -2761,9 +2761,31 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .sws{display:flex;gap:12px;flex-wrap:wrap}
 .swb{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;box-shadow:0 0 0 1px #E3E8E7}
 .swb.on{border-color:#fff;box-shadow:0 0 0 2px var(--live-cta)}
-.note{background:#FBE9C6;color:#6B4B12;border-radius:5px;padding:13px 16px;font-size:13.5px;
+.note{background:#FFBC4A;color:#2E3C3B;border-radius:8px;padding:12px 16px;font-size:14px;
   display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
 .note .ms{font-size:18px;flex:none}
+
+.dlg-f .revert{margin-right:auto;background:#F95246;border-color:#F95246;color:#fff}
+.dlg-f .revert:hover{background:#E23B2F;border-color:#E23B2F;color:#fff}
+.logorow{display:flex;align-items:center;gap:10px;border:1px solid #D5DCDA;border-radius:5px;padding:11px 13px}
+.logorow .fn{flex:1;min-width:0;font-size:13.5px;color:#3A4442;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logorow .ms{font-size:19px;color:#6B7674;cursor:pointer}
+.logorow .ms:hover{color:var(--live-cta)}
+/* Contents page - styled by Edit Table of Contents Style */
+.tocp{position:relative;width:100%;box-sizing:border-box;overflow:hidden;border-radius:2px;aspect-ratio:1/1.28;padding:34px 30px;display:flex;flex-direction:column}
+.tocp-h{display:flex;align-items:baseline;gap:12px}
+.tocp-h .t{font-size:34px;font-weight:600;letter-spacing:-.5px}
+.tocp-h .lg{margin-left:auto;font-size:13px;font-weight:700;letter-spacing:-.2px}
+.tocp-k{display:flex;gap:10px;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-top:6px}
+.tocp-b{margin-top:26px}
+.tocp-rule{height:1px;margin:12px 0}
+.tocp-r{display:flex;gap:14px;align-items:baseline;margin-bottom:5px}
+.tocp-r .no{font-size:15px;font-weight:700;width:34px;flex:none}
+.tocp-r .nm{font-size:15px;font-weight:600}
+.tocp-r.sub .no{font-size:11px;font-weight:600;padding-left:14px}
+.tocp-r.sub .nm{font-size:12px;font-weight:400}
+.lcard.bare .ctop{margin-bottom:12px}
+.lcard.bare .shot{height:160px}
 .cvr{position:relative;overflow:hidden;border-radius:2px;aspect-ratio:1/1.28;display:flex;flex-direction:column;justify-content:flex-end}
 .cvr .art{position:absolute;inset:0;background:linear-gradient(150deg,#6B7C74,#3F4E4A 55%,#232C29);opacity:.96}
 .cvr .art:after{content:'';position:absolute;inset:0;
@@ -3365,15 +3387,59 @@ textarea.fin{resize:vertical;line-height:1.5}
           <div class="sub">Custom Text Color</div>
           <div class="hexwrap"><input class="hexin" id="csTxHex" oninput="csHex('tx',this.value)"><span class="ms">palette</span></div>
         </div>
+        <div class="fld"><label>Cover Logo</label>
+          <div class="logorow"><span class="fn" id="csLogo"></span>
+            <span class="ms" data-toast="Replace the cover logo" title="Replace">edit</span>
+            <span class="ms" data-toast="Remove the cover logo" title="Remove">delete</span></div>
+        </div>
       </div>
       <div>
-        <div class="note"><span class="ms">notes</span> Update key details such as title, date, and author when building your tender.</div>
+        <div class="note"><span class="ms">info</span> Update key details such as title, date, and author when building your tender.</div>
         <div id="csPrev"></div>
       </div>
     </div>
     <div class="dlg-f">
+      <button class="lbtn revert" onclick="csRevert()">Revert to Original</button>
       <button class="lbtn" onclick="csClose()">Cancel</button>
       <button class="lbtn pri" onclick="csSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Table of Contents Style - live's twin of Edit Cover Style -->
+<div class="ov" id="tcOv">
+  <div class="dlg">
+    <div class="dlg-h">Edit Table of Contents Style <span class="ms x" onclick="tcClose()">close</span></div>
+    <div class="dlg-b">
+      <div>
+        <div class="fld"><label>Table of Content Font</label>
+          <select class="selin" id="tcFont" onchange="tcSync()"></select></div>
+        <div class="fld"><label>Background Color</label>
+          <div class="sub">Vibrant</div><div class="sws" id="tcBgV"></div>
+          <div class="sub">Earthy</div><div class="sws" id="tcBgE"></div>
+          <div class="sub">Custom Background Color</div>
+          <div class="hexwrap"><input class="hexin" id="tcBgHex" oninput="tcHex('bg',this.value)"><span class="ms">palette</span></div>
+        </div>
+        <div class="fld"><label>Secondary Color</label>
+          <div class="sub">Vibrant</div><div class="sws" id="tcSecV"></div>
+          <div class="sub">Earthy</div><div class="sws" id="tcSecE"></div>
+          <div class="sub">Custom Secondary Color</div>
+          <div class="hexwrap"><input class="hexin" id="tcSecHex" oninput="tcHex('sec',this.value)"><span class="ms">palette</span></div>
+        </div>
+        <div class="fld"><label>Table of Content Logo</label>
+          <div class="logorow"><span class="fn" id="tcLogo"></span>
+            <span class="ms" data-toast="Replace the contents logo" title="Replace">edit</span>
+            <span class="ms" data-toast="Remove the contents logo" title="Remove">delete</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="note"><span class="ms">info</span> The Table of Contents will dynamically populate as you build your tender. You can also edit it if needed</div>
+        <div id="tcPrev"></div>
+      </div>
+    </div>
+    <div class="dlg-f">
+      <button class="lbtn" onclick="tcClose()">Cancel</button>
+      <button class="lbtn pri" onclick="tcSave()">Save</button>
     </div>
   </div>
 </div>
@@ -4217,18 +4283,28 @@ const CASE_STUDIES = [
 
 /* Cover pages \u2014 the live app keeps these under Tenders > Cover Pages. */
 const COVERS = [
-  {id:'cv1', name:'Bielby Cover - Logo Right',       font:'Tungsten-Narrow', bg:'#172E39', tx:'#B4D33B', logo:'right',  status:'live'},
-  {id:'cv2', name:'Bielby Cover - Logo Bottom Right',font:'Tungsten-Narrow', bg:'#1B2422', tx:'#FFBE0B', logo:'bottom', status:'live'},
-  {id:'cv3', name:'Bielby Cover',                    font:'Manrope',         bg:'#094074', tx:'#ACBDE3', logo:'right',  status:'draft'},
+  {id:'cv1', name:'Bielby Cover - Logo Right',       font:'Tungsten-Narrow', bg:'#172E39', tx:'#B4D33B', logo:'right',  logoFile:'Tenderfy_Civil_logo.svg', status:'live'},
+  {id:'cv2', name:'Bielby Cover - Logo Bottom Right',font:'Tungsten-Narrow', bg:'#1B2422', tx:'#FFBE0B', logo:'bottom', logoFile:'Tenderfy_Civil_logo.svg', status:'live'},
+  {id:'cv3', name:'Bielby Cover',                    font:'Manrope',         bg:'#094074', tx:'#ACBDE3', logo:'right',  logoFile:'Tenderfy_Civil_logo.svg', status:'draft'},
 ];
 const COVER_FONTS = ['Tungsten-Narrow','Manrope','Outfit','Inter','Poppins','Lora','Roboto'];
 const PAL_VIBRANT = ['#FFBE0B','#FB5607','#DE0663','#8338EC','#3A86FF'];
 const PAL_EARTHY  = ['#ACBDE3','#EF8354','#584A4B','#094074','#2C3232'];
 
+/* Contents templates. Live styles each one through "Edit Table of Contents
+   Style" - a font, a background and a secondary colour - so they carry the
+   same three fields the dialog edits. */
 const TOCS = [
-  {id:'t1', name:'Standard Contents', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
-  {id:'t2', name:'Detailed Contents (numbered)', status:'draft', by:'Priya Nair', updated:'26 Jun 2026'},
+  {id:'t1', name:'Standard Contents',            font:'Manrope', bg:'#2C3232', sec:'#38988A', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
+  {id:'t2', name:'Standard Contents - Light',    font:'Manrope', bg:'#F7F9F8', sec:'#38988A', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
+  {id:'t3', name:'Detailed Contents (numbered)', font:'Outfit',  bg:'#094074', sec:'#ACBDE3', logo:'Tenderfy_Civil_logo.svg', status:'draft', by:'Priya Nair',      updated:'26 Jun 2026'},
+  {id:'t4', name:'Contents - Accent',            font:'Poppins', bg:'#584A4B', sec:'#EF8354', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Priya Nair',      updated:'26 Jun 2026'},
 ];
+// Live's font picker lists 90 families; these are the head of that list.
+const STYLE_FONTS = ['Manrope-Regular','Roboto','Open Sans','Lato','Montserrat','Oswald','Raleway','Poppins',
+  'Merriweather','Nunito','PT Sans','Playfair Display','Noto Sans','Roboto Condensed','Ubuntu','Rubik',
+  'Work Sans','Inter','Source Sans Pro','Quicksand','Josefin Sans','Karla','Fira Sans','Mulish','Cabin',
+  'DM Sans','Anton','Bebas Neue','Comfortaa','Lora','Outfit','Manrope','Tungsten-Narrow'];
 
 const OTHER_DOCS = {
   policies:[
@@ -4686,6 +4762,42 @@ function coverHtml(c){
       <div><div class="k" style="color:${c.tx}">PREPARED FOR</div><div class="v" style="color:#fff">Enter prepared for</div></div>
     </div></div>`;
 }
+
+/* The contents page live styles through "Edit Table of Contents Style". The
+   sections mirror the File Manager categories, which is what live populates
+   from as the tender is built. */
+const TOC_SECTIONS = [
+  ['Tender Documentations', ['Tender Documentation']],
+  ['Resumes',               ['Resume','Resume']],
+  ['Case Studies',          ['Case Study']],
+  ['Policies',              ['Policy','Policy','Policy']],
+  ['Insurances',            ['Insurance']],
+];
+function tocHtml(t){
+  const light = isLight(t.bg);
+  const ink   = light ? '#2E3C3B' : '#FFFFFF';
+  const soft  = light ? 'rgba(46,60,59,.55)' : 'rgba(255,255,255,.55)';
+  const rule  = light ? 'rgba(46,60,59,.14)' : 'rgba(255,255,255,.16)';
+  let n = 0;
+  const rows = TOC_SECTIONS.map(([name, subs]) => {
+    n++;
+    return `<div class="tocp-r"><span class="no" style="color:${t.sec}">${n}.</span>
+        <span class="nm" style="color:${ink}">${esc(name)}</span></div>
+      ${subs.map((sub,i) => `<div class="tocp-r sub"><span class="no" style="color:${t.sec}">${n}.${i+1}</span>
+        <span class="nm" style="color:${soft}">${esc(sub)}</span></div>`).join('')}`;
+  }).join(`<div class="tocp-rule" style="background:${rule}"></div>`);
+  return `<div class="tocp" style="font-family:'${t.font==='Tungsten-Narrow'||t.font==='Manrope-Regular'?'Manrope':t.font}',sans-serif;background:${t.bg}">
+    <div class="tocp-h"><span class="t" style="color:${ink}">Contents</span>
+      <span class="lg" style="color:${t.sec}">&#x25B6;&#x25B6; Tenderfy Civil</span></div>
+    <div class="tocp-k"><span style="color:${t.sec}">TENDER</span><span style="color:${soft}">Commercial in Confidence</span></div>
+    <div class="tocp-b">${rows}</div></div>`;
+}
+function isLight(hex){
+  const h = String(hex||'').replace('#','');
+  if(h.length !== 6) return false;
+  const n = parseInt(h,16);
+  return (((n>>16&255)*299 + (n>>8&255)*587 + (n&255)*114) / 1000) > 150;
+}
 function docPageHtml(title, desc){
   return `<div style="padding:34px;font-family:Outfit,sans-serif;min-height:460px;text-align:left">
     <div style="display:flex;align-items:center;gap:9px;padding-bottom:12px;border-bottom:2px solid #38988A">
@@ -4748,16 +4860,28 @@ window.advOpen = () => {
 /* \u2500\u2500 Edit Cover Style \u2014 the live "simple" builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
 let CS = {bg:'#172E39', tx:'#B4D33B', font:'Tungsten-Narrow'};
+let csTarget = null;                       // cover id when opened from the listing
 window.csOpen = () => {
   const f = btCur();
   const id = btCoverId(f);
   if(!id){ showToast('Simple mode styles a cover page - this document has no cover'); return; }
+  csTarget = null;
+  csLoad(COVERS.find(x => x.id === id) || COVERS[0]);
+};
+// Live opens the same dialog straight off a Cover Pages card.
+window.csOpenCover = id => {
   const c = COVERS.find(x => x.id === id) || COVERS[0];
-  CS = {bg:c.bg, tx:c.tx, font:c.font};
-  document.getElementById('csFont').innerHTML = COVER_FONTS.map(f=>`<option${f===CS.font?' selected':''}>${f}</option>`).join('');
+  csTarget = c.id;
+  csLoad(c);
+};
+function csLoad(c){
+  CS = {bg:c.bg, tx:c.tx, font:c.font, logoFile:c.logoFile, orig:{bg:c.bg, tx:c.tx, font:c.font}};
+  document.getElementById('csFont').innerHTML = STYLE_FONTS.map(f=>`<option${f===CS.font?' selected':''}>${esc(f)}</option>`).join('');
+  document.getElementById('csLogo').textContent = CS.logoFile || 'No logo';
   csRender();
   document.getElementById('csOv').classList.add('open');
-};
+}
+window.csRevert = () => { Object.assign(CS, CS.orig); csRender(); showToast('Reverted to the original style'); };
 window.csClose = () => document.getElementById('csOv').classList.remove('open');
 window.csSync = () => { CS.font = document.getElementById('csFont').value; csRender(); };
 window.csHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)){ CS[which] = v; csRender(true); } };
@@ -4776,6 +4900,12 @@ function csRender(skipInputs){
   document.getElementById('csPrev').innerHTML = coverHtml({font:CS.font, bg:CS.bg, tx:CS.tx, logo:'right'});
 }
 window.csSave = () => {
+  if(csTarget){
+    const t = COVERS.find(x => x.id === csTarget);
+    if(t) Object.assign(t, {bg:CS.bg, tx:CS.tx, font:CS.font});
+    csClose(); renderRoute(); showToast('Cover style saved');
+    return;
+  }
   const f = btCur();
   const id = btCoverId(f);
   const c = id && COVERS.find(x => x.id === id);
@@ -4789,6 +4919,50 @@ window.csSave = () => {
 };
 document.getElementById('csOv').addEventListener('click', e => { if(e.target.id === 'csOv') csClose(); });
 
+/* \u2500\u2500 Edit Table of Contents Style \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Live's twin of Edit Cover Style, opened from a Table of Contents card. Same
+   left column, but a Secondary Color instead of a Text Color, and no
+   "Revert to Original" in the footer. */
+let TC = null, tcTarget = null;
+window.tcOpen = id => {
+  const t = TOCS.find(x => x.id === id) || TOCS[0];
+  tcTarget = t.id;
+  TC = {bg:t.bg, sec:t.sec, font:t.font, logoFile:t.logo};
+  document.getElementById('tcFont').innerHTML = STYLE_FONTS.map(f=>`<option${f===TC.font?' selected':''}>${esc(f)}</option>`).join('');
+  document.getElementById('tcLogo').textContent = TC.logoFile || 'No logo';
+  tcRender();
+  document.getElementById('tcOv').classList.add('open');
+};
+window.tcClose = () => document.getElementById('tcOv').classList.remove('open');
+window.tcSync = () => { TC.font = document.getElementById('tcFont').value; tcRender(); };
+window.tcHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)){ TC[which] = v; tcRender(true); } };
+window.tcPick = (which, v) => { TC[which] = v; tcRender(); };
+function tcRender(skipInputs){
+  const sw = (which, list, cur) => list.map(c => `<span class="swb ${c.toLowerCase()===cur.toLowerCase()?'on':''}" style="background:${c}" onclick="tcPick('${which}','${c}')" title="${c}"></span>`).join('');
+  document.getElementById('tcBgV').innerHTML  = sw('bg',  PAL_VIBRANT, TC.bg);
+  document.getElementById('tcBgE').innerHTML  = sw('bg',  PAL_EARTHY,  TC.bg);
+  document.getElementById('tcSecV').innerHTML = sw('sec', PAL_VIBRANT, TC.sec);
+  document.getElementById('tcSecE').innerHTML = sw('sec', PAL_EARTHY,  TC.sec);
+  if(!skipInputs){
+    document.getElementById('tcBgHex').value  = TC.bg;
+    document.getElementById('tcSecHex').value = TC.sec;
+    document.getElementById('tcFont').value   = TC.font;
+  }
+  document.getElementById('tcPrev').innerHTML = tocHtml(TC);
+}
+window.tcSave = () => {
+  const t = TOCS.find(x => x.id === tcTarget);
+  if(t) Object.assign(t, {bg:TC.bg, sec:TC.sec, font:TC.font});
+  tcClose(); renderRoute(); showToast('Table of Contents style saved');
+};
+document.getElementById('tcOv').addEventListener('click', e => { if(e.target.id === 'tcOv') tcClose(); });
+
+/* Both listings offer a single Edit action, as on live. */
+window.styleMenu = (ev, kind, id) => {
+  openMenu(ev, [{label:'Edit', run:() => kind === 'cover' ? csOpenCover(id) : tcOpen(id)}]);
+};
+
+
 /* \u2500\u2500 Library picker (Build Tender "Add from File Manager") \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
 let libSrc = 'resumes', libTarget = 'resume', libPick = {};
@@ -4796,7 +4970,7 @@ function libItems(){
   if(libSrc === 'resumes')      return RESUMES.map(r => ({n:`${r.name} - ${r.role}`, prev:{kind:'resume', id:r.id}}));
   if(libSrc === 'case-studies') return CASE_STUDIES.map(c => ({n:c.title, prev:{kind:'case', id:c.id}}));
   if(libSrc === 'cover-pages')  return COVERS.map(c => ({n:c.name, prev:{kind:'cover', id:c.id}}));
-  if(libSrc === 'table-of-contents') return TOCS.map(t => ({n:t.name, prev:{kind:'doc', title:t.name, desc:'A contents list generated from the tender sections.'}}));
+  if(libSrc === 'table-of-contents') return TOCS.map(t => ({n:t.name, prev:{kind:'toc', id:t.id}}));
   return (OTHER_DOCS[libSrc] || []).map(d => {
     const title = d.t.replace(/&amp;/g,'&').replace(/&rsquo;/g,"'");
     return {n:title, prev:{kind:'doc', title, desc:d.desc}};
@@ -4824,6 +4998,7 @@ window.attRender = () => {
 function libDocHtml(f){
   const p = f.prev || {};
   if(p.kind === 'cover'){ const c = COVERS.find(x=>x.id===p.id); return coverHtml(c); }
+  if(p.kind === 'toc'){ const t = TOCS.find(x=>x.id===p.id) || TOCS[0]; return tocHtml(t); }
   if(p.kind === 'resume'){ const r = RESUMES.find(x=>x.id===p.id); return renderResume({layout:r.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:r.accent}), data:r.data || RESUME_DATA}); }
   if(p.kind === 'case'){ const c = CASE_STUDIES.find(x=>x.id===p.id); return renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}); }
   return docPageHtml(p.title || f.n, p.desc || '');
@@ -4864,17 +5039,20 @@ function pgLibrary(slug){
                      <button class="lbtn pri" data-toast="Create a new cover page">Create New Cover Page</button>`,
   }[slug] || `<button class="lbtn pri" data-toast="Upload ${esc(m.sing)}"><span class="ms">upload</span> Upload ${esc(m.sing)}</button>`;
 
+  // Live's Cover Pages and Table of Contents are bare: title, the Files rail
+  // and the cards. Every other category gets the full listing chrome.
+  const bare = slug === 'cover-pages' || slug === 'table-of-contents';
   return `<div class="phead">
       <div class="h">${esc(m.name)}</div>
-      <span class="lseg">
+      ${bare ? '' : `<span class="lseg">
         <button class="${view==='list'?'on':''}" onclick="fmSetView('${slug}','list')"><span class="ms">format_list_bulleted</span> List view</button>
         <button class="${view==='grid'?'on':''}" onclick="fmSetView('${slug}','grid')"><span class="ms">grid_view</span> Grid view</button>
       </span>
       <div class="lsearch"><span class="ms">search</span><input placeholder="Search"></div>
-      <div class="sp">${acts}</div>
+      <div class="sp">${acts}</div>`}
     </div>
     <div class="pbody">
-      ${folderRail(folders, sel, `fmSetFolder.bind(null,'${slug}')`)}
+      ${bare ? '' : folderRail(folders, sel, `fmSetFolder.bind(null,'${slug}')`)}
       <div class="frail" id="railF2"><span class="ms car" onclick="railToggle('railF2')">expand_more</span> Files
         <span class="ms" data-toast="Sort" style="color:#7C8886;font-size:19px">sort</span></div>
       ${slug === 'resumes'
@@ -4936,22 +5114,19 @@ function fmCards(slug){
         <span class="ms" style="font-size:16px;color:var(--live-cta)">bookmark</span> ${esc(c.sector)}</div>
     </div>`).join('');
 
+  // A card opens the style dialog straight away - live has no view page here.
   if(slug === 'cover-pages') return COVERS.map(c => `
-    <div class="lcard" onclick="showToast('Open cover page - ${esc(c.name)}')">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
-        <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
-        <span class="ms" data-toast="Cover options" onclick="event.stopPropagation()">more_vert</span></div>
+    <div class="lcard bare" onclick="csOpenCover('${c.id}')">
+      <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
+        <span class="ms" onclick="event.stopPropagation();styleMenu(event,'cover','${c.id}')" title="Cover options">more_vert</span></div>
       ${shrink(coverHtml(c), .55, 430)}
-      <div class="k">Cover Font</div><div class="v">${esc(c.font)}</div>
     </div>`).join('');
 
   if(slug === 'table-of-contents') return TOCS.map(t => `
-    <div class="lcard" data-toast="Open ${esc(t.name)}">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
-        <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
-        <span class="ms">more_vert</span></div>
-      ${shrink(`<div style="padding:34px;font-family:Outfit,sans-serif;text-align:left">${renderPrimitive('heading',null,{title:'Contents'})}<div style="height:14px"></div>${renderPrimitive('toc')}</div>`, .38)}
-      <div class="k">Updated</div><div class="v">${esc(t.updated)}</div>
+    <div class="lcard bare" onclick="tcOpen('${t.id}')">
+      <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
+        <span class="ms" onclick="event.stopPropagation();styleMenu(event,'toc','${t.id}')" title="Contents options">more_vert</span></div>
+      ${shrink(tocHtml(t), .55, 430)}
     </div>`).join('');
 
   return (OTHER_DOCS[slug] || []).map(d => {

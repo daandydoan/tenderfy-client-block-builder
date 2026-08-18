@@ -343,6 +343,42 @@ function coverHtml(c){
       <div><div class="k" style="color:${c.tx}">PREPARED FOR</div><div class="v" style="color:#fff">Enter prepared for</div></div>
     </div></div>`;
 }
+
+/* The contents page live styles through "Edit Table of Contents Style". The
+   sections mirror the File Manager categories, which is what live populates
+   from as the tender is built. */
+const TOC_SECTIONS = [
+  ['Tender Documentations', ['Tender Documentation']],
+  ['Resumes',               ['Resume','Resume']],
+  ['Case Studies',          ['Case Study']],
+  ['Policies',              ['Policy','Policy','Policy']],
+  ['Insurances',            ['Insurance']],
+];
+function tocHtml(t){
+  const light = isLight(t.bg);
+  const ink   = light ? '#2E3C3B' : '#FFFFFF';
+  const soft  = light ? 'rgba(46,60,59,.55)' : 'rgba(255,255,255,.55)';
+  const rule  = light ? 'rgba(46,60,59,.14)' : 'rgba(255,255,255,.16)';
+  let n = 0;
+  const rows = TOC_SECTIONS.map(([name, subs]) => {
+    n++;
+    return `<div class="tocp-r"><span class="no" style="color:${t.sec}">${n}.</span>
+        <span class="nm" style="color:${ink}">${esc(name)}</span></div>
+      ${subs.map((sub,i) => `<div class="tocp-r sub"><span class="no" style="color:${t.sec}">${n}.${i+1}</span>
+        <span class="nm" style="color:${soft}">${esc(sub)}</span></div>`).join('')}`;
+  }).join(`<div class="tocp-rule" style="background:${rule}"></div>`);
+  return `<div class="tocp" style="font-family:'${t.font==='Tungsten-Narrow'||t.font==='Manrope-Regular'?'Manrope':t.font}',sans-serif;background:${t.bg}">
+    <div class="tocp-h"><span class="t" style="color:${ink}">Contents</span>
+      <span class="lg" style="color:${t.sec}">&#x25B6;&#x25B6; Tenderfy Civil</span></div>
+    <div class="tocp-k"><span style="color:${t.sec}">TENDER</span><span style="color:${soft}">Commercial in Confidence</span></div>
+    <div class="tocp-b">${rows}</div></div>`;
+}
+function isLight(hex){
+  const h = String(hex||'').replace('#','');
+  if(h.length !== 6) return false;
+  const n = parseInt(h,16);
+  return (((n>>16&255)*299 + (n>>8&255)*587 + (n&255)*114) / 1000) > 150;
+}
 function docPageHtml(title, desc){
   return `<div style="padding:34px;font-family:Outfit,sans-serif;min-height:460px;text-align:left">
     <div style="display:flex;align-items:center;gap:9px;padding-bottom:12px;border-bottom:2px solid #38988A">
@@ -405,16 +441,28 @@ window.advOpen = () => {
 /* ── Edit Cover Style — the live "simple" builder ────────────────────────── */
 
 let CS = {bg:'#172E39', tx:'#B4D33B', font:'Tungsten-Narrow'};
+let csTarget = null;                       // cover id when opened from the listing
 window.csOpen = () => {
   const f = btCur();
   const id = btCoverId(f);
   if(!id){ showToast('Simple mode styles a cover page - this document has no cover'); return; }
+  csTarget = null;
+  csLoad(COVERS.find(x => x.id === id) || COVERS[0]);
+};
+// Live opens the same dialog straight off a Cover Pages card.
+window.csOpenCover = id => {
   const c = COVERS.find(x => x.id === id) || COVERS[0];
-  CS = {bg:c.bg, tx:c.tx, font:c.font};
-  document.getElementById('csFont').innerHTML = COVER_FONTS.map(f=>`<option${f===CS.font?' selected':''}>${f}</option>`).join('');
+  csTarget = c.id;
+  csLoad(c);
+};
+function csLoad(c){
+  CS = {bg:c.bg, tx:c.tx, font:c.font, logoFile:c.logoFile, orig:{bg:c.bg, tx:c.tx, font:c.font}};
+  document.getElementById('csFont').innerHTML = STYLE_FONTS.map(f=>`<option${f===CS.font?' selected':''}>${esc(f)}</option>`).join('');
+  document.getElementById('csLogo').textContent = CS.logoFile || 'No logo';
   csRender();
   document.getElementById('csOv').classList.add('open');
-};
+}
+window.csRevert = () => { Object.assign(CS, CS.orig); csRender(); showToast('Reverted to the original style'); };
 window.csClose = () => document.getElementById('csOv').classList.remove('open');
 window.csSync = () => { CS.font = document.getElementById('csFont').value; csRender(); };
 window.csHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)){ CS[which] = v; csRender(true); } };
@@ -433,6 +481,12 @@ function csRender(skipInputs){
   document.getElementById('csPrev').innerHTML = coverHtml({font:CS.font, bg:CS.bg, tx:CS.tx, logo:'right'});
 }
 window.csSave = () => {
+  if(csTarget){
+    const t = COVERS.find(x => x.id === csTarget);
+    if(t) Object.assign(t, {bg:CS.bg, tx:CS.tx, font:CS.font});
+    csClose(); renderRoute(); showToast('Cover style saved');
+    return;
+  }
   const f = btCur();
   const id = btCoverId(f);
   const c = id && COVERS.find(x => x.id === id);
@@ -446,6 +500,50 @@ window.csSave = () => {
 };
 document.getElementById('csOv').addEventListener('click', e => { if(e.target.id === 'csOv') csClose(); });
 
+/* ── Edit Table of Contents Style ─────────────────────────────────────────────
+   Live's twin of Edit Cover Style, opened from a Table of Contents card. Same
+   left column, but a Secondary Color instead of a Text Color, and no
+   "Revert to Original" in the footer. */
+let TC = null, tcTarget = null;
+window.tcOpen = id => {
+  const t = TOCS.find(x => x.id === id) || TOCS[0];
+  tcTarget = t.id;
+  TC = {bg:t.bg, sec:t.sec, font:t.font, logoFile:t.logo};
+  document.getElementById('tcFont').innerHTML = STYLE_FONTS.map(f=>`<option${f===TC.font?' selected':''}>${esc(f)}</option>`).join('');
+  document.getElementById('tcLogo').textContent = TC.logoFile || 'No logo';
+  tcRender();
+  document.getElementById('tcOv').classList.add('open');
+};
+window.tcClose = () => document.getElementById('tcOv').classList.remove('open');
+window.tcSync = () => { TC.font = document.getElementById('tcFont').value; tcRender(); };
+window.tcHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)){ TC[which] = v; tcRender(true); } };
+window.tcPick = (which, v) => { TC[which] = v; tcRender(); };
+function tcRender(skipInputs){
+  const sw = (which, list, cur) => list.map(c => `<span class="swb ${c.toLowerCase()===cur.toLowerCase()?'on':''}" style="background:${c}" onclick="tcPick('${which}','${c}')" title="${c}"></span>`).join('');
+  document.getElementById('tcBgV').innerHTML  = sw('bg',  PAL_VIBRANT, TC.bg);
+  document.getElementById('tcBgE').innerHTML  = sw('bg',  PAL_EARTHY,  TC.bg);
+  document.getElementById('tcSecV').innerHTML = sw('sec', PAL_VIBRANT, TC.sec);
+  document.getElementById('tcSecE').innerHTML = sw('sec', PAL_EARTHY,  TC.sec);
+  if(!skipInputs){
+    document.getElementById('tcBgHex').value  = TC.bg;
+    document.getElementById('tcSecHex').value = TC.sec;
+    document.getElementById('tcFont').value   = TC.font;
+  }
+  document.getElementById('tcPrev').innerHTML = tocHtml(TC);
+}
+window.tcSave = () => {
+  const t = TOCS.find(x => x.id === tcTarget);
+  if(t) Object.assign(t, {bg:TC.bg, sec:TC.sec, font:TC.font});
+  tcClose(); renderRoute(); showToast('Table of Contents style saved');
+};
+document.getElementById('tcOv').addEventListener('click', e => { if(e.target.id === 'tcOv') tcClose(); });
+
+/* Both listings offer a single Edit action, as on live. */
+window.styleMenu = (ev, kind, id) => {
+  openMenu(ev, [{label:'Edit', run:() => kind === 'cover' ? csOpenCover(id) : tcOpen(id)}]);
+};
+
+
 /* ── Library picker (Build Tender "Add from File Manager") ───────────────── */
 
 let libSrc = 'resumes', libTarget = 'resume', libPick = {};
@@ -453,7 +551,7 @@ function libItems(){
   if(libSrc === 'resumes')      return RESUMES.map(r => ({n:`${r.name} - ${r.role}`, prev:{kind:'resume', id:r.id}}));
   if(libSrc === 'case-studies') return CASE_STUDIES.map(c => ({n:c.title, prev:{kind:'case', id:c.id}}));
   if(libSrc === 'cover-pages')  return COVERS.map(c => ({n:c.name, prev:{kind:'cover', id:c.id}}));
-  if(libSrc === 'table-of-contents') return TOCS.map(t => ({n:t.name, prev:{kind:'doc', title:t.name, desc:'A contents list generated from the tender sections.'}}));
+  if(libSrc === 'table-of-contents') return TOCS.map(t => ({n:t.name, prev:{kind:'toc', id:t.id}}));
   return (OTHER_DOCS[libSrc] || []).map(d => {
     const title = d.t.replace(/&amp;/g,'&').replace(/&rsquo;/g,"'");
     return {n:title, prev:{kind:'doc', title, desc:d.desc}};
@@ -481,6 +579,7 @@ window.attRender = () => {
 function libDocHtml(f){
   const p = f.prev || {};
   if(p.kind === 'cover'){ const c = COVERS.find(x=>x.id===p.id); return coverHtml(c); }
+  if(p.kind === 'toc'){ const t = TOCS.find(x=>x.id===p.id) || TOCS[0]; return tocHtml(t); }
   if(p.kind === 'resume'){ const r = RESUMES.find(x=>x.id===p.id); return renderResume({layout:r.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:r.accent}), data:r.data || RESUME_DATA}); }
   if(p.kind === 'case'){ const c = CASE_STUDIES.find(x=>x.id===p.id); return renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}); }
   return docPageHtml(p.title || f.n, p.desc || '');
@@ -521,17 +620,20 @@ function pgLibrary(slug){
                      <button class="lbtn pri" data-toast="Create a new cover page">Create New Cover Page</button>`,
   }[slug] || `<button class="lbtn pri" data-toast="Upload ${esc(m.sing)}"><span class="ms">upload</span> Upload ${esc(m.sing)}</button>`;
 
+  // Live's Cover Pages and Table of Contents are bare: title, the Files rail
+  // and the cards. Every other category gets the full listing chrome.
+  const bare = slug === 'cover-pages' || slug === 'table-of-contents';
   return `<div class="phead">
       <div class="h">${esc(m.name)}</div>
-      <span class="lseg">
+      ${bare ? '' : `<span class="lseg">
         <button class="${view==='list'?'on':''}" onclick="fmSetView('${slug}','list')"><span class="ms">format_list_bulleted</span> List view</button>
         <button class="${view==='grid'?'on':''}" onclick="fmSetView('${slug}','grid')"><span class="ms">grid_view</span> Grid view</button>
       </span>
       <div class="lsearch"><span class="ms">search</span><input placeholder="Search"></div>
-      <div class="sp">${acts}</div>
+      <div class="sp">${acts}</div>`}
     </div>
     <div class="pbody">
-      ${folderRail(folders, sel, `fmSetFolder.bind(null,'${slug}')`)}
+      ${bare ? '' : folderRail(folders, sel, `fmSetFolder.bind(null,'${slug}')`)}
       <div class="frail" id="railF2"><span class="ms car" onclick="railToggle('railF2')">expand_more</span> Files
         <span class="ms" data-toast="Sort" style="color:#7C8886;font-size:19px">sort</span></div>
       ${slug === 'resumes'
@@ -593,22 +695,19 @@ function fmCards(slug){
         <span class="ms" style="font-size:16px;color:var(--live-cta)">bookmark</span> ${esc(c.sector)}</div>
     </div>`).join('');
 
+  // A card opens the style dialog straight away - live has no view page here.
   if(slug === 'cover-pages') return COVERS.map(c => `
-    <div class="lcard" onclick="showToast('Open cover page - ${esc(c.name)}')">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
-        <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
-        <span class="ms" data-toast="Cover options" onclick="event.stopPropagation()">more_vert</span></div>
+    <div class="lcard bare" onclick="csOpenCover('${c.id}')">
+      <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
+        <span class="ms" onclick="event.stopPropagation();styleMenu(event,'cover','${c.id}')" title="Cover options">more_vert</span></div>
       ${shrink(coverHtml(c), .55, 430)}
-      <div class="k">Cover Font</div><div class="v">${esc(c.font)}</div>
     </div>`).join('');
 
   if(slug === 'table-of-contents') return TOCS.map(t => `
-    <div class="lcard" data-toast="Open ${esc(t.name)}">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
-        <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
-        <span class="ms">more_vert</span></div>
-      ${shrink(`<div style="padding:34px;font-family:Outfit,sans-serif;text-align:left">${renderPrimitive('heading',null,{title:'Contents'})}<div style="height:14px"></div>${renderPrimitive('toc')}</div>`, .38)}
-      <div class="k">Updated</div><div class="v">${esc(t.updated)}</div>
+    <div class="lcard bare" onclick="tcOpen('${t.id}')">
+      <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
+        <span class="ms" onclick="event.stopPropagation();styleMenu(event,'toc','${t.id}')" title="Contents options">more_vert</span></div>
+      ${shrink(tocHtml(t), .55, 430)}
     </div>`).join('');
 
   return (OTHER_DOCS[slug] || []).map(d => {

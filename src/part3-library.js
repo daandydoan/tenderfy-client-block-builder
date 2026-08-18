@@ -64,18 +64,28 @@ const CASE_STUDIES = [
 
 /* Cover pages — the live app keeps these under Tenders > Cover Pages. */
 const COVERS = [
-  {id:'cv1', name:'Bielby Cover - Logo Right',       font:'Tungsten-Narrow', bg:'#172E39', tx:'#B4D33B', logo:'right',  status:'live'},
-  {id:'cv2', name:'Bielby Cover - Logo Bottom Right',font:'Tungsten-Narrow', bg:'#1B2422', tx:'#FFBE0B', logo:'bottom', status:'live'},
-  {id:'cv3', name:'Bielby Cover',                    font:'Manrope',         bg:'#094074', tx:'#ACBDE3', logo:'right',  status:'draft'},
+  {id:'cv1', name:'Bielby Cover - Logo Right',       font:'Tungsten-Narrow', bg:'#172E39', tx:'#B4D33B', logo:'right',  logoFile:'Tenderfy_Civil_logo.svg', status:'live'},
+  {id:'cv2', name:'Bielby Cover - Logo Bottom Right',font:'Tungsten-Narrow', bg:'#1B2422', tx:'#FFBE0B', logo:'bottom', logoFile:'Tenderfy_Civil_logo.svg', status:'live'},
+  {id:'cv3', name:'Bielby Cover',                    font:'Manrope',         bg:'#094074', tx:'#ACBDE3', logo:'right',  logoFile:'Tenderfy_Civil_logo.svg', status:'draft'},
 ];
 const COVER_FONTS = ['Tungsten-Narrow','Manrope','Outfit','Inter','Poppins','Lora','Roboto'];
 const PAL_VIBRANT = ['#FFBE0B','#FB5607','#DE0663','#8338EC','#3A86FF'];
 const PAL_EARTHY  = ['#ACBDE3','#EF8354','#584A4B','#094074','#2C3232'];
 
+/* Contents templates. Live styles each one through "Edit Table of Contents
+   Style" - a font, a background and a secondary colour - so they carry the
+   same three fields the dialog edits. */
 const TOCS = [
-  {id:'t1', name:'Standard Contents', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
-  {id:'t2', name:'Detailed Contents (numbered)', status:'draft', by:'Priya Nair', updated:'26 Jun 2026'},
+  {id:'t1', name:'Standard Contents',            font:'Manrope', bg:'#2C3232', sec:'#38988A', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
+  {id:'t2', name:'Standard Contents - Light',    font:'Manrope', bg:'#F7F9F8', sec:'#38988A', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Andrew Williams', updated:'11 Jul 2026'},
+  {id:'t3', name:'Detailed Contents (numbered)', font:'Outfit',  bg:'#094074', sec:'#ACBDE3', logo:'Tenderfy_Civil_logo.svg', status:'draft', by:'Priya Nair',      updated:'26 Jun 2026'},
+  {id:'t4', name:'Contents - Accent',            font:'Poppins', bg:'#584A4B', sec:'#EF8354', logo:'Tenderfy_Civil_logo.svg', status:'live',  by:'Priya Nair',      updated:'26 Jun 2026'},
 ];
+// Live's font picker lists 90 families; these are the head of that list.
+const STYLE_FONTS = ['Manrope-Regular','Roboto','Open Sans','Lato','Montserrat','Oswald','Raleway','Poppins',
+  'Merriweather','Nunito','PT Sans','Playfair Display','Noto Sans','Roboto Condensed','Ubuntu','Rubik',
+  'Work Sans','Inter','Source Sans Pro','Quicksand','Josefin Sans','Karla','Fira Sans','Mulish','Cabin',
+  'DM Sans','Anton','Bebas Neue','Comfortaa','Lora','Outfit','Manrope','Tungsten-Narrow'];
 
 const OTHER_DOCS = {
   policies:[
