@@ -60,7 +60,6 @@ window.psPick = (which, v) => {
 };
 window.psHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)) psPick(which, v); };
 window.psFont = v => { PS.doc.brand.font = PS.doc.brand.bodyFont = v; markDirty(PS.doc); psRenderAll(); };
-window.psDocStyle = (k, v) => { PS.doc.docStyle[k] = +v; markDirty(PS.doc); psRenderAll(); };
 
 function psRenderAll(){ psHead(); psSide(); psStage(); psProps(); }
 
@@ -119,25 +118,19 @@ function psStage(){
 }
 /* Right: the same Properties panel Advanced shows, so it does not appear or
    disappear across the toggle. */
+/* Right: only what live's dialog carries beyond the controls - Revert to
+   Original. Page geometry (padding, spacing, radius, page fill) is an Advanced
+   concern and is deliberately absent here; the column stays so the canvas does
+   not shift when you toggle. */
 function psProps(){
-  const ds = PS.doc.docStyle;
-  const row = (k, label, min, max) => `
-    <div class="ds-row"><label>${label}</label>
-      <div class="ds-ctl"><input type="range" min="${min}" max="${max}" value="${ds[k]}" oninput="psDocStyle('${k}',this.value)">
-        <span class="ds-u">${ds[k]}<i>px</i></span></div></div>`;
   document.getElementById('psRight').innerHTML = `
-    <div class="card">
-      <h3 class="ed-h">Style</h3>
-      <div class="ds-row"><label>Fill</label><div class="ds-ctl">
-        <input type="color" value="${esc(ds.bg)}" oninput="PS.doc.docStyle.bg=this.value;markDirty(PS.doc);psStage()">
-        <input class="ds-hex" value="${esc(ds.bg).toUpperCase()}" oninput="if(/^#[0-9a-f]{6}$/i.test(this.value)){PS.doc.docStyle.bg=this.value;markDirty(PS.doc);psStage()}"></div></div>
-      ${row('pad','Padding',0,80)}
-      ${row('gap','Spacing',0,60)}
-      ${row('rad','Radius',0,24)}
-      <div class="fhint" style="margin-top:10px">Page-level styling. Switch to Advanced to add or rearrange blocks.</div>
-    </div>
     <div class="card">
       <h3 class="ed-h">Reset</h3>
       <button class="lbtn danger" style="width:100%" onclick="psRevert()">Revert to Original</button>
+      <div class="fhint" style="margin-top:10px">Restores the font and colours this ${PS.kind === 'cover' ? 'cover page' : 'contents page'} was opened with.</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h">Layout</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
     </div>`;
 }
