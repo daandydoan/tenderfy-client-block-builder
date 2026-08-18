@@ -712,26 +712,12 @@ let DB = null;
   window.dbToSimpleMode = () => {
     const d = DB.doc, cb = DB.onSave, back = DB.backRoute, kind = d.kind;
     if(kind === 'cover' || kind === 'toc'){
-      const id = (back||'').includes('cover') ? null : null;
-      dbClose(); go(back);
-      setTimeout(() => { const t = simpleTargetFor(kind, d); if(t) t(); }, 0);
+      dbClose(); psOpen(kind, d.srcId);
       return;
     }
     dbClose();
     smOpen({doc:d, backRoute:back, onSave:cb});
   };
-  /* The dialog edits the source record, so push the builder's brand back onto
-     it first - otherwise Simple would reopen showing the pre-Advanced colours. */
-  function simpleTargetFor(kind, d){
-    if(kind === 'cover'){
-      const c = COVERS.find(x => x.id === d.srcId) || COVERS[0];
-      Object.assign(c, {bg:d.brand.primary, tx:d.brand.secondary, font:d.brand.font});
-      return () => csOpenCover(c.id);
-    }
-    const t = TOCS.find(x => x.id === d.srcId) || TOCS[0];
-    Object.assign(t, {bg:d.brand.primary, sec:d.brand.secondary, font:d.brand.font});
-    return () => tcOpen(t.id);
-  }
   function dbHead(){
     document.getElementById('dbHead').innerHTML = edHeadHtml({
       doc: DB.doc, mode:'advanced', sub: DB.sub,

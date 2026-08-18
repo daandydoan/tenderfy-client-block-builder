@@ -571,7 +571,7 @@ document.getElementById('tcOv').addEventListener('click', e => { if(e.target.id 
 /* Both listings offer a single Edit action, as on live. */
 window.styleMenu = (ev, kind, id) => {
   openMenu(ev, [
-    {label:'Edit',     run:() => kind === 'cover' ? csOpenCover(id) : tcOpen(id)},
+    {label:'Edit',     run:() => psOpen(kind, id)},
     {label:'Advanced', run:() => go(kind === 'cover'
       ? '/file-manager/cover-pages/edit/?id=' + id
       : '/file-manager/table-of-contents/edit/?id=' + id)},
@@ -732,14 +732,14 @@ function fmCards(slug){
 
   // A card opens the style dialog straight away - live has no view page here.
   if(slug === 'cover-pages') return COVERS.map(c => `
-    <div class="lcard bare" onclick="csOpenCover('${c.id}')">
+    <div class="lcard bare" onclick="psOpen('cover','${c.id}')">
       <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
         <span class="ms" onclick="event.stopPropagation();styleMenu(event,'cover','${c.id}')" title="Cover options">more_vert</span></div>
       ${shrink(coverPageHtml(c), .55, 430)}
     </div>`).join('');
 
   if(slug === 'table-of-contents') return TOCS.map(t => `
-    <div class="lcard bare" onclick="tcOpen('${t.id}')">
+    <div class="lcard bare" onclick="psOpen('toc','${t.id}')">
       <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
         <span class="ms" onclick="event.stopPropagation();styleMenu(event,'toc','${t.id}')" title="Contents options">more_vert</span></div>
       ${shrink(tocPageHtml(t), .55, 430)}

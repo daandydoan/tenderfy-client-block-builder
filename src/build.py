@@ -34,6 +34,7 @@ PARTS = [
     'ray-assets.js',        # Ray artwork, embedded from the live assets
     'part9-mockups.js',     # Ray, tender menu, Time Sheet (mocked from live)
     'part10-viewpages.js',  # read-only view pages + Add To Tender (from live)
+    'part11-pagestyle.js',  # Simple mode for cover / contents pages
 ]
 CSS = [
     ('styles/fonts-all.css', 'embedded fonts (Outfit, Manrope, Material Symbols subset)'),
