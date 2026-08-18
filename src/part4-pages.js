@@ -12,7 +12,7 @@ function pgTenders(){
       </span>
       <span class="ms" data-toast="Filter tenders" style="color:#7C8886;font-size:22px">filter_list</span>
       <div class="lsearch"><span class="ms">search</span><input placeholder="Search by organization or contact name" value="${esc(tnQuery)}" oninput="tnSearch(this.value)"></div>
-      <div class="sp"><button class="lbtn pri" data-toast="Create new tender">Create New Tender</button></div>
+      <div class="sp"><button class="lbtn pri" onclick="ntOpen()">Create New Tender</button></div>
     </div>
     <div class="pbody">
       ${folderRail(['Default Tenders','Aviral','Evolve housing'], tnFolder, 'tnSetFolder')}
@@ -652,14 +652,19 @@ function pgLibrary(slug){
     'case-studies': `<button class="lbtn" data-toast="Upload an existing case study">Upload Case Study</button>
                      <button class="lbtn pri" onclick="go('/file-manager/case-studies/add-edit-case-study/')">Create New Case Study</button>`,
     'cover-pages':  `<button class="lbtn" data-toast="Upload a cover page">Upload Cover Page</button>
-                     <button class="lbtn pri" data-toast="Create a new cover page">Create New Cover Page</button>`,
+                     <button class="lbtn pri" onclick="newCoverPage()">Create New Cover Page</button>`,
   }[slug] || `<button class="lbtn pri" data-toast="Upload ${esc(m.sing)}"><span class="ms">upload</span> Upload ${esc(m.sing)}</button>`;
 
   // Live's Cover Pages and Table of Contents are bare: title, the Files rail
   // and the cards. Every other category gets the full listing chrome.
   const bare = slug === 'cover-pages' || slug === 'table-of-contents';
+  // Live offers no way to create these; the prototype adds one.
+  const bareAdd = slug === 'cover-pages'
+    ? `<div class="sp"><button class="lbtn pri" onclick="newCoverPage()"><span class="ms">add</span> Create New Cover Page</button></div>`
+    : `<div class="sp"><button class="lbtn pri" onclick="newContentsPage()"><span class="ms">add</span> Create New Contents</button></div>`;
   return `<div class="phead">
       <div class="h">${esc(m.name)}</div>
+      ${bare ? bareAdd : ''}
       ${bare ? '' : `<span class="lseg">
         <button class="${view==='list'?'on':''}" onclick="fmSetView('${slug}','list')"><span class="ms">format_list_bulleted</span> List view</button>
         <button class="${view==='grid'?'on':''}" onclick="fmSetView('${slug}','grid')"><span class="ms">grid_view</span> Grid view</button>
@@ -724,7 +729,7 @@ function fmCards(slug){
       <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
         <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.title)}</span>
         <span class="ms" onclick="event.stopPropagation();fmMenu(event,'case-study','${c.id}')" title="Case study options">more_vert</span></div>
-      ${shrink(renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
+      ${shrink(c.doc ? renderComposedDoc(c.doc.items, c.doc.brand, {header:c.doc.header, footer:c.doc.footer, bg:c.doc.bg}) : renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
       <div class="k">Categories</div><div class="v">${esc(c.cats)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;color:#8B9694;font-size:13px;font-style:italic">
         <span class="ms" style="font-size:16px;color:var(--live-cta)">bookmark</span> ${esc(c.sector)}</div>
@@ -831,6 +836,7 @@ window.fmMenu = (ev, kind, id) => {
     {label:isR?'Edit Resume':'Edit Case Study',
                              run:() => go(isR ? '/file-manager/resumes/add-resume?id='+id
                                              : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
+    {label:'Duplicate',      run:() => duplicateDoc(kind, id)},
     {label:'Add To Tender',  run:() => a2tOpen(name)},
     {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);

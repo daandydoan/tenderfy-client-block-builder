@@ -3948,6 +3948,26 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
+<!-- New tender - the create step live does not have on this screen -->
+<div class="ov" id="ntOv">
+  <div class="cfm">
+    <h3>New tender</h3>
+    <div class="sub">Start a bid. You can add documents to it straight after.</div>
+    <div class="fld"><label for="nt-name">Tender name</label>
+      <input class="fin" id="nt-name" placeholder="e.g. Northline Rail Upgrade"><span class="fld-err" id="nt-name-err">Give the tender a name</span></div>
+    <div class="fld"><label for="nt-org">Organisation</label><input class="fin" id="nt-org" placeholder="e.g. Dept of Transport &amp; Main Roads"></div>
+    <div class="fld"><label for="nt-pri">Priority</label>
+      <select class="fin" id="nt-pri"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div class="fld"><label for="nt-st">Status</label>
+      <select class="fin" id="nt-st"><option>Pending</option><option>In progress</option><option>Submitted</option></select></div>
+    <div class="fld" style="margin-bottom:0"><label for="nt-due">Due date</label><input class="fin" id="nt-due" placeholder="e.g. 22/05/2026"></div>
+    <div class="cfm-acts">
+      <button class="lbtn" onclick="ntClose()">Cancel</button>
+      <button class="lbtn pri" onclick="ntCreate()"><span class="ms">add</span> Create tender</button>
+    </div>
+  </div>
+</div>
+
 <!-- New block / Save block - structure and copy from tenderfy-admin's
      #saveModal and #pubModal, minus the super-admin fields. -->
 <div class="ov" id="bnOv">
@@ -4907,7 +4927,7 @@ function pgTenders(){
       </span>
       <span class="ms" data-toast="Filter tenders" style="color:#7C8886;font-size:22px">filter_list</span>
       <div class="lsearch"><span class="ms">search</span><input placeholder="Search by organization or contact name" value="${esc(tnQuery)}" oninput="tnSearch(this.value)"></div>
-      <div class="sp"><button class="lbtn pri" data-toast="Create new tender">Create New Tender</button></div>
+      <div class="sp"><button class="lbtn pri" onclick="ntOpen()">Create New Tender</button></div>
     </div>
     <div class="pbody">
       ${folderRail(['Default Tenders','Aviral','Evolve housing'], tnFolder, 'tnSetFolder')}
@@ -5547,14 +5567,19 @@ function pgLibrary(slug){
     'case-studies': `<button class="lbtn" data-toast="Upload an existing case study">Upload Case Study</button>
                      <button class="lbtn pri" onclick="go('/file-manager/case-studies/add-edit-case-study/')">Create New Case Study</button>`,
     'cover-pages':  `<button class="lbtn" data-toast="Upload a cover page">Upload Cover Page</button>
-                     <button class="lbtn pri" data-toast="Create a new cover page">Create New Cover Page</button>`,
+                     <button class="lbtn pri" onclick="newCoverPage()">Create New Cover Page</button>`,
   }[slug] || `<button class="lbtn pri" data-toast="Upload ${esc(m.sing)}"><span class="ms">upload</span> Upload ${esc(m.sing)}</button>`;
 
   // Live's Cover Pages and Table of Contents are bare: title, the Files rail
   // and the cards. Every other category gets the full listing chrome.
   const bare = slug === 'cover-pages' || slug === 'table-of-contents';
+  // Live offers no way to create these; the prototype adds one.
+  const bareAdd = slug === 'cover-pages'
+    ? `<div class="sp"><button class="lbtn pri" onclick="newCoverPage()"><span class="ms">add</span> Create New Cover Page</button></div>`
+    : `<div class="sp"><button class="lbtn pri" onclick="newContentsPage()"><span class="ms">add</span> Create New Contents</button></div>`;
   return `<div class="phead">
       <div class="h">${esc(m.name)}</div>
+      ${bare ? bareAdd : ''}
       ${bare ? '' : `<span class="lseg">
         <button class="${view==='list'?'on':''}" onclick="fmSetView('${slug}','list')"><span class="ms">format_list_bulleted</span> List view</button>
         <button class="${view==='grid'?'on':''}" onclick="fmSetView('${slug}','grid')"><span class="ms">grid_view</span> Grid view</button>
@@ -5619,7 +5644,7 @@ function fmCards(slug){
       <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
         <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.title)}</span>
         <span class="ms" onclick="event.stopPropagation();fmMenu(event,'case-study','${c.id}')" title="Case study options">more_vert</span></div>
-      ${shrink(renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
+      ${shrink(c.doc ? renderComposedDoc(c.doc.items, c.doc.brand, {header:c.doc.header, footer:c.doc.footer, bg:c.doc.bg}) : renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
       <div class="k">Categories</div><div class="v">${esc(c.cats)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;color:#8B9694;font-size:13px;font-style:italic">
         <span class="ms" style="font-size:16px;color:var(--live-cta)">bookmark</span> ${esc(c.sector)}</div>
@@ -5726,6 +5751,7 @@ window.fmMenu = (ev, kind, id) => {
     {label:isR?'Edit Resume':'Edit Case Study',
                              run:() => go(isR ? '/file-manager/resumes/add-resume?id='+id
                                              : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
+    {label:'Duplicate',      run:() => duplicateDoc(kind, id)},
     {label:'Add To Tender',  run:() => a2tOpen(name)},
     {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
@@ -6555,11 +6581,18 @@ const DOC_STORE = {};
 function docFor(kind, id){
   const key = kind + ':' + (id || 'new');
   if(!DOC_STORE[key]){
-    DOC_STORE[key] = kind === 'resume'     ? seedResumeDoc(RESUMES.find(r=>r.id===id))
-                   : kind === 'case-study' ? seedCaseDoc(CASE_STUDIES.find(c=>c.id===id))
-                   : kind === 'cover'      ? seedCoverDoc(COVERS.find(c=>c.id===id))
-                   : kind === 'toc'        ? seedTocDoc(TOCS.find(t=>t.id===id))
+    // A record saved earlier keeps the document it was built from.
+    const rec = kind === 'resume' ? RESUMES.find(r=>r.id===id)
+              : kind === 'case-study' ? CASE_STUDIES.find(c=>c.id===id)
+              : kind === 'cover' ? COVERS.find(c=>c.id===id)
+              : kind === 'toc' ? TOCS.find(t=>t.id===id) : null;
+    if(rec && rec.doc){ DOC_STORE[key] = rec.doc; return DOC_STORE[key]; }
+    DOC_STORE[key] = kind === 'resume'     ? seedResumeDoc(rec)
+                   : kind === 'case-study' ? seedCaseDoc(rec)
+                   : kind === 'cover'      ? seedCoverDoc(rec)
+                   : kind === 'toc'        ? seedTocDoc(rec)
                    : seedBlankDoc();
+    DOC_STORE[key].srcId = id || null;
     DOC_STORE[key].isNew = !id;
     if(id) DOC_STORE[key].status = (kind==='resume' ? RESUMES : CASE_STUDIES).find(x=>x.id===id)?.status || 'draft';
   }
@@ -6573,7 +6606,7 @@ function pgDocEditor(kind, backRoute, title){
   const isNew = !id;
   const doc = docFor(kind, id);
   setTimeout(() => {
-    const open = () => smOpen({doc, backRoute, onSave: () => go(backRoute)});
+    const open = () => smOpen({doc, backRoute, onSave: d => upsertDoc(kind, d)});
     if(isNew && kind === 'resume'){
       tplChoose('resume', tpl => { ensureForm(doc).template = tpl; open(); });
     } else if(isNew && kind === 'case-study'){
@@ -8197,6 +8230,7 @@ window.viewDelete = (kind, id) => {
     const list = kind === 'resume' ? RESUMES : CASE_STUDIES;
     const i = list.findIndex(x => x.id === id);
     if(i >= 0) list.splice(i, 1);
+    persistLibrary();
     vdClose();
     go(kind === 'resume' ? '/file-manager/resumes' : '/file-manager/case-studies');
     showToast('Deleted');
@@ -8375,6 +8409,133 @@ function psProps(){
       <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
     </div>`;
 }
+
+/* \u2550\u2550\u2550 Creating, saving and remembering library records \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   Documents built in the editors now become real records: a new resume or case
+   study lands in its listing, keeps the document it was built from, and
+   survives a reload alongside the client's custom blocks.                     */
+
+const NEW_ID = p => p + '-' + Date.now().toString(36);
+const TODAY  = () => new Date().toLocaleDateString('en-AU', {day:'2-digit', month:'short', year:'numeric'});
+
+/* Pull a display title out of whatever the document holds. */
+function docTitleOf(doc, fallback){
+  const n = (doc.name || '').trim();
+  if(n && !/^untitled/i.test(n)) return n;
+  for(const it of doc.items || []){
+    const slot = (it.content || {})[0] || {};
+    const t = (slot.title || '').replace(/<[^>]+>/g, '').trim();
+    if(t) return t;
+  }
+  return fallback;
+}
+/* Save the document back to the record it came from, creating the record on a
+   first save. Everything the listings read is derived from the document, so a
+   card always matches what is inside it. */
+function upsertDoc(kind, doc){
+  const list = kind === 'resume' ? RESUMES : CASE_STUDIES;
+  let rec = doc.srcId && list.find(x => x.id === doc.srcId);
+  const isNew = !rec;
+  if(isNew){
+    rec = kind === 'resume'
+      ? {id:NEW_ID('r'), name:'', role:'', av:ACCENTS[list.length % ACCENTS.length], skills:['New skill'],
+         layout:'left-panel', accent:'#38988A', status:'draft', by:'You', updated:TODAY(), pages:1}
+      : {id:NEW_ID('c'), title:'', client:'', sector:'General', cats:'N/A', layout:'hero',
+         accent:'#38988A', status:'draft', by:'You', updated:TODAY(), pages:1};
+    list.push(rec);
+    doc.srcId = rec.id;
+    DOC_STORE[kind + ':' + rec.id] = doc;
+  }
+  if(kind === 'resume'){
+    rec.name = docTitleOf(doc, 'Untitled Resume');
+    const f = doc.form; if(f && f.role) rec.role = f.role;
+    if(!rec.role) rec.role = 'Team member';
+  } else {
+    rec.title = docTitleOf(doc, 'Untitled Case Study');
+  }
+  rec.doc = doc;
+  rec.updated = TODAY();
+  doc.isNew = false;
+  persistLibrary();
+  return rec;
+}
+window.upsertDoc = upsertDoc;
+
+/* Duplicate a resume or case study, document and all. */
+window.duplicateDoc = (kind, id) => {
+  const list = kind === 'resume' ? RESUMES : CASE_STUDIES;
+  const src = list.find(x => x.id === id); if(!src) return;
+  const rec = JSON.parse(JSON.stringify(src));
+  rec.id = NEW_ID(kind === 'resume' ? 'r' : 'c');
+  if(kind === 'resume') rec.name = src.name + ' copy'; else rec.title = src.title + ' copy';
+  rec.updated = TODAY(); rec.status = 'draft';
+  if(rec.doc){ rec.doc.srcId = rec.id; DOC_STORE[kind + ':' + rec.id] = rec.doc; }
+  list.push(rec); persistLibrary(); renderRoute();
+  showToast('Duplicated - "' + (kind === 'resume' ? rec.name : rec.title) + '" added');
+};
+
+/* \u2500\u2500 Creating the other record types \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Live has no create path for cover pages, contents pages or (from this
+   screen) tenders. These are additions, so the client can run the whole
+   create -> view -> edit loop in one sitting. */
+window.newCoverPage = () => {
+  const rec = {id:NEW_ID('cv'), name:'Untitled Cover Page', font:'Manrope', bg:'#172E39', tx:'#B4D33B',
+               logo:'right', logoFile:'Tenderfy_Civil_logo.svg', status:'draft'};
+  COVERS.push(rec); persistLibrary(); renderRoute();
+  psOpen('cover', rec.id);
+};
+window.newContentsPage = () => {
+  const rec = {id:NEW_ID('t'), name:'Untitled Contents', font:'Manrope', bg:'#2C3232', sec:'#38988A',
+               logo:'Tenderfy_Civil_logo.svg', status:'draft', by:'You', updated:TODAY()};
+  TOCS.push(rec); persistLibrary(); renderRoute();
+  psOpen('toc', rec.id);
+};
+
+window.ntOpen = () => {
+  ['nt-name','nt-org','nt-due'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('nt-pri').value = 'High';
+  document.getElementById('nt-st').value = 'Pending';
+  document.getElementById('nt-name-err').classList.remove('show');
+  document.getElementById('ntOv').classList.add('open');
+  setTimeout(() => document.getElementById('nt-name').focus(), 30);
+};
+window.ntClose = () => document.getElementById('ntOv').classList.remove('open');
+window.ntCreate = () => {
+  const name = document.getElementById('nt-name').value.trim();
+  if(!name){ document.getElementById('nt-name-err').classList.add('show'); return; }
+  TENDERS.unshift({name, org:document.getElementById('nt-org').value.trim(), contact:'', who:'You',
+                   pri:document.getElementById('nt-pri').value, st:document.getElementById('nt-st').value,
+                   due:document.getElementById('nt-due').value});
+  persistLibrary(); ntClose();
+  go('/tenders/tender-details/?tender=' + encodeURIComponent(name));
+  showToast('Created tender - ' + name);
+};
+
+/* \u2500\u2500 The library survives a reload \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Records are replaced in place, because the arrays are shared by reference
+   across every page and palette. */
+const LIB_KEY = 'tf_library';
+function persistLibrary(){
+  try{
+    localStorage.setItem(LIB_KEY, JSON.stringify({
+      resumes:RESUMES, caseStudies:CASE_STUDIES, covers:COVERS, tocs:TOCS, tenders:TENDERS,
+    }));
+  }catch(e){}
+}
+function restoreLibrary(){
+  let s = null;
+  try{ s = JSON.parse(localStorage.getItem(LIB_KEY)); }catch(e){ return; }
+  if(!s) return;
+  const swap = (arr, saved) => { if(Array.isArray(saved) && saved.length){ arr.length = 0; saved.forEach(x => arr.push(x)); } };
+  swap(RESUMES, s.resumes); swap(CASE_STUDIES, s.caseStudies);
+  swap(COVERS, s.covers);   swap(TOCS, s.tocs); swap(TENDERS, s.tenders);
+  // Documents saved with a record go straight back into the store.
+  [['resume', RESUMES], ['case-study', CASE_STUDIES]].forEach(([kind, list]) =>
+    list.forEach(r => { if(r.doc) DOC_STORE[kind + ':' + r.id] = r.doc; }));
+}
+window.persistLibrary = persistLibrary;
+window.resetLibrary = () => { try{ localStorage.removeItem(LIB_KEY); localStorage.removeItem('tf_custom_blocks'); }catch(e){} location.reload(); };
+restoreLibrary();
 
 
 if(!location.hash) location.hash = '/tenders';

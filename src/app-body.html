@@ -1386,6 +1386,26 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
+<!-- New tender - the create step live does not have on this screen -->
+<div class="ov" id="ntOv">
+  <div class="cfm">
+    <h3>New tender</h3>
+    <div class="sub">Start a bid. You can add documents to it straight after.</div>
+    <div class="fld"><label for="nt-name">Tender name</label>
+      <input class="fin" id="nt-name" placeholder="e.g. Northline Rail Upgrade"><span class="fld-err" id="nt-name-err">Give the tender a name</span></div>
+    <div class="fld"><label for="nt-org">Organisation</label><input class="fin" id="nt-org" placeholder="e.g. Dept of Transport &amp; Main Roads"></div>
+    <div class="fld"><label for="nt-pri">Priority</label>
+      <select class="fin" id="nt-pri"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div class="fld"><label for="nt-st">Status</label>
+      <select class="fin" id="nt-st"><option>Pending</option><option>In progress</option><option>Submitted</option></select></div>
+    <div class="fld" style="margin-bottom:0"><label for="nt-due">Due date</label><input class="fin" id="nt-due" placeholder="e.g. 22/05/2026"></div>
+    <div class="cfm-acts">
+      <button class="lbtn" onclick="ntClose()">Cancel</button>
+      <button class="lbtn pri" onclick="ntCreate()"><span class="ms">add</span> Create tender</button>
+    </div>
+  </div>
+</div>
+
 <!-- New block / Save block - structure and copy from tenderfy-admin's
      #saveModal and #pubModal, minus the super-admin fields. -->
 <div class="ov" id="bnOv">

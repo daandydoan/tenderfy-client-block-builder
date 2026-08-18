@@ -92,11 +92,18 @@ const DOC_STORE = {};
 function docFor(kind, id){
   const key = kind + ':' + (id || 'new');
   if(!DOC_STORE[key]){
-    DOC_STORE[key] = kind === 'resume'     ? seedResumeDoc(RESUMES.find(r=>r.id===id))
-                   : kind === 'case-study' ? seedCaseDoc(CASE_STUDIES.find(c=>c.id===id))
-                   : kind === 'cover'      ? seedCoverDoc(COVERS.find(c=>c.id===id))
-                   : kind === 'toc'        ? seedTocDoc(TOCS.find(t=>t.id===id))
+    // A record saved earlier keeps the document it was built from.
+    const rec = kind === 'resume' ? RESUMES.find(r=>r.id===id)
+              : kind === 'case-study' ? CASE_STUDIES.find(c=>c.id===id)
+              : kind === 'cover' ? COVERS.find(c=>c.id===id)
+              : kind === 'toc' ? TOCS.find(t=>t.id===id) : null;
+    if(rec && rec.doc){ DOC_STORE[key] = rec.doc; return DOC_STORE[key]; }
+    DOC_STORE[key] = kind === 'resume'     ? seedResumeDoc(rec)
+                   : kind === 'case-study' ? seedCaseDoc(rec)
+                   : kind === 'cover'      ? seedCoverDoc(rec)
+                   : kind === 'toc'        ? seedTocDoc(rec)
                    : seedBlankDoc();
+    DOC_STORE[key].srcId = id || null;
     DOC_STORE[key].isNew = !id;
     if(id) DOC_STORE[key].status = (kind==='resume' ? RESUMES : CASE_STUDIES).find(x=>x.id===id)?.status || 'draft';
   }
@@ -110,7 +117,7 @@ function pgDocEditor(kind, backRoute, title){
   const isNew = !id;
   const doc = docFor(kind, id);
   setTimeout(() => {
-    const open = () => smOpen({doc, backRoute, onSave: () => go(backRoute)});
+    const open = () => smOpen({doc, backRoute, onSave: d => upsertDoc(kind, d)});
     if(isNew && kind === 'resume'){
       tplChoose('resume', tpl => { ensureForm(doc).template = tpl; open(); });
     } else if(isNew && kind === 'case-study'){

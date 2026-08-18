@@ -63,6 +63,7 @@ window.viewDelete = (kind, id) => {
     const list = kind === 'resume' ? RESUMES : CASE_STUDIES;
     const i = list.findIndex(x => x.id === id);
     if(i >= 0) list.splice(i, 1);
+    persistLibrary();
     vdClose();
     go(kind === 'resume' ? '/file-manager/resumes' : '/file-manager/case-studies');
     showToast('Deleted');
