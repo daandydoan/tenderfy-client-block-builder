@@ -2572,6 +2572,54 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .phead .h:before{content:'';width:5px;height:23px;background:var(--live-cta);border-radius:2px}
 .phead .sp{margin-left:auto;display:flex;align-items:center;gap:13px}
 .pbody{padding:24px 40px 40px}
+/* View pages - measured on stgbusinessadmin.tenderfy.org (resume-preview and
+   the case-study view). Buttons are 53px tall, 18px/400, radius 8, pad 0 25. */
+.vhead{background:#fff;padding:15px 40px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;flex-shrink:0}
+.vtitle{display:flex;align-items:center;gap:11px;font-size:28px;font-weight:400;color:rgba(0,0,0,.87)}
+.vtitle:before{content:'';width:5px;height:26px;background:var(--live-cta);border-radius:2px}
+.vacts{margin-left:auto;display:flex;align-items:center;gap:14px}
+.vbtn{font-family:inherit;font-size:18px;font-weight:400;height:53px;padding:0 25px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:#fff;border:1px solid transparent;white-space:nowrap}
+.vbtn .ms{font-size:22px}
+.vbtn.amber{background:#FFBC4A;border-color:#FFBC4A}
+.vbtn.amber:hover{background:#F0A92F}
+.vbtn.red{background:#F95246;border-color:#A1ADAB}
+.vbtn.red:hover{background:#E23B2F}
+.vbtn.teal{background:var(--live-cta);border-color:#A1ADAB}
+.vbtn.teal:hover{background:var(--live-cta-dark)}
+.vchev{width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--live-cta);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.vchev:hover{background:rgba(56,152,138,.12)}
+.vchev .ms{font-size:24px}
+.vbody{padding:20px 40px 40px}
+.vsplit{display:flex;align-items:flex-start;gap:20px}
+.vstage{display:flex;justify-content:center}
+.vpage{position:relative;width:620px;max-width:100%;min-height:877px;background:#fff;overflow:hidden;text-align:left}
+.vcard{flex:1;min-width:0;border:1px solid #C3C3C3;border-radius:12px;background:#fff;padding:20px}
+.vpanel{width:30%;min-width:300px;flex:none;border:1px solid #EAEDEC;border-radius:14px;background:#fff;
+  padding:20px;box-shadow:0 3px 6px rgba(0,0,0,.16)}
+.vpanel h3{font-size:20px;font-weight:400;color:rgba(0,0,0,.87);margin:0 0 14px;padding-bottom:14px;border-bottom:1px solid #EAEDEC}
+.vfld .k{font-size:14px;font-weight:500;color:var(--live-cta);margin-bottom:5px}
+.vfld .v{font-size:15px;color:rgba(0,0,0,.87)}
+/* Add To Tender modal */
+.a2t{width:1283px;max-width:94vw;background:#fff;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;max-height:88vh}
+.a2t-h{height:70px;flex:none;background:#596262;color:#fff;font-size:18px;font-weight:500;
+  display:flex;align-items:center;padding:0 26px}
+.a2t-h .x{margin-left:auto;cursor:pointer;font-size:24px}
+.a2t-b{padding:24px 26px 26px;overflow:auto}
+.a2t-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;margin-top:18px}
+.a2t-card{border:1px solid #E3E8E7;border-radius:10px;background:#fff;padding:18px 20px 20px}
+.a2t-card .k{font-size:12px;color:#A1ADAB;margin-top:12px}
+.a2t-card .k:first-child{margin-top:0}
+.a2t-card .v{font-size:15px;color:rgba(0,0,0,.87);min-height:22px;display:flex;align-items:center;gap:3px}
+.a2t-card .v .ms{font-size:18px;color:#6B7674}
+.a2t-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px}
+.a2t-card .a2t-pri{color:#F95246}
+.a2t-card .a2t-st{color:#FFBC4A}
+.a2t-add{width:100%;height:48px;margin-top:18px;border:none;border-radius:8px;background:var(--live-cta);
+  color:#fff;font-family:inherit;font-size:14px;cursor:pointer}
+.a2t-add:hover{background:var(--live-cta-dark)}
+
 
 /* Buttons in the live style */
 .lbtn{font-family:inherit;font-size:15px;font-weight:600;padding:11px 24px;border-radius:8px;
@@ -3420,6 +3468,35 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
+<!-- Add To Tender - recreated from live's modal -->
+<div class="ov" id="a2tOv">
+  <div class="a2t">
+    <div class="a2t-h">Add To Tender<span class="ms x" onclick="a2tClose()">close</span></div>
+    <div class="a2t-b">
+      <div class="lsearch" style="max-width:305px"><span class="ms">search</span>
+        <input placeholder="Search" oninput="a2tSearch(this.value)"></div>
+      <div class="frail" style="margin-top:20px"><span class="ms car">expand_more</span> Folders</div>
+      <div class="fchips" id="a2tChips"></div>
+      <div class="a2t-grid" id="a2tGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirmation for the view pages -->
+<div class="ov" id="vdOv">
+  <div class="dlg" style="width:420px">
+    <div class="dlg-h"><span>Delete</span><span class="ms x" onclick="vdClose()">close</span></div>
+    <div style="padding:22px 24px">
+      <div style="font-size:15px;font-weight:600;color:#2E3C3B" id="vdName"></div>
+      <div class="fhint" style="margin-top:6px" id="vdSub"></div>
+    </div>
+    <div class="dlg-f">
+      <button class="lbtn" onclick="vdClose()">Cancel</button>
+      <button class="lbtn danger" id="vdOk">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add / rename a Build Tender section -->
 <div class="ov" id="secOv">
   <div class="dlg" style="width:460px">
@@ -4211,8 +4288,10 @@ const ROUTES = [
   {path:'/file-manager/cover-pages',                       crumb:['Tenders','Cover Pages'],    title:'Cover Pages',  render:()=>pgLibrary('cover-pages'), key:1},
   {path:'/file-manager/table-of-contents',                 crumb:['Tenders','Table of Contents'], title:'Table of Contents', render:()=>pgLibrary('table-of-contents')},
   {path:'/file-manager/resumes',                           crumb:['File manager','Resumes'],   title:'Resumes',      render:()=>pgLibrary('resumes'), key:1},
+  {path:'/file-manager/resumes/resume-preview/',            crumb:['File manager','Resumes','Resume Details'], title:'Resume Preview', render:pgResumePreview, key:1},
   {path:'/file-manager/resumes/add-resume',                crumb:['File manager','Resumes','Add New Resume'], title:'Add Resume', render:pgAddResume, key:1},
   {path:'/file-manager/case-studies',                      crumb:['File manager','Case Studies'], title:'Case Studies', render:()=>pgLibrary('case-studies'), key:1},
+  {path:'/file-manager/case-studies/case-study/',          crumb:['File manager','Case Studies','Case Study'], title:'Case Study', render:pgCaseStudyView, key:1},
   {path:'/file-manager/case-studies/add-edit-case-study/', crumb:['File manager','Case Studies','Add/Edit Case Study'], title:'Add/Edit Case Study', render:pgCaseStudyEdit, key:1},
   {path:'/file-manager/policies',                          crumb:['File manager','Policies'],  title:'Policies',     render:()=>pgLibrary('policies')},
   {path:'/file-manager/insurances',                        crumb:['File manager','Insurances'],title:'Insurances',   render:()=>pgLibrary('insurances')},
@@ -4836,8 +4915,8 @@ function shrink(html, scale, w){
 }
 function fmCards(slug){
   if(slug === 'resumes') return RESUMES.map(r => `
-    <div class="lcard" onclick="go('/file-manager/resumes/add-resume?id=${r.id}')">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()"><span class="ms" data-toast="Resume options" onclick="event.stopPropagation()">more_vert</span></div>
+    <div class="lcard" onclick="go('/file-manager/resumes/resume-preview/?id=${r.id}')">
+      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()"><span class="ms" onclick="event.stopPropagation();fmMenu(event,'resume','${r.id}')" title="Resume options">more_vert</span></div>
       <div class="ava-lg" style="background:${r.av}">${esc(r.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</div>
       <div class="cname">${esc(r.name)}</div>
       <div class="k">Job Position</div><div class="v">${esc(r.role)}</div>
@@ -4847,10 +4926,10 @@ function fmCards(slug){
     </div>`).join('');
 
   if(slug === 'case-studies') return CASE_STUDIES.map(c => `
-    <div class="lcard" onclick="go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')">
+    <div class="lcard" onclick="go('/file-manager/case-studies/case-study/?id=${c.id}')">
       <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
         <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.title)}</span>
-        <span class="ms" data-toast="Case study options" onclick="event.stopPropagation()">more_vert</span></div>
+        <span class="ms" onclick="event.stopPropagation();fmMenu(event,'case-study','${c.id}')" title="Case study options">more_vert</span></div>
       ${shrink(renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
       <div class="k">Categories</div><div class="v">${esc(c.cats)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;color:#8B9694;font-size:13px;font-style:italic">
@@ -4948,6 +5027,21 @@ window.secMenu = (ev, k) => {
       btRerender();
       showToast('Removed section' + (n ? ' and ' + n + ' document' + (n===1?'':'s') : ''));
     }},
+  ]);
+};
+
+/* Listing kebab - the same three actions the view page carries. */
+window.fmMenu = (ev, kind, id) => {
+  const isR = kind === 'resume';
+  const name = isR ? (RESUMES.find(x=>x.id===id)||{}).name : (CASE_STUDIES.find(x=>x.id===id)||{}).title;
+  openMenu(ev, [
+    {label:'View',           run:() => go(isR ? '/file-manager/resumes/resume-preview/?id='+id
+                                             : '/file-manager/case-studies/case-study/?id='+id)},
+    {label:isR?'Edit Resume':'Edit Case Study',
+                             run:() => go(isR ? '/file-manager/resumes/add-resume?id='+id
+                                             : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
+    {label:'Add To Tender',  run:() => a2tOpen(name)},
+    {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
 };
 
@@ -5708,8 +5802,18 @@ function pgDocEditor(kind, backRoute, title){
       <b>Opening the editor&hellip;</b>Close it to come back here.</div></div>`;
 }
 // Function declarations, not consts \u2014 the ROUTES table is built before this file runs.
-function pgAddResume(){ return pgDocEditor('resume', '/file-manager/resumes', 'Create Resume'); }
-function pgCaseStudyEdit(){ return pgDocEditor('case-study', '/file-manager/case-studies', 'Create Case Studies'); }
+// Editing an existing document returns to its view page, which is where you
+// came from; creating a new one returns to the listing.
+function pgAddResume(){
+  const id = q('id');
+  return pgDocEditor('resume', id ? '/file-manager/resumes/resume-preview/?id=' + id : '/file-manager/resumes',
+    id ? 'Edit Resume' : 'Create Resume');
+}
+function pgCaseStudyEdit(){
+  const id = q('id');
+  return pgDocEditor('case-study', id ? '/file-manager/case-studies/case-study/?id=' + id : '/file-manager/case-studies',
+    id ? 'Edit Case Study' : 'Create Case Studies');
+}
 
 /* \u2550\u2550\u2550 Block Library \u2014 lives under File manager \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    Documents are created from Resumes / Case Studies / Build Tender, so there is
@@ -6820,6 +6924,115 @@ window.tsClose = () => document.getElementById('tsOv').classList.remove('open');
   set('rayExpandImg', RAY_EXPAND_IMG);
   set('rayDownImg', RAY_DOWN_IMG);
 })();
+
+/* \u2550\u2550\u2550 View pages \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   Live puts a read-only view between the listing and the editor:
+     Resumes      /file-manager/resumes/resume-preview/<id>
+     Case Studies /file-manager/case-studies/add-edit-case-study/edit/<id>/1
+   Both were read off stgbusinessadmin.tenderfy.org. Shared header: an amber
+   Back on the left, the accent bar + title, then Delete / Edit X / Add To
+   Tender on the right. The case-study view also carries a round chevron that
+   slides out a "Case Study Details" panel; the resume view has no panel.     */
+
+const VIEW_H = 53;                              // live's action-button height
+let viewPanel = false;                          // case-study details panel
+
+function vheadHtml(cfg){
+  return `<div class="vhead">
+    <button class="vbtn amber" onclick="go('${cfg.back}')"><span class="ms">keyboard_arrow_left</span> Back</button>
+    <div class="vtitle">${esc(cfg.title)}</div>
+    <div class="vacts">
+      <button class="vbtn red" onclick="${cfg.del}">Delete</button>
+      <button class="vbtn amber" onclick="${cfg.edit}">${esc(cfg.editLabel)}</button>
+      <button class="vbtn teal" onclick="a2tOpen('${esc(cfg.title).replace(/'/g,'')}')">Add To Tender</button>
+      ${cfg.panel ? `<button class="vchev" onclick="viewPanel=!viewPanel;renderRoute()" title="${viewPanel?'Hide':'Show'} details"><span class="ms">${viewPanel?'chevron_right':'chevron_left'}</span></button>` : ''}
+    </div>
+  </div>`;
+}
+
+/* \u2500\u2500 Resume Preview \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+function pgResumePreview(){
+  const id = q('id');
+  const r = RESUMES.find(x => x.id === id) || RESUMES[0];
+  const d = docFor('resume', r.id);
+  return vheadHtml({
+    title:'Resume Preview', back:'/file-manager/resumes',
+    editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`,
+    del:`viewDelete('resume','${r.id}')`,
+  }) + `<div class="vbody">
+    <div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div>
+  </div>`;
+}
+
+/* \u2500\u2500 Case Study view \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+function pgCaseStudyView(){
+  const id = q('id');
+  const c = CASE_STUDIES.find(x => x.id === id) || CASE_STUDIES[0];
+  const d = docFor('case-study', c.id);
+  const fld = (k,v) => `<div class="vfld"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`;
+  return vheadHtml({
+    title:c.title, back:'/file-manager/case-studies', panel:true,
+    editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`,
+    del:`viewDelete('case-study','${c.id}')`,
+  }) + `<div class="vbody vsplit">
+    <div class="vcard"><div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div></div>
+    ${viewPanel ? `<aside class="vpanel"><h3>Case Study Details</h3>${fld('Name', c.title)}</aside>` : ''}
+  </div>`;
+}
+
+window.viewDelete = (kind, id) => {
+  const label = kind === 'resume' ? 'resume' : 'case study';
+  document.getElementById('vdName').textContent =
+    kind === 'resume' ? (RESUMES.find(x=>x.id===id)||{}).name : (CASE_STUDIES.find(x=>x.id===id)||{}).title;
+  document.getElementById('vdSub').textContent = 'This ' + label + ' will be removed from the File Manager.';
+  document.getElementById('vdOk').onclick = () => {
+    const list = kind === 'resume' ? RESUMES : CASE_STUDIES;
+    const i = list.findIndex(x => x.id === id);
+    if(i >= 0) list.splice(i, 1);
+    vdClose();
+    go(kind === 'resume' ? '/file-manager/resumes' : '/file-manager/case-studies');
+    showToast('Deleted');
+  };
+  document.getElementById('vdOv').classList.add('open');
+};
+window.vdClose = () => document.getElementById('vdOv').classList.remove('open');
+
+/* \u2500\u2500 Add To Tender \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Live opens a modal with a slate header, a search box, the tender folder rail
+   and a card per tender showing Name / Organisation / Priority / Status / Due
+   Date over a full-width "Add to Tender" button.                             */
+const A2T_FOLDERS = ['Default Tenders','Aviral'];
+let a2tFolder = A2T_FOLDERS[0], a2tQuery = '', a2tDoc = '';
+
+window.a2tOpen = name => {
+  a2tDoc = name; a2tQuery = '';
+  a2tRender();
+  document.getElementById('a2tOv').classList.add('open');
+};
+window.a2tClose = () => document.getElementById('a2tOv').classList.remove('open');
+window.a2tSetFolder = f => { a2tFolder = f; a2tRender(); };
+window.a2tSearch = v => { a2tQuery = v; document.getElementById('a2tGrid').innerHTML = a2tCards(); };
+function a2tCards(){
+  const q = a2tQuery.toLowerCase();
+  const pool = TENDERS.filter(t => !q || t.name.toLowerCase().includes(q));
+  if(!pool.length) return '<div class="fhint" style="padding:20px 2px">No tenders match that search.</div>';
+  return pool.map(t => `<div class="a2t-card">
+    <div class="k">Name</div><div class="v">${esc(t.name)}</div>
+    <div class="k">Organisation</div><div class="v">${esc(t.org || '')}</div>
+    <div class="a2t-meta">
+      <div><div class="k">Priority</div><div class="v a2t-pri">${esc(t.pri || 'High')} <span class="ms">expand_more</span></div></div>
+      <div><div class="k">Status</div><div class="v a2t-st">${esc(t.st || 'Pending')} <span class="ms">expand_more</span></div></div>
+      <div><div class="k">Due Date</div><div class="v">${esc(t.due || '')}</div></div>
+    </div>
+    <button class="a2t-add" onclick="a2tAdd('${esc(t.name).replace(/'/g,'')}')">Add to Tender</button>
+  </div>`).join('');
+}
+function a2tRender(){
+  document.getElementById('a2tChips').innerHTML = A2T_FOLDERS.map(f =>
+    `<div class="fchip ${f===a2tFolder?'on':''}" onclick="a2tSetFolder('${f}')">${esc(f)}</div>`).join('');
+  document.getElementById('a2tGrid').innerHTML = a2tCards();
+}
+window.a2tAdd = tender => { a2tClose(); showToast('Added "' + a2tDoc + '" to ' + tender); };
 
 
 if(!location.hash) location.hash = '/tenders';

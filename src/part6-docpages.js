@@ -84,8 +84,18 @@ function pgDocEditor(kind, backRoute, title){
       <b>Opening the editor&hellip;</b>Close it to come back here.</div></div>`;
 }
 // Function declarations, not consts — the ROUTES table is built before this file runs.
-function pgAddResume(){ return pgDocEditor('resume', '/file-manager/resumes', 'Create Resume'); }
-function pgCaseStudyEdit(){ return pgDocEditor('case-study', '/file-manager/case-studies', 'Create Case Studies'); }
+// Editing an existing document returns to its view page, which is where you
+// came from; creating a new one returns to the listing.
+function pgAddResume(){
+  const id = q('id');
+  return pgDocEditor('resume', id ? '/file-manager/resumes/resume-preview/?id=' + id : '/file-manager/resumes',
+    id ? 'Edit Resume' : 'Create Resume');
+}
+function pgCaseStudyEdit(){
+  const id = q('id');
+  return pgDocEditor('case-study', id ? '/file-manager/case-studies/case-study/?id=' + id : '/file-manager/case-studies',
+    id ? 'Edit Case Study' : 'Create Case Studies');
+}
 
 /* ═══ Block Library — lives under File manager ═════════════════════════════
    Documents are created from Resumes / Case Studies / Build Tender, so there is

@@ -572,8 +572,8 @@ function shrink(html, scale, w){
 }
 function fmCards(slug){
   if(slug === 'resumes') return RESUMES.map(r => `
-    <div class="lcard" onclick="go('/file-manager/resumes/add-resume?id=${r.id}')">
-      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()"><span class="ms" data-toast="Resume options" onclick="event.stopPropagation()">more_vert</span></div>
+    <div class="lcard" onclick="go('/file-manager/resumes/resume-preview/?id=${r.id}')">
+      <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()"><span class="ms" onclick="event.stopPropagation();fmMenu(event,'resume','${r.id}')" title="Resume options">more_vert</span></div>
       <div class="ava-lg" style="background:${r.av}">${esc(r.name.split(' ').map(w=>w[0]).join('').slice(0,2))}</div>
       <div class="cname">${esc(r.name)}</div>
       <div class="k">Job Position</div><div class="v">${esc(r.role)}</div>
@@ -583,10 +583,10 @@ function fmCards(slug){
     </div>`).join('');
 
   if(slug === 'case-studies') return CASE_STUDIES.map(c => `
-    <div class="lcard" onclick="go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')">
+    <div class="lcard" onclick="go('/file-manager/case-studies/case-study/?id=${c.id}')">
       <div class="ctop"><input type="checkbox" onclick="event.stopPropagation()">
         <span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.title)}</span>
-        <span class="ms" data-toast="Case study options" onclick="event.stopPropagation()">more_vert</span></div>
+        <span class="ms" onclick="event.stopPropagation();fmMenu(event,'case-study','${c.id}')" title="Case study options">more_vert</span></div>
       ${shrink(renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}), .38)}
       <div class="k">Categories</div><div class="v">${esc(c.cats)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;color:#8B9694;font-size:13px;font-style:italic">
@@ -684,5 +684,20 @@ window.secMenu = (ev, k) => {
       btRerender();
       showToast('Removed section' + (n ? ' and ' + n + ' document' + (n===1?'':'s') : ''));
     }},
+  ]);
+};
+
+/* Listing kebab - the same three actions the view page carries. */
+window.fmMenu = (ev, kind, id) => {
+  const isR = kind === 'resume';
+  const name = isR ? (RESUMES.find(x=>x.id===id)||{}).name : (CASE_STUDIES.find(x=>x.id===id)||{}).title;
+  openMenu(ev, [
+    {label:'View',           run:() => go(isR ? '/file-manager/resumes/resume-preview/?id='+id
+                                             : '/file-manager/case-studies/case-study/?id='+id)},
+    {label:isR?'Edit Resume':'Edit Case Study',
+                             run:() => go(isR ? '/file-manager/resumes/add-resume?id='+id
+                                             : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
+    {label:'Add To Tender',  run:() => a2tOpen(name)},
+    {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
 };

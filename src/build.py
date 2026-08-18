@@ -33,6 +33,7 @@ PARTS = [
     'part8-blockeditor.js', # Block Builder
     'ray-assets.js',        # Ray artwork, embedded from the live assets
     'part9-mockups.js',     # Ray, tender menu, Time Sheet (mocked from live)
+    'part10-viewpages.js',  # read-only view pages + Add To Tender (from live)
 ]
 CSS = [
     ('styles/fonts-all.css', 'embedded fonts (Outfit, Manrope, Material Symbols subset)'),
