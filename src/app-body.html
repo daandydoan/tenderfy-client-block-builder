@@ -93,6 +93,8 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .vbtn.red:hover{background:#E23B2F}
 .vbtn.teal{background:var(--live-cta);border-color:#A1ADAB}
 .vbtn.teal:hover{background:var(--live-cta-dark)}
+.vbtn.plain{background:#fff;color:#000;border-color:#A1ADAB}
+.vbtn.plain:hover{border-color:var(--live-cta);color:var(--live-cta)}
 .vchev{width:36px;height:36px;border-radius:50%;border:none;background:transparent;color:var(--live-cta);
   display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
 .vchev:hover{background:rgba(56,152,138,.12)}
@@ -128,16 +130,25 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 
 
 /* Buttons in the live style */
+/* Button hierarchy, measured on staging. Every tier shares the #A1ADAB hairline
+   and an 8px radius; only the fill and the text colour carry the meaning.
+     (default)  secondary  white / black        Upload Resume, Cancel, Clear Filter
+     .pri       primary    teal  / white        Create New Tender, Add To Tender, Save
+     .ghost     tertiary   none  / teal         My Company's skills
+     .gold      accent     amber / white        Back, Edit X, Apply
+     .danger    danger     red   / white        Delete, Discard                       */
 .lbtn{font-family:inherit;font-size:15px;font-weight:600;padding:11px 24px;border-radius:8px;
-  border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
-  justify-content:center;background:#fff;color:#3A4442;border-color:#D5DCDA;white-space:nowrap;text-decoration:none}
+  border:1px solid #A1ADAB;cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+  justify-content:center;background:#fff;color:#000;white-space:nowrap;text-decoration:none}
 .lbtn:hover{border-color:var(--live-cta);color:var(--live-cta)}
-.lbtn.pri{background:var(--live-cta);color:#fff;border-color:var(--live-cta)}
+.lbtn.pri{background:var(--live-cta);color:#fff;border-color:#A1ADAB}
 .lbtn.pri:hover{background:var(--live-cta-dark);color:#fff}
-.lbtn.danger{color:#F95246;border-color:#FBC7C2;background:#FFF6F5}
-.lbtn.danger:hover{border-color:#F95246;color:#E23B2F}
-.lbtn.gold{color:#B4530A;border-color:#F0D5A8;background:#FFFCF5}
-.lbtn.gold:hover{border-color:var(--live-gold);color:#8a4008}
+.lbtn.ghost{background:transparent;color:var(--live-cta);border-color:#A1ADAB}
+.lbtn.ghost:hover{background:rgba(56,152,138,.08);color:var(--live-cta);border-color:var(--live-cta)}
+.lbtn.gold{background:#FFBC4A;color:#fff;border-color:#FFBC4A}
+.lbtn.gold:hover{background:#F0A92F;color:#fff;border-color:#F0A92F}
+.lbtn.danger{background:#F95246;color:#fff;border-color:#A1ADAB}
+.lbtn.danger:hover{background:#E23B2F;color:#fff;border-color:#A1ADAB}
 .lbtn.sm{font-size:13.5px;padding:8px 15px;border-radius:7px}
 .lbtn .ms{font-size:18px}
 .lbtn.icon{padding:11px;width:44px}
@@ -271,8 +282,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
   display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
 .note .ms{font-size:18px;flex:none}
 
-.dlg-f .revert{margin-right:auto;background:#F95246;border-color:#F95246;color:#fff}
-.dlg-f .revert:hover{background:#E23B2F;border-color:#E23B2F;color:#fff}
+.dlg-f .revert{margin-right:auto}
 .logorow{display:flex;align-items:center;gap:10px;border:1px solid #D5DCDA;border-radius:5px;padding:11px 13px}
 .logorow .fn{flex:1;min-width:0;font-size:13.5px;color:#3A4442;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .logorow .ms{font-size:19px;color:#6B7674;cursor:pointer}
@@ -455,7 +465,7 @@ textarea.fin{resize:vertical;line-height:1.5}
   display:flex;align-items:center;justify-content:center;z-index:120;padding:0}
 .ray-fab:hover{filter:brightness(1.04)}
 .ray-fab img{width:60px;height:60px;display:block}
-.sm.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
+#sm.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
 .ray-panel{position:fixed;right:24px;bottom:24px;width:423px;max-width:92vw;height:576px;max-height:86vh;
   background:#fff;z-index:125;border-radius:12px;box-shadow:0 18px 50px rgba(20,45,38,.28);
   display:none;flex-direction:column;overflow:hidden}
@@ -591,8 +601,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 @media(max-width:1280px){ .ed3{grid-template-columns:1fr} }
 
 /* ═══ Simple mode ══════════════════════════════════════════════════════════ */
-.sm{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
-.sm.open{display:flex}
+#sm{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
+#sm.open{display:flex}
 .sm-body{flex:1;min-height:0;overflow:auto;padding:24px 54px 40px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
@@ -905,7 +915,7 @@ textarea.fin{resize:vertical;line-height:1.5}
       </div>
     </div>
     <div class="dlg-f">
-      <button class="lbtn revert" onclick="csRevert()">Revert to Original</button>
+      <button class="lbtn danger revert" onclick="csRevert()">Revert to Original</button>
       <button class="lbtn" onclick="csClose()">Cancel</button>
       <button class="lbtn pri" onclick="csSave()">Save</button>
     </div>
@@ -1089,7 +1099,7 @@ textarea.fin{resize:vertical;line-height:1.5}
           <button class="acc-h"><span class="acc-title"><span class="ms" style="color:var(--teal)">description</span> Document</span><span class="ms acc-caret">expand_more</span></button>
           <div class="acc-body">
             <div class="doc-summary" id="doc-summary"></div>
-            <button class="btn btn-outline btn-sm btn-block" id="editDetailsBtn"><span class="ms" style="font-size:16px">tune</span> Edit details</button>
+            <button class="lbtn sm" style="width:100%" id="editDetailsBtn"><span class="ms" style="font-size:16px">tune</span> Edit details</button>
           </div>
         </div>
         <div class="acc" data-acc>
@@ -1121,7 +1131,7 @@ textarea.fin{resize:vertical;line-height:1.5}
     <div class="sm-add-grid" id="smAddGrid"></div>
     <div class="dlg-f">
       <button class="lbtn" onclick="smAddClose()">Cancel</button>
-      <button class="lbtn" id="smAddBtn" onclick="smAddInsert()">Insert Block</button>
+      <button class="lbtn pri" id="smAddBtn" onclick="smAddInsert()">Insert Block</button>
     </div>
   </div>
 </div>
@@ -1157,7 +1167,7 @@ textarea.fin{resize:vertical;line-height:1.5}
         </div>
         <div class="card" id="codeCard" style="display:none">
           <h3 class="ed-h">Custom code</h3>
-          <a class="btn btn-outline btn-sm" id="genBtn" style="width:100%;justify-content:center;margin-bottom:14px"><span class="ms" style="font-size:16px">bolt</span> Generate from visual layout</a>
+          <a class="lbtn sm" id="genBtn" style="width:100%;justify-content:center;margin-bottom:14px"><span class="ms" style="font-size:16px">bolt</span> Generate from visual layout</a>
           <div class="fhint" style="line-height:1.7"><code style="font-size:11px">var(--brand-primary)</code> · headings<br><code style="font-size:11px">var(--brand-secondary)</code> · accents<br><code style="font-size:11px">{{client.name}}</code> · merge field</div>
         </div>
       </div>

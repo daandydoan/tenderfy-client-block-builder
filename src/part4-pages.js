@@ -611,7 +611,7 @@ function pgLibrary(slug){
   const view = fmView[slug] || 'grid';
   const cards = fmCards(slug, view);
   const acts = {
-    'resumes':      `<button class="lbtn gold" data-toast="My Company's skills">My Company's skills</button>
+    'resumes':      `<button class="lbtn ghost" data-toast="My Company's skills">My Company's skills</button>
                      <button class="lbtn" data-toast="Upload an existing resume">Upload Resume</button>
                      <button class="lbtn pri" onclick="go('/file-manager/resumes/add-resume')">Add New Resume</button>`,
     'case-studies': `<button class="lbtn" data-toast="Upload an existing case study">Upload Case Study</button>
