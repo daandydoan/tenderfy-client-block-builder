@@ -515,7 +515,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
 .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.ed3:not(.el-on) #dbLeft,.ed3:not(.st-on) #dbRight{display:none}
+.db .ed3:not(.el-on) #dleftCol,.db .ed3:not(.st-on) #drightCol{display:none}
 .ed3-col{height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
 /* The two panel toggles. block-edit.html styles .tb-btn as a 30px icon-only
    square and document-edit.html as a labelled pill; both got imported, and the
@@ -946,25 +946,162 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
-<!-- Document Builder — shared by Resumes, Case Studies, the Advanced Editor
-     and the Block Builder section. Mirrors tenderfy-admin/document-edit.html. -->
+<!-- Document Builder - markup copied from tenderfy-admin/document-edit.html.
+     Dropped: the client/brand inheritance picker and Ray's block suggester.
+     Ids the Block Builder already owns are namespaced with a d- prefix. -->
 <div class="db" id="db">
   <div class="ed-top" id="dbHead"></div>
-  <div class="ed3 st-on el-on">
-    <div class="ed3-col" id="dbLeft"></div>
-    <div class="ed3-mid">
-      <div class="vb-toolbar">
-        <button class="tb-btn on" title="Show or hide the blocks panel"
-          onclick="this.classList.toggle('on',document.querySelector('.ed3').classList.toggle('el-on'))"><span class="ms">grid_view</span> Blocks</button>
-        <button class="tb-btn on" style="margin-left:auto" title="Show or hide the properties panel"
-          onclick="this.classList.toggle('on',document.querySelector('.ed3').classList.toggle('st-on'))"><span class="ms">tune</span> Properties</button>
-      </div>
-      <div class="vb-canvas" id="dbCanvas"></div>
-    </div>
-    <div class="ed3-col" id="dbRight"></div>
-  </div>
-</div>
+<div class="ed3 st-on el-on">
+      <!-- LEFT: Blocks palette + Layers -->
+      <div class="ed3-col" id="dleftCol">
+        <div class="lt-tabs">
+          <button class="lt-tab on" data-lt="blocks">Blocks</button>
+          <button class="lt-tab" data-lt="layers">Layers</button>
+        </div>
+        <div id="paneBlocks">
+          <div class="card">
+            <h3 class="ed-h" style="display:flex;align-items:center;gap:8px">Blocks <span class="muted" style="font-weight:400;font-size:12px" id="pal-count"></span><a onclick="dbExit();go('/file-manager/block-library')" style="cursor:pointer" title="Create a new block" style="margin-left:auto;font-size:12px;color:var(--teal);text-decoration:none;font-weight:600"><span class="ms" style="font-size:14px;vertical-align:-2px">add</span> New block</a></h3>
+            <div id="rayBlockSuggestions"></div>
+            <div class="d-search"><span class="ms">search</span><input id="pq" placeholder="Search blocks…"></div>
+            <div class="vb-pal" id="dpalette"></div>
+          </div>
+        </div>
+        <div id="paneLayers" style="display:none">
+          <div class="side-title">Layers</div>
+          <!-- Background layer -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
+              <div class="bg-modeseg" id="bgModeSeg">
+                <button data-bgm="regions" class="on">Regions</button>
+                <button data-bgm="code">Custom CSS</button>
+              </div>
+              <div id="bgRegionsPane">
+                <div id="bgRegions"></div>
+                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
+              </div>
+              <div id="bgCodePane" style="display:none">
+                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
+                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
+              </div>
+              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties ▸ Style).</div>
+            </div>
+          </div>
 
+          <!-- Main layer (the document body) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
+              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
+            </div>
+          </div>
+
+          <!-- Top layer (letterhead + footer) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer — repeats on every page</div>
+              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
+              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
+              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: document canvas -->
+      <div class="ed3-mid">
+        <div class="vb-toolbar">
+          <button class="tb-btn" id="dElBtn" title="Toggle Blocks panel"><span class="ms">grid_view</span> Blocks</button>
+          <button class="tb-btn on" id="dStyleBtn" title="Toggle Properties panel" style="margin-left:auto"><span class="ms">tune</span> Properties</button>
+        </div>
+        <div class="vb-canvas" id="dcvWrap">
+          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
+            <div class="mode-seg" id="modeSeg">
+              <button data-mode="layout" class="on"><span class="ms">dashboard</span> Layout</button>
+              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
+            </div>
+          </div>
+          <div class="vb-stage" id="canvas"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: document properties -->
+      <div class="ed3-col" id="drightCol">
+        <!-- Block inspector: shown when a block is selected in Layout mode -->
+        <div id="blockInspector" style="display:none">
+          <div class="card">
+            <div class="bi-head"><h3 class="ed-h" style="margin:0">Block</h3><button class="bi-x" id="bi-close" title="Deselect"><span class="ms">close</span></button></div>
+            <strong id="bi-name" style="font-size:13.5px;color:var(--ink)"></strong>
+            <div class="fhint" id="bi-desc" style="margin-top:3px"></div>
+
+            <div class="ds-lbl" id="bi-content-lbl" style="display:none">Example content</div>
+            <div id="bi-content"></div>
+
+            <div class="ds-lbl">Layout</div>
+            <div class="fig-resize">
+              <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="bs-wpx" min="0"></span>
+              <select class="fig-strokesel" id="bs-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option></select>
+            </div>
+            <div class="fig-resize" style="margin-top:6px">
+              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval"></span>
+              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed</option><option value="min">Min</option><option value="max">Max</option></select>
+            </div>
+
+            <div class="ds-lbl">Dimension</div>
+            <div class="fig-box" data-box="pad">
+              <div class="fig-box-head"><span class="fig-label">Padding</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="bs-padH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="bs-padV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="bs-padT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="bs-padR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="bs-padB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="bs-padL" placeholder="0"></span></div>
+            </div>
+            <div class="fig-box" data-box="mar">
+              <div class="fig-box-head"><span class="fig-label">Margin</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="bs-marH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="bs-marV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="bs-marT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="bs-marR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="bs-marB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="bs-marL" placeholder="0"></span></div>
+            </div>
+            <div class="fig-sec" data-paint="bg">
+              <div class="fig-sec-h"><span class="fig-sec-t">Fill</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add fill"><span class="ms">add</span></button></span></div>
+              <div class="fig-paint" id="bs-bgPaint"><span class="fig-sw"><input type="color" id="bs-bg"></span><input class="fig-hexin" id="bs-bgH" placeholder="FFFFFF"><span class="fig-op"><input type="number" id="bs-bgA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+            </div>
+            <div class="ds-lbl">Appearance</div>
+            <div class="fig-box" data-box="rad">
+              <div class="fig-box-head"><span class="fig-label">Corner radius</span><button type="button" class="fig-toggle" data-toggle title="Edit corners individually"><span class="ms">rounded_corner</span></button></div>
+              <div class="fig-solo"><span class="fig-field"><span class="ms fig-ic" data-scrub>rounded_corner</span><input type="number" id="bs-rad" min="0" max="400"></span></div>
+              <div class="fig-corners" hidden><span class="fig-field"><span class="ms fig-ic cn cn-tl">rounded_corner</span><input type="number" id="bs-radTL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-tr">rounded_corner</span><input type="number" id="bs-radTR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-bl">rounded_corner</span><input type="number" id="bs-radBL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-br">rounded_corner</span><input type="number" id="bs-radBR" placeholder="0"></span></div>
+            </div>
+            <div class="fig-sec" data-paint="bc">
+              <div class="fig-sec-h"><span class="fig-sec-t">Stroke</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add stroke"><span class="ms">add</span></button></span></div>
+              <div class="fig-paint" id="bs-bcPaint"><span class="fig-sw"><input type="color" id="bs-bc"></span><input class="fig-hexin" id="bs-bcH" placeholder="EAEDEC"><span class="fig-op"><input type="number" id="bs-bcA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+              <div class="fig-strokerow" id="bs-strokeMeta"><div><label>Position</label><select class="fig-strokesel" id="bs-bpos"><option value="inside">Inside</option><option value="center">Center</option><option value="outside">Outside</option></select></div><div><label>Weight</label><span class="fig-wt"><span class="ms">line_weight</span><input type="number" id="bs-bw" min="0" max="40"></span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="docSettings">
+        <div class="side-title">Properties</div>
+        <div class="acc closed" data-acc>
+          <button class="acc-h"><span class="acc-title"><span class="ms" style="color:var(--teal)">description</span> Document</span><span class="ms acc-caret">expand_more</span></button>
+          <div class="acc-body">
+            <div class="doc-summary" id="doc-summary"></div>
+            <button class="btn btn-outline btn-sm btn-block" id="editDetailsBtn"><span class="ms" style="font-size:16px">tune</span> Edit details</button>
+          </div>
+        </div>
+        <div class="acc" data-acc>
+          <button class="acc-h"><span class="acc-title"><span class="ms" style="color:var(--teal)">palette</span> Style</span><span class="ms acc-caret">expand_more</span></button>
+          <div class="acc-body">
+            <div class="ds-row"><label>Fill</label><div class="ds-ctl"><input type="color" id="ds-bg"><input class="ds-hex" id="ds-bgH"></div></div>
+            <div class="ds-row"><label>Padding</label><div class="ds-ctl"><input type="range" id="ds-pad" min="0" max="80"><input type="number" class="ds-num" id="ds-padN"><span class="ds-u">px</span></div></div>
+            <div class="ds-row"><label>Spacing</label><div class="ds-ctl"><input type="range" id="ds-gap" min="0" max="48"><input type="number" class="ds-num" id="ds-gapN"><span class="ds-u">px</span></div></div>
+            <div class="ds-row"><label>Radius</label><div class="ds-ctl"><input type="range" id="ds-rad" min="0" max="24"><input type="number" class="ds-num" id="ds-radN"><span class="ds-u">px</span></div></div>
+            <div class="fhint" style="margin-top:6px">Document-level styling. The assigned client's brand is layered on top.</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+</div>
 
 <!-- Simple mode — the editor the live app offers today (resume form / block canvas) -->
 <div class="sm" id="sm">

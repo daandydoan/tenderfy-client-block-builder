@@ -3018,7 +3018,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
 .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.ed3:not(.el-on) #dbLeft,.ed3:not(.st-on) #dbRight{display:none}
+.db .ed3:not(.el-on) #dleftCol,.db .ed3:not(.st-on) #drightCol{display:none}
 .ed3-col{height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
 /* The two panel toggles. block-edit.html styles .tb-btn as a 30px icon-only
    square and document-edit.html as a labelled pill; both got imported, and the
@@ -3449,25 +3449,162 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
-<!-- Document Builder &#x2014; shared by Resumes, Case Studies, the Advanced Editor
-     and the Block Builder section. Mirrors tenderfy-admin/document-edit.html. -->
+<!-- Document Builder - markup copied from tenderfy-admin/document-edit.html.
+     Dropped: the client/brand inheritance picker and Ray's block suggester.
+     Ids the Block Builder already owns are namespaced with a d- prefix. -->
 <div class="db" id="db">
   <div class="ed-top" id="dbHead"></div>
-  <div class="ed3 st-on el-on">
-    <div class="ed3-col" id="dbLeft"></div>
-    <div class="ed3-mid">
-      <div class="vb-toolbar">
-        <button class="tb-btn on" title="Show or hide the blocks panel"
-          onclick="this.classList.toggle('on',document.querySelector('.ed3').classList.toggle('el-on'))"><span class="ms">grid_view</span> Blocks</button>
-        <button class="tb-btn on" style="margin-left:auto" title="Show or hide the properties panel"
-          onclick="this.classList.toggle('on',document.querySelector('.ed3').classList.toggle('st-on'))"><span class="ms">tune</span> Properties</button>
-      </div>
-      <div class="vb-canvas" id="dbCanvas"></div>
-    </div>
-    <div class="ed3-col" id="dbRight"></div>
-  </div>
-</div>
+<div class="ed3 st-on el-on">
+      <!-- LEFT: Blocks palette + Layers -->
+      <div class="ed3-col" id="dleftCol">
+        <div class="lt-tabs">
+          <button class="lt-tab on" data-lt="blocks">Blocks</button>
+          <button class="lt-tab" data-lt="layers">Layers</button>
+        </div>
+        <div id="paneBlocks">
+          <div class="card">
+            <h3 class="ed-h" style="display:flex;align-items:center;gap:8px">Blocks <span class="muted" style="font-weight:400;font-size:12px" id="pal-count"></span><a onclick="dbExit();go('/file-manager/block-library')" style="cursor:pointer" title="Create a new block" style="margin-left:auto;font-size:12px;color:var(--teal);text-decoration:none;font-weight:600"><span class="ms" style="font-size:14px;vertical-align:-2px">add</span> New block</a></h3>
+            <div id="rayBlockSuggestions"></div>
+            <div class="d-search"><span class="ms">search</span><input id="pq" placeholder="Search blocks&#x2026;"></div>
+            <div class="vb-pal" id="dpalette"></div>
+          </div>
+        </div>
+        <div id="paneLayers" style="display:none">
+          <div class="side-title">Layers</div>
+          <!-- Background layer -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
+              <div class="bg-modeseg" id="bgModeSeg">
+                <button data-bgm="regions" class="on">Regions</button>
+                <button data-bgm="code">Custom CSS</button>
+              </div>
+              <div id="bgRegionsPane">
+                <div id="bgRegions"></div>
+                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
+              </div>
+              <div id="bgCodePane" style="display:none">
+                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
+                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
+              </div>
+              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties &#x25B8; Style).</div>
+            </div>
+          </div>
 
+          <!-- Main layer (the document body) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
+              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
+            </div>
+          </div>
+
+          <!-- Top layer (letterhead + footer) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer &#x2014; repeats on every page</div>
+              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
+              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
+              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: document canvas -->
+      <div class="ed3-mid">
+        <div class="vb-toolbar">
+          <button class="tb-btn" id="dElBtn" title="Toggle Blocks panel"><span class="ms">grid_view</span> Blocks</button>
+          <button class="tb-btn on" id="dStyleBtn" title="Toggle Properties panel" style="margin-left:auto"><span class="ms">tune</span> Properties</button>
+        </div>
+        <div class="vb-canvas" id="dcvWrap">
+          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
+            <div class="mode-seg" id="modeSeg">
+              <button data-mode="layout" class="on"><span class="ms">dashboard</span> Layout</button>
+              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
+            </div>
+          </div>
+          <div class="vb-stage" id="canvas"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: document properties -->
+      <div class="ed3-col" id="drightCol">
+        <!-- Block inspector: shown when a block is selected in Layout mode -->
+        <div id="blockInspector" style="display:none">
+          <div class="card">
+            <div class="bi-head"><h3 class="ed-h" style="margin:0">Block</h3><button class="bi-x" id="bi-close" title="Deselect"><span class="ms">close</span></button></div>
+            <strong id="bi-name" style="font-size:13.5px;color:var(--ink)"></strong>
+            <div class="fhint" id="bi-desc" style="margin-top:3px"></div>
+
+            <div class="ds-lbl" id="bi-content-lbl" style="display:none">Example content</div>
+            <div id="bi-content"></div>
+
+            <div class="ds-lbl">Layout</div>
+            <div class="fig-resize">
+              <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="bs-wpx" min="0"></span>
+              <select class="fig-strokesel" id="bs-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option></select>
+            </div>
+            <div class="fig-resize" style="margin-top:6px">
+              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval"></span>
+              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed</option><option value="min">Min</option><option value="max">Max</option></select>
+            </div>
+
+            <div class="ds-lbl">Dimension</div>
+            <div class="fig-box" data-box="pad">
+              <div class="fig-box-head"><span class="fig-label">Padding</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="bs-padH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="bs-padV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="bs-padT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="bs-padR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="bs-padB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="bs-padL" placeholder="0"></span></div>
+            </div>
+            <div class="fig-box" data-box="mar">
+              <div class="fig-box-head"><span class="fig-label">Margin</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="bs-marH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="bs-marV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="bs-marT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="bs-marR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="bs-marB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="bs-marL" placeholder="0"></span></div>
+            </div>
+            <div class="fig-sec" data-paint="bg">
+              <div class="fig-sec-h"><span class="fig-sec-t">Fill</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add fill"><span class="ms">add</span></button></span></div>
+              <div class="fig-paint" id="bs-bgPaint"><span class="fig-sw"><input type="color" id="bs-bg"></span><input class="fig-hexin" id="bs-bgH" placeholder="FFFFFF"><span class="fig-op"><input type="number" id="bs-bgA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+            </div>
+            <div class="ds-lbl">Appearance</div>
+            <div class="fig-box" data-box="rad">
+              <div class="fig-box-head"><span class="fig-label">Corner radius</span><button type="button" class="fig-toggle" data-toggle title="Edit corners individually"><span class="ms">rounded_corner</span></button></div>
+              <div class="fig-solo"><span class="fig-field"><span class="ms fig-ic" data-scrub>rounded_corner</span><input type="number" id="bs-rad" min="0" max="400"></span></div>
+              <div class="fig-corners" hidden><span class="fig-field"><span class="ms fig-ic cn cn-tl">rounded_corner</span><input type="number" id="bs-radTL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-tr">rounded_corner</span><input type="number" id="bs-radTR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-bl">rounded_corner</span><input type="number" id="bs-radBL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-br">rounded_corner</span><input type="number" id="bs-radBR" placeholder="0"></span></div>
+            </div>
+            <div class="fig-sec" data-paint="bc">
+              <div class="fig-sec-h"><span class="fig-sec-t">Stroke</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add stroke"><span class="ms">add</span></button></span></div>
+              <div class="fig-paint" id="bs-bcPaint"><span class="fig-sw"><input type="color" id="bs-bc"></span><input class="fig-hexin" id="bs-bcH" placeholder="EAEDEC"><span class="fig-op"><input type="number" id="bs-bcA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+              <div class="fig-strokerow" id="bs-strokeMeta"><div><label>Position</label><select class="fig-strokesel" id="bs-bpos"><option value="inside">Inside</option><option value="center">Center</option><option value="outside">Outside</option></select></div><div><label>Weight</label><span class="fig-wt"><span class="ms">line_weight</span><input type="number" id="bs-bw" min="0" max="40"></span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="docSettings">
+        <div class="side-title">Properties</div>
+        <div class="acc closed" data-acc>
+          <button class="acc-h"><span class="acc-title"><span class="ms" style="color:var(--teal)">description</span> Document</span><span class="ms acc-caret">expand_more</span></button>
+          <div class="acc-body">
+            <div class="doc-summary" id="doc-summary"></div>
+            <button class="btn btn-outline btn-sm btn-block" id="editDetailsBtn"><span class="ms" style="font-size:16px">tune</span> Edit details</button>
+          </div>
+        </div>
+        <div class="acc" data-acc>
+          <button class="acc-h"><span class="acc-title"><span class="ms" style="color:var(--teal)">palette</span> Style</span><span class="ms acc-caret">expand_more</span></button>
+          <div class="acc-body">
+            <div class="ds-row"><label>Fill</label><div class="ds-ctl"><input type="color" id="ds-bg"><input class="ds-hex" id="ds-bgH"></div></div>
+            <div class="ds-row"><label>Padding</label><div class="ds-ctl"><input type="range" id="ds-pad" min="0" max="80"><input type="number" class="ds-num" id="ds-padN"><span class="ds-u">px</span></div></div>
+            <div class="ds-row"><label>Spacing</label><div class="ds-ctl"><input type="range" id="ds-gap" min="0" max="48"><input type="number" class="ds-num" id="ds-gapN"><span class="ds-u">px</span></div></div>
+            <div class="ds-row"><label>Radius</label><div class="ds-ctl"><input type="range" id="ds-rad" min="0" max="24"><input type="number" class="ds-num" id="ds-radN"><span class="ds-u">px</span></div></div>
+            <div class="fhint" style="margin-top:6px">Document-level styling. The assigned client's brand is layered on top.</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+</div>
 
 <!-- Simple mode &#x2014; the editor the live app offers today (resume form / block canvas) -->
 <div class="sm" id="sm">
@@ -5486,52 +5623,11 @@ function newDoc(kind, name){
 }
 const docItem = (t, id, content, style) => ({t, id, content: content||{}, style: Object.assign({}, DOC_ITEM_STYLE_DEFAULT, style||{})});
 
-/* \u2550\u2550\u2550 The Document Builder \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-   The same three-pane editor the admin prototype uses for Documents and Tender
-   Documents: Blocks/Layers on the left, canvas in the middle (Layout | Preview,
-   selection persists across both), Figma-style inspector on the right ordered
-   Layout -> Dimension -> Fill -> Appearance -> Stroke.                        */
 
-let DB = null;
-
-function dbOpen(cfg){
-  DB = {
-    doc: cfg.doc, backRoute: cfg.backRoute, title: cfg.title || cfg.doc.name, sub: cfg.sub || '',
-    onSave: cfg.onSave, backLabel: cfg.backLabel || 'Cancel',
-    sel: null, mode: 'layout', tab: 'blocks', q: '', showLeft: true, showRight: true,
-    accClosed: {},                       // Layers accordions, kept across re-renders
-  };
-  if(!DB.doc.bg) DB.doc.bg = newDocBg();
-  document.getElementById('db').classList.add('open');
-  dbRenderAll();
-}
-function dbClose(){ document.getElementById('db').classList.remove('open'); DB = null; }
-window.dbClose = dbClose;
-window.dbSave = () => {
-  const d = DB.doc, cb = DB.onSave, back = DB.backRoute;
-  d.dirty = false; dbClose();
-  if(cb) cb(d); else if(back) go(back);
-  showToast('Saved - ' + d.name);
-};
-// Leaving the builder: back to the list, guarded if the document was touched.
-window.dbExit = () => exitEditor(DB.doc, DB.backRoute, () => dbClose(), window.dbSave);
-// Back to Simple. A cover page's Simple mode is the style dialog; a resume or
-// case study gets the live form / block canvas. The document is handed over
-// intact either way.
-window.dbToSimple = () => { const d = DB.doc, cb = DB.onSave; dbClose(); if(cb) cb(d); csOpen(); };
-window.dbToSimpleMode = () => {
-  const d = DB.doc, cb = DB.onSave, back = DB.backRoute;
-  if(d.coverId){ dbClose(); if(cb) cb(d); csOpen(); return; }
-  d.customised = true;                 // block edits exist; Simple will say so
-  dbClose();
-  smOpen({doc:d, backRoute: back || '/tenders', onSave: cb});
-};
-
-
-/* \u2500\u2500 Shared editor header \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-   Simple, Advanced and the Block Builder all render the SAME header shape and
-   height, so toggling modes never moves anything. Only the mode pill's active
-   side and the right-hand extras change.                                      */
+/* \u2500\u2500 Shared editor chrome \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   One header for Simple, Advanced and the Block Builder, so the UI does not
+   jump when you toggle. rteHtml/dbWireInline give the rich-text fields and
+   the edit-on-the-page behaviour this prototype adds over the admin editor. */
 function edHeadHtml(cfg){
   const d = cfg.doc;
   const label = (d.isNew ? 'Create ' : 'Save ') + (KIND_LABEL[d.kind] || 'Document');
@@ -5550,234 +5646,6 @@ function edHeadHtml(cfg){
     </div>`;
 }
 
-function dbRenderAll(){ dbHead(); dbLeft(); dbCanvas(); dbInspector(); }
-
-function dbHead(){
-  document.getElementById('dbHead').innerHTML = edHeadHtml({
-    doc: DB.doc, mode:'advanced', sub: DB.sub,
-    exit:'dbExit()', save:'dbSave()',
-    rename:"DB.doc.name=this.value;markDirty(DB.doc);var b=document.getElementById('dbBarName');if(b)b.textContent=this.value",
-  });
-}
-
-/* \u2500\u2500 Left column: Blocks | Layers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-function dbLeft(){
-  const d = DB.doc;
-  const blocksPane = () => {
-    const q = DB.q.toLowerCase();
-    const pool = BLOCKS.filter(b => !b.slot && (!q || (b.name+' '+b.label).toLowerCase().includes(q)));
-    const cats = BLOCK_CATS.filter(c => pool.some(b => b.cat === c));
-    return `<div class="card">
-      <h3 class="ed-h">Blocks <span class="muted" style="font-weight:400;font-size:12px">${pool.length}</span>
-        <a onclick="dbClose();go('/file-manager/block-library')" title="Open the Block Library" style="margin-left:auto;font-size:12px;color:var(--live-cta);cursor:pointer;font-weight:600"><span class="ms" style="font-size:14px;vertical-align:-2px">add</span> New block</a></h3>
-      <div class="d-search"><span class="ms">search</span><input id="dbQ" placeholder="Search blocks..." value="${esc(DB.q)}" oninput="DB.q=this.value;dbLeft()"></div>
-      ${cats.map(c => `<div class="pal-cat">${esc(c)}</div>
-        <div class="vb-pal">${pool.filter(b=>b.cat===c).map(b => `
-          <div class="vb-widget" draggable="true" data-add="${b.id}" title="${esc(b.label)}">
-            <div class="pal-prev">${blockSchematic(b)}</div>
-            <span class="vb-el"><span class="el-ic ms">${b.kind==='element'?(PRIM_ICON[b.p]||'article'):'dashboard_customize'}</span>${esc(b.label)}</span>
-          </div>`).join('')}</div>`).join('') || '<div class="fhint">No blocks match that search.</div>'}
-    </div>`;
-  };
-  /* Layers, lifted from tenderfy-admin/document-edit.html #paneLayers:
-     Background (fills behind content) / Main (the document body) / Top
-     (letterhead + footer). Accordion state survives a re-render.             */
-  const acc = (key, icon, title, bodyHtml) => `
-    <div class="acc ${DB.accClosed[key]?'closed':''}" data-acc data-acck="${key}">
-      <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">${icon}</span></span> ${title}</span><span class="ms acc-caret">expand_more</span></button>
-      <div class="acc-body">${bodyHtml}</div>
-    </div>`;
-  const slotFld = (which, label, none) => `
-    <div class="lyr-fld"${which==='footer'?' style="margin-bottom:2px"':''}><label>${label}</label>
-      <select class="lyr-sel" onchange="DB.doc.${which}=this.value||null;markDirty(DB.doc);dbCanvas();dbLeft()">
-        <option value="">${none}</option>
-        ${BLOCKS.filter(b=>b.slot===which).map(b=>`<option value="${b.id}"${d[which]===b.id?' selected':''}>${esc(b.label)}</option>`).join('')}
-      </select>
-      <div class="lyr-mini">${d[which] ? renderStationery(BLOCK_BY_ID[d[which]].p, d.brand) : '<span class="empty">None</span>'}</div>
-    </div>`;
-  const layersPane = () => `
-    <div class="side-title">Layers</div>
-    ${acc('bg','wallpaper','Background', `
-      <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
-      <div class="bg-modeseg" id="bgModeSeg">
-        <button data-bgm="regions" class="${d.bg.mode==='regions'?'on':''}">Regions</button>
-        <button data-bgm="code" class="${d.bg.mode==='code'?'on':''}">Custom CSS</button>
-      </div>
-      <div id="bgRegionsPane"${d.bg.mode==='regions'?'':' style="display:none"'}>
-        <div id="bgRegions"></div>
-        <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
-      </div>
-      <div id="bgCodePane"${d.bg.mode==='code'?'':' style="display:none"'}>
-        <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);">${esc(d.bg.css||'')}</textarea>
-        <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
-      </div>
-      <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties &#9654; Style).</div>`)}
-    ${acc('main','layers','Main', `
-      <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big">${d.items.length}</span><span class="muted">block${d.items.length===1?'':'s'} on the page</span></div>
-      <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>`)}
-    ${acc('top','flip_to_front','Top', `
-      <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer &mdash; repeats on every page</div>
-      ${slotFld('header','Letterhead','No letterhead')}
-      ${slotFld('footer','Footer','No footer')}
-      <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>`)}`;
-
-  document.getElementById('dbLeft').innerHTML = `
-    <div class="lt-tabs">
-      <button class="lt-tab ${DB.tab==='blocks'?'on':''}" onclick="DB.tab='blocks';dbLeft()">Blocks</button>
-      <button class="lt-tab ${DB.tab==='layers'?'on':''}" onclick="DB.tab='layers';dbLeft()">Layers</button>
-    </div>
-    ${DB.tab === 'blocks' ? blocksPane() : layersPane()}`;
-
-  document.querySelectorAll('#dbLeft .vb-widget').forEach(el => {
-    el.addEventListener('click', () => dbAdd(el.dataset.add));
-    el.addEventListener('dragstart', e => e.dataTransfer.setData('text','add:'+el.dataset.add));
-  });
-  // Accordions collapse the same way as the admin sidebar.
-  document.querySelectorAll('#dbLeft .acc-h').forEach(h => h.addEventListener('click', () => {
-    const a = h.parentElement; a.classList.toggle('closed');
-    DB.accClosed[a.dataset.acck] = a.classList.contains('closed');
-  }));
-  if(DB.tab === 'layers') dbWireBg();
-}
-
-/* Background-layer editor, ported from tenderfy-admin/document-edit.html. */
-function bgGeoFields(r){
-  const num = (k,l) => `<div class="g"><label>${l}</label><input type="number" data-geo="${k}" value="${r[k]}"></div>`;
-  if(r.shape==='band-top'||r.shape==='band-bottom') return num('h','Height');
-  if(r.shape==='col-left'||r.shape==='col-right') return num('w','Width');
-  if(r.shape==='region') return num('x','X')+num('y','Y')+num('w','W')+num('h','H');
-  return '';
-}
-function bgRegionRow(r){
-  const colorInput = (f,v) => `<div class="samp-row" style="margin-bottom:8px"><input type="color" data-f="${f}" value="${v}" style="width:30px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;flex:none"><input class="ds-hex" data-f="${f}H" value="${v.toUpperCase()}" style="flex:1"></div>`;
-  const geo = bgGeoFields(r);
-  return `<div class="bg-reg" data-id="${r.id}">
-    <div class="bg-reg-h"><select class="ds-sel" data-f="shape">${BG_SHAPES.map(x=>`<option value="${x[0]}"${x[0]===r.shape?' selected':''}>${x[1]}</option>`).join('')}</select><button class="bg-del" title="Remove"><span class="ms">delete</span></button></div>
-    ${geo?`<div class="bg-geo">${geo}</div>`:''}
-    ${colorInput('color', r.color)}
-    <label class="bi-tog" style="margin-bottom:8px"><input type="checkbox" data-f="gradOn"${r.gradOn?' checked':''}>Gradient</label>
-    ${r.gradOn?colorInput('color2', r.color2):''}
-    <div class="ds-row" style="margin-bottom:8px"><label>Opacity</label><div class="ds-ctl"><input type="range" data-f="op" min="0" max="100" value="${Math.round(r.op*100)}"><span class="ds-u">${Math.round(r.op*100)}%</span></div></div>
-    <label class="bi-tog"><input type="checkbox" data-f="firstOnly"${r.firstOnly?' checked':''}>First page only</label>
-  </div>`;
-}
-function dbWireBg(){
-  const bg = DB.doc.bg, paint = () => { markDirty(DB.doc); dbCanvas(); };
-  const wrap = document.getElementById('bgRegions');
-  if(!wrap) return;
-  wrap.innerHTML = bg.regions.length ? bg.regions.map(bgRegionRow).join('')
-    : `<div class="fhint" style="margin:2px 0 10px">No fill regions yet &mdash; add one, or switch to Custom CSS.</div>`;
-  wrap.querySelectorAll('.bg-reg').forEach(el => {
-    const r = bg.regions.find(x => x.id == el.dataset.id);
-    el.querySelector('.bg-del').addEventListener('click', () => {
-      bg.regions = bg.regions.filter(x => x !== r); dbWireBg(); paint();
-    });
-    el.querySelectorAll('[data-f]').forEach(inp => {
-      const f = inp.dataset.f, ev = inp.type === 'checkbox' ? 'change' : 'input';
-      inp.addEventListener(ev, () => {
-        if(f==='shape'){ r.shape=inp.value; dbWireBg(); }
-        else if(f==='gradOn'){ r.gradOn=inp.checked; dbWireBg(); }
-        else if(f==='firstOnly'){ r.firstOnly=inp.checked; }
-        else if(f==='color'||f==='color2'){ r[f]=inp.value; const h=el.querySelector(`[data-f=${f}H]`); if(h)h.value=inp.value.toUpperCase(); }
-        else if(f==='colorH'||f==='color2H'){ const v=inp.value.trim(); if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return;
-          r[f.slice(0,-1)]=v; const c=el.querySelector(`[data-f=${f.slice(0,-1)}]`); if(c)c.value=v; }
-        else if(f==='op'){ r.op=(+inp.value)/100; inp.nextElementSibling.textContent=inp.value+'%'; }
-        paint();
-      });
-    });
-    el.querySelectorAll('[data-geo]').forEach(inp => inp.addEventListener('input', () => {
-      r[inp.dataset.geo] = Math.max(0, Math.round(+inp.value||0)); paint();
-    }));
-  });
-  document.getElementById('bgAdd').addEventListener('click', () => {
-    bg.regions.push(mkRegion(DB.doc.brand)); dbWireBg(); paint();
-  });
-  document.querySelectorAll('#bgModeSeg button').forEach(b => b.addEventListener('click', () => {
-    bg.mode = b.dataset.bgm;
-    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.toggle('on', x === b));
-    document.getElementById('bgRegionsPane').style.display = bg.mode === 'regions' ? '' : 'none';
-    document.getElementById('bgCodePane').style.display = bg.mode === 'code' ? '' : 'none';
-    paint();
-  }));
-  document.getElementById('bgCss').addEventListener('input', e => { bg.css = e.target.value; paint(); });
-}
-
-/* \u2500\u2500 Middle: canvas, Layout | Preview \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
-function dbAdd(id, at){
-  const b = BLOCK_BY_ID[id]; markDirty(DB.doc);
-  if(b.slot){ DB.doc[b.slot] = id; dbCanvas(); dbLeft(); showToast('Top layer: ' + b.label); return; }
-  const it = docItem(b.kind === 'element' ? 'element' : 'block', id);
-  if(typeof at === 'number') DB.doc.items.splice(at, 0, it); else DB.doc.items.push(it);
-  DB.sel = typeof at === 'number' ? at : DB.doc.items.length - 1;
-  dbRenderAll(); showToast('Added: ' + b.label);
-}
-window.dbSel = (i, keepCaret) => {
-  if(DB.sel === i && keepCaret) return;    // already selected; don't re-render mid-edit
-  DB.sel = i;
-  if(keepCaret){ document.querySelectorAll('#dbCanvas .db-item, #dbCanvas .db-pv')
-      .forEach(el => el.classList.toggle('sel', +el.dataset.i === i)); }
-  else dbCanvas();
-  dbInspector(); if(DB.tab==='layers') dbLeft();
-};
-window.dbDel = i => { markDirty(DB.doc); DB.doc.items.splice(i,1); if(DB.sel===i) DB.sel=null; else if(DB.sel>i) DB.sel--; dbRenderAll(); };
-window.dbDup = i => { markDirty(DB.doc); const c = JSON.parse(JSON.stringify(DB.doc.items[i])); DB.doc.items.splice(i+1,0,c); DB.sel=i+1; dbRenderAll(); };
-window.dbMove = (i,dir) => { markDirty(DB.doc); const j=i+dir; if(j<0||j>=DB.doc.items.length) return; const [x]=DB.doc.items.splice(i,1); DB.doc.items.splice(j,0,x); DB.sel=j; dbRenderAll(); };
-function dbDrop(tok, at){
-  if(!tok) return;
-  if(tok.startsWith('add:')) dbAdd(tok.slice(4), at);
-  else if(tok.startsWith('move:')){
-    const from = +tok.slice(5);
-    if(from === at) return;
-    const [x] = DB.doc.items.splice(from,1);
-    DB.doc.items.splice(from < at ? at-1 : at, 0, x);
-    DB.sel = from < at ? at-1 : at;
-    dbRenderAll();
-  }
-}
-function dbCanvas(){
-  const d = DB.doc;
-  const bar = `<div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--live-cta)">description</span>
-      <span id="dbBarName">${esc(d.name)}</span>
-      <span class="muted" style="font-weight:400">${d.items.length} item${d.items.length===1?'':'s'}</span>
-      <div class="mode-seg">
-        <button class="${DB.mode==='layout'?'on':''}" onclick="DB.mode='layout';dbCanvas()"><span class="ms">dashboard</span> Layout</button>
-        <button class="${DB.mode==='preview'?'on':''}" onclick="DB.mode='preview';dbCanvas()"><span class="ms">visibility</span> Preview</button>
-      </div></div>`;
-
-  let page;
-  if(DB.mode === 'preview'){
-    // Blocks stay clickable in Preview and the selection survives both ways.
-    const body = d.items.map((it,i) =>
-      docItemHtml(it, d.brand, 'doc-blk-r db-pv' + (DB.sel===i?' sel':''), `data-i="${i}" onclick="dbSel(${i})"`)).join('');
-    const band = id => id ? `<div class="db-slot">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
-    page = `<div class="vb-page">${renderDocBg(d.bg,0)}<div class="db-layer">${band(d.header)}<div class="db-body">${body}</div>${band(d.footer)}</div></div>`;
-  } else {
-    const slot = (which,label) => d[which]
-      ? `<div class="db-slot" title="${label}">${renderStationery(BLOCK_BY_ID[d[which]].p, d.brand)}
-           <span class="db-slot-x ms" onclick="DB.doc.${which}=null;dbCanvas();dbLeft()">close</span></div>`
-      : `<div class="db-slot empty" onclick="DB.tab='layers';dbLeft()">${label} &mdash; choose in Layers</div>`;
-    const rows = d.items.length ? d.items.map((it,i) => {
-      const def = BLOCK_BY_ID[it.id] || {label:it.id};
-      return `<div class="db-line" data-at="${i}"></div>
-        <div class="db-item ${DB.sel===i?'sel':''}" data-i="${i}" draggable="true" onclick="dbSel(${i})">
-          <span class="db-tag">${esc(def.label)}</span>
-          <span class="db-bar">
-            <span class="ms" onclick="event.stopPropagation();dbMove(${i},-1)" title="Move up">expand_less</span>
-            <span class="ms" onclick="event.stopPropagation();dbMove(${i},1)" title="Move down">expand_more</span>
-            <span class="ms" onclick="event.stopPropagation();dbDup(${i})" title="Duplicate">content_copy</span>
-            <span class="ms" onclick="event.stopPropagation();dbDel(${i})" title="Remove">close</span></span>
-          ${docItemHtml(it, d.brand, 'db-inner')}</div>`;
-    }).join('') + `<div class="db-line" data-at="${d.items.length}"></div>`
-      : `<div class="vb-tail"><span class="ms">dashboard_customize</span>Drag a block here, or click one in the palette.</div>`;
-    page = `<div class="vb-page">${renderDocBg(d.bg,0)}<div class="db-layer">${slot('header','Letterhead')}<div class="db-body" id="dbBody">${rows}</div>${slot('footer','Footer')}</div></div>`;
-  }
-
-  document.getElementById('dbCanvas').innerHTML = bar + `<div class="vb-stage">${page}</div>`;
-  dbWireCanvas();
-}
-/* Content is editable straight on the page, in Layout and Preview alike. Each
-   rendered field carries data-f (and the primitive index via .dp[data-pi]), so
-   a keystroke writes back to exactly the right slot. */
 function dbWireInline(root){
   root.querySelectorAll('[data-f]').forEach(el => {
     const holder = el.closest('.db-item, .db-pv');
@@ -5810,156 +5678,7 @@ function dbWireInline(root){
     });
   });
 }
-function dbWireCanvas(){
-  dbWireInline(document.getElementById('dbCanvas'));
-  const body = document.getElementById('dbBody');
-  if(!body) return;
-  const lines = [...body.querySelectorAll('.db-line')];
-  const clear = () => lines.forEach(l => l.classList.remove('on'));
-  body.querySelectorAll('.db-item').forEach(el =>
-    el.addEventListener('dragstart', e => e.dataTransfer.setData('text','move:'+el.dataset.i)));
-  const nearest = y => lines.reduce((best,l) => {
-    const r = l.getBoundingClientRect(), d = Math.abs((r.top+r.bottom)/2 - y);
-    return (!best || d < best.d) ? {l,d} : best;
-  }, null);
-  body.addEventListener('dragover', e => { e.preventDefault(); clear(); const n = nearest(e.clientY); if(n) n.l.classList.add('on'); });
-  body.addEventListener('dragleave', e => { if(!body.contains(e.relatedTarget)) clear(); });
-  body.addEventListener('drop', e => {
-    e.preventDefault(); const n = nearest(e.clientY); clear();
-    if(n) dbDrop(e.dataTransfer.getData('text'), +n.l.dataset.at);
-  });
-}
 
-/* \u2500\u2500 Right: Figma inspector (Layout, Dimension, Fill, Appearance, Stroke) \u2500\u2500 */
-function dbInspector(){
-  const el = document.getElementById('dbRight');
-  if(DB.sel == null || !DB.doc.items[DB.sel]){
-    // Properties, with the brand Style block the Layers panel points at.
-    const d = DB.doc;
-    el.innerHTML = `<div class="card"><h3 class="ed-h">Properties</h3>
-      <div class="fhint">Select a block on the page to style it. Blocks are clickable in Layout and Preview, and the selection carries across both.</div>
-      <div class="insp-sec"><div class="insp-h">Composition</div>
-        <div class="fhint">${d.items.length} item${d.items.length===1?'':'s'} &middot; letterhead ${d.header?'set':'none'} &middot; footer ${d.footer?'set':'none'}</div></div>
-      <div class="insp-sec"><div class="insp-h">Style</div>
-        <div class="ds-lbl" style="margin-top:0">Company name</div><input class="fin" value="${esc(d.brand.company)}" oninput="DB.doc.brand.company=this.value;markDirty(DB.doc);dbCanvas()">
-        <div class="ds-lbl">Primary</div><div class="swatches">${ACCENTS.concat(['#27535C','#172E39']).map(c=>`<span class="sw ${c.toLowerCase()===d.brand.primary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.primary='${c}';markDirty(DB.doc);dbCanvas();dbInspector()"></span>`).join('')}</div>
-        <div class="ds-lbl">Accent</div><div class="swatches">${ACCENTS.map(c=>`<span class="sw ${c.toLowerCase()===d.brand.secondary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.secondary='${c}';markDirty(DB.doc);dbCanvas();dbInspector()"></span>`).join('')}</div>
-        <div class="ds-lbl">Heading font</div><select class="fin" onchange="DB.doc.brand.font=this.value;markDirty(DB.doc);dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.font?' selected':''}>${f}</option>`).join('')}</select>
-        <div class="ds-lbl">Body font</div><select class="fin" onchange="DB.doc.brand.bodyFont=this.value;markDirty(DB.doc);dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.bodyFont?' selected':''}>${f}</option>`).join('')}</select>
-      </div></div>`;
-    return;
-  }
-  const i = DB.sel, it = DB.doc.items[i], def = BLOCK_BY_ID[it.id] || {name:it.id, label:it.id};
-  const s = it.style = Object.assign({}, DOC_ITEM_STYLE_DEFAULT, it.style || {});
-  const num = (id, val, min, max) => `<input type="number" data-s="${id}" value="${val==null?'':val}" min="${min==null?0:min}"${max!=null?` max="${max}"`:''}>`;
-  const boxSec = (key, label) => `
-    <div class="fig-box">
-      <div class="fig-box-head"><span class="fig-label">${label}</span>
-        <button type="button" class="fig-toggle ${s[key+'Sides']?'on':''}" data-sides="${key}" title="Edit sides individually"><span class="ms">border_outer</span></button></div>
-      <div class="fig-hv" ${s[key+'Sides']?'hidden':''}>
-        <span class="fig-field"><span class="ms fig-ic" title="Horizontal">width</span>${num(key+'H', s[key+'H'], 0, 200)}</span>
-        <span class="fig-field"><span class="ms fig-ic" title="Vertical">height</span>${num(key+'V', s[key+'V'], 0, 200)}</span></div>
-      <div class="fig-cross" ${s[key+'Sides']?'':'hidden'}>
-        ${[['T','border_top'],['R','border_right'],['B','border_bottom'],['L','border_left']]
-          .map(([k,ic])=>`<span class="fig-field"><span class="ms fig-ic">${ic}</span>${num(key+k, s[key+k])}</span>`).join('')}</div>
-    </div>`;
-  const paintSec = (on, kind, hex, alpha, vis, label) => `
-    <div class="fig-sec">
-      <div class="fig-sec-h"><span class="fig-sec-t">${label}</span>
-        <span class="fig-acts"><button type="button" class="fig-a" data-paint="${kind}" title="${on?'Remove':'Add'} ${label.toLowerCase()}"><span class="ms">${on?'remove':'add'}</span></button></span></div>
-      ${on ? `<div class="fig-paint">
-        <input type="color" class="fig-sw" data-s="${kind==='fill'?'bg':'bc'}" value="${hex}">
-        <input class="fig-hexin" data-s="${kind==='fill'?'bg':'bc'}" value="${hex}">
-        <span class="fig-op"><input type="number" data-s="${kind==='fill'?'bgA':'bcA'}" value="${alpha}" min="0" max="100"><span class="fig-op-u">%</span></span>
-        <button type="button" class="fig-a" data-vis="${kind==='fill'?'bgVis':'bcVis'}" title="${vis?'Hide':'Show'}"><span class="ms">${vis?'visibility':'visibility_off'}</span></button>
-      </div>` : ''}
-    </div>`;
-
-  el.innerHTML = `<div class="card">
-    <div class="bi-head"><h3 class="ed-h" style="margin:0">Block</h3>
-      <button class="bi-x" onclick="dbSel(null)" title="Deselect"><span class="ms">close</span></button></div>
-    <strong style="font-size:13.5px">${esc(def.name)}</strong>
-    <div class="fhint" style="margin-top:3px">${it.t === 'element' ? 'A single element.' : 'A composed block.'}
-      Made of ${blockElements(def).join(', ') || def.p}.</div>
-
-    <div class="ds-lbl">Example content</div>
-    <div id="dbContent">${dbContentFields(it, def)}</div>
-
-    <div class="ds-lbl">Layout</div>
-    <div class="fig-resize">
-      <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span>${num('wPx', s.wPx)}</span>
-      <select class="fig-strokesel" data-s="wMode">${[['fill','Fill container'],['fixed','Fixed width']].map(([v,t])=>`<option value="${v}"${s.wMode===v?' selected':''}>${t}</option>`).join('')}</select>
-    </div>
-    <div class="fig-resize" style="margin-top:6px">
-      <span class="fig-wt" title="Height"><span class="ms">swap_vert</span>${num('hVal', s.hVal)}</span>
-      <select class="fig-strokesel" data-s="hMode">${[['auto','Auto'],['hug','Hug'],['fixed','Fixed'],['min','Min'],['max','Max']].map(([v,t])=>`<option value="${v}"${s.hMode===v?' selected':''}>${t}</option>`).join('')}</select>
-    </div>
-
-    <div class="ds-lbl">Dimension</div>
-    ${boxSec('pad','Padding')}
-    ${boxSec('mar','Margin')}
-
-    ${paintSec(s.bgOn,'fill', s.bg, s.bgA, s.bgVis, 'Fill')}
-
-    <div class="ds-lbl">Appearance</div>
-    <div class="fig-box">
-      <div class="fig-box-head"><span class="fig-label">Corner radius</span>
-        <button type="button" class="fig-toggle ${s.radSides?'on':''}" data-sides="rad" title="Edit corners individually"><span class="ms">border_outer</span></button></div>
-      <div class="fig-hv" ${s.radSides?'hidden':''}>
-        <span class="fig-field"><span class="ms fig-ic">rounded_corner</span>${num('rad', s.rad, 0, 400)}</span></div>
-      <div class="fig-corners" ${s.radSides?'':'hidden'}>
-        ${[['radTL',''],['radTR','cn-tr'],['radBR','cn-br'],['radBL','cn-bl']]
-          .map(([k,cn])=>`<span class="fig-field"><span class="ms fig-ic ${cn}">rounded_corner</span>${num(k, s[k], 0, 400)}</span>`).join('')}</div>
-    </div>
-
-    ${paintSec(s.bcOn,'stroke', s.bc, s.bcA, s.bcVis, 'Stroke')}
-    ${s.bcOn ? `<div class="fig-resize" style="margin-top:6px">
-      <span class="fig-wt" title="Weight"><span class="ms">line_weight</span>${num('bw', s.bw, 0, 40)}</span>
-      <select class="fig-strokesel" data-s="bpos">${[['inside','Inside'],['center','Center'],['outside','Outside']].map(([v,t])=>`<option value="${v}"${s.bpos===v?' selected':''}>${t}</option>`).join('')}</select>
-    </div>` : ''}
-
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="lbtn sm" style="flex:1" onclick="dbDup(${i})"><span class="ms">content_copy</span> Duplicate</button>
-      <button class="lbtn sm" style="flex:1" onclick="dbDel(${i})"><span class="ms">close</span> Remove</button>
-    </div>
-  </div>`;
-  dbWireInspector();
-}
-function dbContentFields(it, def){
-  const prims = [];
-  (P2DOC[def.p] || [{cols:[[def.p]]}]).forEach(r => r.cols.forEach(c => c.forEach(p => prims.push(p))));
-  return prims.map((p,n) => {
-    const c = (it.content[n] = it.content[n] || {});
-    // Rich text where the field is prose; plain textareas where it's structure.
-    const rte = (label,k,v,tall) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
-      ${rteHtml(`c${n}-${k}`, v, n, k, tall)}`;
-    const ta = (label,k,v,rows) => `<div class="ds-lbl" style="margin-top:8px">${label}</div>
-      <textarea class="fin" rows="${rows||3}" data-c="${n}" data-k="${k}">${esc(v==null?'':v)}</textarea>`;
-    let body;
-    switch(p){
-      case 'heading': case 'subheading': body = rte('Text','title',c.title); break;
-      case 'paragraph': body = rte('Body','body',c.body,1); break;
-      case 'quote': body = rte('Quote','body',c.body,1); break;
-      case 'list': body = ta('Items (one per line)','items',(c.items||[]).join('\n'),3); break;
-      case 'callout': body = rte('Label','label',c.label) + rte('Body','body',c.body,1); break;
-      case 'stat': body = rte('Value','value',c.value) + rte('Label','label',c.label); break;
-      case 'button': body = rte('Label','label',c.label); break;
-      case 'field': body = ta('Merge field','field',c.field,1); break;
-      case 'signature': body = rte('Name','name',c.name) + rte('Role','role',c.role) + rte('Date','date',c.date); break;
-      case 'cover': body = rte('Kicker','kicker',c.kicker) + rte('Title','title',c.title) + rte('Meta','meta',c.meta); break;
-      case 'table': body = ta('Headers (comma separated)','headers',(c.headers||[]).join(', '),1)
-        + ta('Rows (one per line)','rows',(c.rows||[]).map(r=>r.join(', ')).join('\n'),3); break;
-      case 'keyvalue': body = ta('Pairs ("label | value" per line)','pairs',(c.pairs||[]).map(r=>r.join(' | ')).join('\n'),4); break;
-      case 'toc': body = ta('Entries ("title | page" per line)','rows',(c.rows||[]).map(r=>r.join(' | ')).join('\n'),4); break;
-      case 'image': body = `<div class="cf-drop" data-toast="Upload an image" style="margin-top:8px"><span class="ms">photo_camera</span>Upload image</div>`; break;
-      default: return '';
-    }
-    return `<div class="dbc-grp"><span class="dbc-h"><span class="ms">${PRIM_ICON[p]||'article'}</span>${p}</span>${body}</div>`;
-  }).join('') || '<div class="fhint">No editable content.</div>';
-}
-
-/* A small rich-text field for the inspector \u2014 the same formatting the canvas
-   accepts, so the two stay interchangeable. */
 function rteHtml(id, value, pi, field, tall){
   const b = (ic,t,cmd) => `<button class="srte-b" title="${t}" onmousedown="event.preventDefault()" onclick="document.execCommand('${cmd}')"><span class="ms">${ic}</span></button>`;
   return `<div class="srte">
@@ -5975,64 +5694,492 @@ function rteHtml(id, value, pi, field, tall){
   </div>`;
 }
 
-function dbWireInspector(){
-  const root = document.getElementById('dbRight');
-  const it = DB.doc.items[DB.sel];
-  if(!it) return;
-  root.querySelectorAll('[data-s]').forEach(el => {
-    const k = el.dataset.s;
-    const ev = el.type === 'color' || el.tagName === 'SELECT' ? 'change' : 'input';
-    el.addEventListener(ev, () => {
-      markDirty(DB.doc);
-      it.style[k] = el.type === 'number' ? (el.value === '' ? 0 : +el.value) : el.value;
-      dbCanvas();
-      if(el.classList.contains('fig-sw') || el.classList.contains('fig-hexin') || el.tagName === 'SELECT') dbInspector();
+/* \u2550\u2550\u2550 The Document Builder \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   Ported from tenderfy-admin/document-edit.html. That file's script drives
+   everything below: the Blocks/Layers left panes, the compact Layout list with
+   measured page-break markers, the paginated A4 Preview that repeats the
+   letterhead and footer on every page, the document Style controls, the Top
+   and Background layers, and the Figma inspector with scrub handles.
+
+   Dropped, as super-admin only: the client/brand inheritance picker and Ray's
+   block suggester. Kept from this prototype: editing content directly on the
+   page in Preview, and the Simple <-> Advanced handover.                     */
+
+let DB = null;
+
+(function(){
+  const $ = id => document.getElementById(id);
+  const canvas = $('canvas'), wrap = $('dcvWrap'), palette = $('dpalette');
+  const A4H = 877;                         // A4 page height at 620px wide
+  let uid = 0, mode = 'layout', selK = null, curItem = null, pq = '';
+
+  const items = () => DB.doc.items;
+  const brandOf = () => DB.doc.brand;
+  const docStyle = () => DB.doc.docStyle;
+
+  /* This build keeps its own item shape ({t,id,content,style}), which every
+     preview and the Simple editor already read; these mirror the admin's
+     inst* helpers over it. */
+  function instObj(it){ return BLOCK_BY_ID[it.id] || {}; }
+  function instLabel(it){ const o = instObj(it); return it.t === 'element' ? (BE_NAME[it.id] || it.id) : (o.label || it.id); }
+  function instDesc(it){ return instObj(it).desc || ''; }
+  function instIcon(it){
+    if(it.t === 'element') return PRIM_ICON[it.id] || 'widgets';
+    const p = instObj(it).p || '';
+    return /^l[hf]-/.test(p) ? 'flip_to_front' : 'grid_view';
+  }
+  function instFromToken(tok){
+    const el = String(tok).startsWith('el:');
+    const it = docItem(el ? 'element' : 'block', el ? tok.slice(3) : tok);
+    it.k = ++uid;
+    return it;
+  }
+
+  // ---- Palette ----
+  function renderPalette(){
+    const hit = txt => !pq || txt.toLowerCase().includes(pq);
+    const blocks = BLOCKS.filter(b => b.cat !== 'Headers & Footers' && !b.slot && hit(b.name + ' ' + b.cat));
+    let html = BLOCK_CATS.filter(c => c !== 'Headers & Footers' && blocks.some(b => b.cat === c)).map(cat =>
+      `<div class="pal-tag">${esc(cat)}</div>` + blocks.filter(b => b.cat === cat).map(b =>
+        `<div class="vb-widget" draggable="true" data-id="${b.id}" data-kind="block" title="${esc(b.desc||'')}"><div class="pal-prev blk-preview">${blockSchematic(b)}</div><span class="pal-lbl">${esc(b.label)}</span></div>`).join('')
+    ).join('');
+    const els = PRIMITIVES.filter(p => hit(p.name + ' ' + p.tag));
+    if(els.length){
+      html += `<div class="pal-sect"><span class="ms" style="font-size:15px">category</span> Elements</div>`;
+      html += [...new Set(PRIMITIVES.map(p => p.tag))].filter(t => els.some(p => p.tag === t)).map(tag =>
+        `<div class="pal-tag">${esc(tag)}</div>` + els.filter(p => p.tag === tag).map(p =>
+          `<div class="vb-widget vb-el" draggable="true" data-id="${p.id}" data-kind="element" title="${esc(p.desc)}"><span class="ms el-ic">${PRIM_ICON[p.id]||'widgets'}</span><span class="pal-lbl">${esc(p.name)}</span></div>`).join('')
+      ).join('');
+    }
+    palette.innerHTML = html;
+    $('pal-count').textContent = `(${blocks.length + els.length})`;
+    palette.querySelectorAll('.vb-widget').forEach(el => {
+      const tok = el.dataset.kind === 'element' ? ('el:' + el.dataset.id) : el.dataset.id;
+      el.addEventListener('click', () => addItem(tok));
+      el.addEventListener('dragstart', e => { e.dataTransfer.setData('add', tok); el.classList.add('dragging'); });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
     });
-  });
-  root.querySelectorAll('[data-sides]').forEach(b => b.addEventListener('click', () => {
-    const k = b.dataset.sides;
-    it.style[k+'Sides'] = !it.style[k+'Sides'];
-    dbInspector(); dbCanvas();
+  }
+  $('pq').addEventListener('input', e => { pq = e.target.value.toLowerCase().trim(); renderPalette(); });
+
+  // ---- Canvas ----
+  function renderBlockInstance(it){
+    return docItemHtml(it, brandOf(), 'pv-blk' + (it.k === selK ? ' sel' : ''), `data-k="${it.k}"`);
+  }
+  function furnSlot(kind, bottom){
+    const bid = kind === 'header' ? DB.doc.header : DB.doc.footer, b = bid && BLOCK_BY_ID[bid];
+    const label = kind === 'header' ? 'Letterhead' : 'Footer';
+    const body = b ? `<div class="furn-prev">${renderStationery(b.p, brandOf())}</div>`
+                   : `<div class="furn-empty"><span class="ms">add</span> No ${label.toLowerCase()} &mdash; choose one in Layers &#9654; Top</div>`;
+    return `<div class="doc-furn" data-furn="${kind}"${bottom?' style="margin-top:auto"':''}><div class="furn-tag"><span class="ms">flip_to_front</span> ${label} - Top layer</div>${body}</div>`;
+  }
+  function furnHTML(){
+    const hb = DB.doc.header && BLOCK_BY_ID[DB.doc.header], fb = DB.doc.footer && BLOCK_BY_ID[DB.doc.footer];
+    return {
+      head: hb ? `<div class="pv-furn" style="margin-bottom:22px">${renderStationery(hb.p, brandOf())}</div>` : '',
+      foot: fb ? `<div class="pv-furn" style="margin-top:auto;padding-top:22px">${renderStationery(fb.p, brandOf())}</div>` : ''
+    };
+  }
+  /* Measure the real rendered content into A4 pages, so Layout can show where
+     the page breaks fall and Preview can paginate for real. */
+  function measure(blocks, head, foot){
+    const ds = docStyle();
+    const meas = document.createElement('div');
+    meas.style.cssText = `position:absolute;left:-9999px;top:0;width:620px;box-sizing:border-box;padding:${ds.pad}px;visibility:hidden`;
+    meas.innerHTML = head + blocks.join('') + foot; wrap.appendChild(meas);
+    const kids = [...meas.children];
+    const headH = head ? kids[0].getBoundingClientRect().height + 22 : 0;
+    const footH = foot ? kids[kids.length-1].getBoundingClientRect().height + 16 : 0;
+    const bEls = kids.slice(head?1:0, foot?kids.length-1:kids.length);
+    const hts = bEls.map(el => { const cs = getComputedStyle(el); return el.getBoundingClientRect().height + (parseFloat(cs.marginBottom)||0); });
+    meas.remove();
+    return {hts, usable: Math.max(120, A4H - 2*ds.pad - headH - footH)};
+  }
+  function renderPreview(){
+    const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);
+    let pages;
+    try{
+      const {hts, usable} = measure(blocks, head, foot);
+      pages = []; let cur = [], acc = 0;
+      for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(cur.length && acc+h > usable){ pages.push(cur); cur = []; acc = 0; } cur.push(blocks[i]); acc += h; }
+      if(cur.length || !pages.length) pages.push(cur);
+    }catch(e){ pages = [blocks]; }
+    const n = pages.length;
+    canvas.innerHTML = pages.map((pg,pi) =>
+      `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg, pi)}</div><div class="doc-body">${head}${pg.join('')}${foot}</div><span class="pg-num">Page ${pi+1} / ${n}</span></div>`).join('');
+    return n;
+  }
+  function measurePages(){
+    const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);
+    let pageOf = [], count = 1;
+    try{
+      const {hts, usable} = measure(blocks, head, foot);
+      let pg = 0, acc = 0;
+      for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(i>0 && acc+h > usable){ pg++; acc = 0; } pageOf[i] = pg; acc += h; }
+      count = pg + 1;
+    }catch(e){ pageOf = items().map(()=>0); count = 1; }
+    return {count, pageOf};
+  }
+  function render(){
+    canvas.style.setProperty('--teal', brandOf().secondary || '');
+    let pageCount = 1;
+    if(mode === 'preview' && items().length){
+      pageCount = renderPreview();
+    } else if(!items().length){
+      canvas.innerHTML = `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg,0)}</div><div class="doc-body"><div class="doc-empty"><span class="ms big">library_add</span>Empty document<div class="fhint" style="margin-top:6px">Drag a block from the left, or click one to add it.</div></div></div></div>`;
+    } else {
+      const {count, pageOf} = measurePages(); pageCount = count;
+      const card = (it,i) => `
+        <div class="doc-blk doc-compact ${it.k===selK?'sel':''}" draggable="true" data-i="${i}" data-k="${it.k}" title="${esc(instDesc(it))}">
+          <span class="ms cmp-grip" data-grip>drag_indicator</span>
+          <span class="cmp-ic"><span class="ms">${instIcon(it)}</span></span>
+          <span class="cmp-name">${esc(instLabel(it))}</span>
+          <span class="cmp-tag ${it.t==='element'?'el':''}">${it.t==='element'?'Element':'Block'}</span>
+          <span class="ms cmp-rm" data-rm="${i}" title="Remove">close</span>
+        </div>`;
+      const rows = items().map((it,i) => {
+        const brk = (i>0 && pageOf[i] !== pageOf[i-1]) ? `<div class="pg-brk"><span><span class="ms" style="font-size:14px;vertical-align:-2px">insert_page_break</span> Page ${pageOf[i]+1}</span></div>` : '';
+        return brk + card(it,i);
+      }).join('');
+      canvas.innerHTML = `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg,0)}</div><div class="doc-body">${furnSlot('header')}${rows}${furnSlot('footer',true)}</div></div>`;
+    }
+    const lc = $('lyr-count'); if(lc) lc.textContent = items().length;
+    $('doc-count').textContent = items().length ? `- ${items().length} block${items().length>1?'s':''} - ${pageCount} A4 page${pageCount>1?'s':''}` : '';
+    applyDocStyle();
+    wire();
+    if(mode === 'preview') dbWireInline(canvas);      // content is editable straight on the page
+  }
+  function wire(){
+    canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
+      el.addEventListener('click', e => { if(e.target.closest('[data-f]')) return; e.stopPropagation(); selK = +el.dataset.k; render(); renderInspector(); });
+    });
+    canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
+    canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));
+    canvas.querySelectorAll('.doc-blk').forEach(el => {
+      el.addEventListener('click', e => { if(e.target.closest('.doc-tools')) return; selK = +el.dataset.k; render(); renderInspector(); });
+      el.addEventListener('dragstart', e => { e.dataTransfer.setData('move', el.dataset.i); el.classList.add('dragging'); });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+      el.addEventListener('dragover', e => e.preventDefault());
+      el.addEventListener('drop', e => {
+        e.preventDefault(); e.stopPropagation();
+        const mv = e.dataTransfer.getData('move'), add = e.dataTransfer.getData('add'), to = +el.dataset.i;
+        if(add){ items().splice(to,0,instFromToken(add)); } else if(mv !== ''){ const [m] = items().splice(+mv,1); items().splice(to,0,m); }
+        markDirty(DB.doc); render();
+      });
+    });
+  }
+  function addItem(tok){
+    const it = instFromToken(tok); items().push(it);
+    selK = (mode === 'layout') ? it.k : null;
+    markDirty(DB.doc); render(); renderInspector();
+    showToast((it.t==='element' ? 'Added element: ' : 'Added block: ') + instLabel(it));
+  }
+  wrap.addEventListener('dragover', e => { if(e.dataTransfer.types.includes('add')){ e.preventDefault(); wrap.classList.add('drag-over'); } });
+  wrap.addEventListener('dragleave', e => { if(!wrap.contains(e.relatedTarget)) wrap.classList.remove('drag-over'); });
+  wrap.addEventListener('drop', e => { wrap.classList.remove('drag-over'); const add = e.dataTransfer.getData('add'); if(add && !e.target.closest('.doc-blk')){ e.preventDefault(); addItem(add); } });
+
+  // ---- Document style (page fill / padding / spacing / radius) ----
+  function applyDocStyle(){
+    const ds = docStyle();
+    canvas.querySelectorAll('.vb-page').forEach(p => { p.style.background = ds.bg; p.style.borderRadius = ds.rad+'px'; });
+    canvas.querySelectorAll('.doc-body').forEach(b => { b.style.padding = ds.pad+'px'; b.style.gap = (mode==='preview'?0:ds.gap)+'px'; });
+  }
+  function syncDoc(){ markDirty(DB.doc); if(mode === 'preview') render(); else applyDocStyle(); }
+  function bindRange(rId,nId,key){
+    const R = $(rId), N = $(nId);
+    const set = v => { v = Math.max(+R.min, Math.min(+R.max, Math.round(+v||0))); docStyle()[key] = v; R.value = v; N.value = v; syncDoc(); };
+    R.addEventListener('input', () => set(R.value)); N.addEventListener('input', () => set(N.value));
+  }
+  bindRange('ds-pad','ds-padN','pad'); bindRange('ds-gap','ds-gapN','gap'); bindRange('ds-rad','ds-radN','rad');
+  const dbg = $('ds-bg'), dbgH = $('ds-bgH');
+  dbg.addEventListener('input', () => { docStyle().bg = dbg.value; dbgH.value = dbg.value.toUpperCase(); syncDoc(); });
+  dbgH.addEventListener('input', e => { const v = e.target.value.trim(); if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)){ docStyle().bg = v; dbg.value = v; syncDoc(); } });
+  function syncDocStyleInputs(){
+    const ds = docStyle();
+    [['ds-pad','ds-padN','pad'],['ds-gap','ds-gapN','gap'],['ds-rad','ds-radN','rad']].forEach(([r,n,k]) => { $(r).value = ds[k]; $(n).value = ds[k]; });
+    dbg.value = ds.bg; dbgH.value = ds.bg.toUpperCase();
+  }
+
+  // ---- Left-panel tabs (Blocks / Layers) ----
+  function showLeftTab(which){
+    document.querySelectorAll('#db .lt-tab').forEach(x => x.classList.toggle('on', x.dataset.lt === which));
+    $('paneBlocks').style.display = which === 'blocks' ? '' : 'none';
+    $('paneLayers').style.display = which === 'layers' ? '' : 'none';
+  }
+  document.querySelectorAll('#db .lt-tab').forEach(t => t.addEventListener('click', () => showLeftTab(t.dataset.lt)));
+  document.querySelectorAll('#db .acc-h').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('closed')));
+
+  // ---- Top layer (letterhead / footer, from Headers & Footers blocks) ----
+  const lhSel = $('lh-sel'), lfSel = $('lf-sel');
+  function furnMini(el, bid){ const b = bid && BLOCK_BY_ID[bid]; el.innerHTML = b ? `<div style="font-size:11px">${renderStationery(b.p, brandOf())}</div>` : `<span class="empty">None selected</span>`; }
+  lhSel.addEventListener('change', () => { DB.doc.header = lhSel.value||null; furnMini($('lh-mini'), DB.doc.header); markDirty(DB.doc); render(); });
+  lfSel.addEventListener('change', () => { DB.doc.footer = lfSel.value||null; furnMini($('lf-mini'), DB.doc.footer); markDirty(DB.doc); render(); });
+  function syncTopLayer(){
+    const heads = BLOCKS.filter(b => b.slot === 'header'), foots = BLOCKS.filter(b => b.slot === 'footer');
+    lhSel.innerHTML = `<option value="">None</option>` + heads.map(b => `<option value="${b.id}"${DB.doc.header===b.id?' selected':''}>${esc(b.label)}</option>`).join('');
+    lfSel.innerHTML = `<option value="">None</option>` + foots.map(b => `<option value="${b.id}"${DB.doc.footer===b.id?' selected':''}>${esc(b.label)}</option>`).join('');
+    furnMini($('lh-mini'), DB.doc.header); furnMini($('lf-mini'), DB.doc.footer);
+  }
+
+  // ---- Background layer (fill regions + custom CSS) ----
+  function bgGeoFields(r){
+    const num = (k,l) => `<div class="g"><label>${l}</label><input type="number" data-geo="${k}" value="${r[k]}"></div>`;
+    if(r.shape==='band-top'||r.shape==='band-bottom') return num('h','Height');
+    if(r.shape==='col-left'||r.shape==='col-right') return num('w','Width');
+    if(r.shape==='region') return num('x','X')+num('y','Y')+num('w','W')+num('h','H');
+    return '';
+  }
+  function regionRow(r){
+    const colorInput = (f,v) => `<div class="samp-row" style="margin-bottom:8px"><input type="color" data-f="${f}" value="${v}" style="width:30px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;flex:none"><input class="ds-hex" data-f="${f}H" value="${v.toUpperCase()}" style="flex:1"></div>`;
+    const geo = bgGeoFields(r);
+    return `<div class="bg-reg" data-id="${r.id}">
+      <div class="bg-reg-h"><select class="ds-sel" data-f="shape">${BG_SHAPES.map(x=>`<option value="${x[0]}"${x[0]===r.shape?' selected':''}>${x[1]}</option>`).join('')}</select><button class="bg-del" title="Remove"><span class="ms">delete</span></button></div>
+      ${geo?`<div class="bg-geo">${geo}</div>`:''}
+      ${colorInput('color', r.color)}
+      <label class="bi-tog" style="margin-bottom:8px"><input type="checkbox" data-f="gradOn"${r.gradOn?' checked':''}>Gradient</label>
+      ${r.gradOn?colorInput('color2', r.color2):''}
+      <div class="ds-row" style="margin-bottom:8px"><label>Opacity</label><div class="ds-ctl"><input type="range" data-f="op" min="0" max="100" value="${Math.round(r.op*100)}"><span class="ds-u">${Math.round(r.op*100)}%</span></div></div>
+      <label class="bi-tog"><input type="checkbox" data-f="firstOnly"${r.firstOnly?' checked':''}>First page only</label>
+    </div>`;
+  }
+  function renderBgRegions(){
+    const bg = DB.doc.bg, w = $('bgRegions');
+    w.innerHTML = bg.regions.length ? bg.regions.map(regionRow).join('')
+      : `<div class="fhint" style="margin:2px 0 10px">No fill regions yet &mdash; add one, or switch to Custom CSS.</div>`;
+    w.querySelectorAll('.bg-reg').forEach(el => {
+      const r = bg.regions.find(x => x.id == el.dataset.id);
+      el.querySelector('.bg-del').addEventListener('click', () => { bg.regions = bg.regions.filter(x => x !== r); renderBgRegions(); markDirty(DB.doc); render(); });
+      el.querySelectorAll('[data-f]').forEach(inp => {
+        const f = inp.dataset.f, ev = inp.type === 'checkbox' ? 'change' : 'input';
+        inp.addEventListener(ev, () => {
+          if(f==='shape'){ r.shape=inp.value; renderBgRegions(); }
+          else if(f==='gradOn'){ r.gradOn=inp.checked; renderBgRegions(); }
+          else if(f==='firstOnly'){ r.firstOnly=inp.checked; }
+          else if(f==='color'||f==='color2'){ r[f]=inp.value; const h=el.querySelector(`[data-f=${f}H]`); if(h)h.value=inp.value.toUpperCase(); }
+          else if(f==='colorH'||f==='color2H'){ const v=inp.value.trim(); if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return; r[f.slice(0,-1)]=v; const c=el.querySelector(`[data-f=${f.slice(0,-1)}]`); if(c)c.value=v; }
+          else if(f==='op'){ r.op=(+inp.value)/100; inp.nextElementSibling.textContent=inp.value+'%'; }
+          markDirty(DB.doc); render();
+        });
+      });
+      el.querySelectorAll('[data-geo]').forEach(inp => inp.addEventListener('input', () => { r[inp.dataset.geo]=Math.max(0,Math.round(+inp.value||0)); markDirty(DB.doc); render(); }));
+    });
+  }
+  $('bgAdd').addEventListener('click', () => { DB.doc.bg.regions.push(mkRegion(brandOf())); renderBgRegions(); markDirty(DB.doc); render(); });
+  document.querySelectorAll('#bgModeSeg button').forEach(b => b.addEventListener('click', () => {
+    DB.doc.bg.mode = b.dataset.bgm;
+    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.toggle('on', x === b));
+    $('bgRegionsPane').style.display = DB.doc.bg.mode === 'regions' ? '' : 'none';
+    $('bgCodePane').style.display = DB.doc.bg.mode === 'code' ? '' : 'none';
+    markDirty(DB.doc); render();
   }));
-  root.querySelectorAll('[data-paint]').forEach(b => b.addEventListener('click', () => {
-    const k = b.dataset.paint === 'fill' ? 'bgOn' : 'bcOn';
-    it.style[k] = !it.style[k];
-    dbInspector(); dbCanvas();
-  }));
-  root.querySelectorAll('[data-vis]').forEach(b => b.addEventListener('click', () => {
-    const k = b.dataset.vis;
-    it.style[k] = it.style[k] === false;
-    dbInspector(); dbCanvas();
-  }));
-  root.querySelectorAll('[data-rte]').forEach(el => el.addEventListener('input', () => {
-    markDirty(DB.doc);
-    const c = (it.content[+el.dataset.rte] = it.content[+el.dataset.rte] || {});
-    c[el.dataset.k] = el.innerHTML;
-    dbCanvas();
-  }));
-  root.querySelectorAll('[data-c]').forEach(el => el.addEventListener('input', () => {
-    markDirty(DB.doc);
-    const c = (it.content[+el.dataset.c] = it.content[+el.dataset.c] || {});
-    const k = el.dataset.k, v = el.value;
-    if(k === 'items')        c.items   = v.split('\n').map(x=>x.trim()).filter(Boolean);
-    else if(k === 'headers') c.headers = v.split(',').map(x=>x.trim()).filter(Boolean);
-    else if(k === 'rows' && it.id === 'toc') c.rows = v.split('\n').map(l=>l.split('|').map(x=>x.trim())).filter(r=>r[0]);
-    else if(k === 'rows')    c.rows    = v.split('\n').map(l=>l.split(',').map(x=>x.trim())).filter(r=>r[0]);
-    else if(k === 'pairs')   c.pairs   = v.split('\n').map(l=>l.split('|').map(x=>x.trim())).filter(r=>r[0]);
-    else c[k] = v;
-    dbCanvas();
-  }));
-  // Scrub-drag the little field icons, as in the admin inspector.
-  root.querySelectorAll('.fig-ic').forEach(ic => ic.addEventListener('mousedown', e => {
-    const input = ic.parentElement.querySelector('input');
-    if(!input) return;
-    e.preventDefault();
-    const x0 = e.clientX, v0 = +input.value || 0;
-    const move = ev => { input.value = Math.max(0, v0 + Math.round((ev.clientX - x0)/2)); input.dispatchEvent(new Event('input',{bubbles:true})); };
-    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
-    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
-  }));
-}
+  $('bgCss').addEventListener('input', e => { DB.doc.bg.css = e.target.value; markDirty(DB.doc); render(); });
+  function syncBgPane(){
+    const bg = DB.doc.bg;
+    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.toggle('on', x.dataset.bgm === bg.mode));
+    $('bgRegionsPane').style.display = bg.mode === 'regions' ? '' : 'none';
+    $('bgCodePane').style.display = bg.mode === 'code' ? '' : 'none';
+    $('bgCss').value = bg.css || '';
+    renderBgRegions();
+  }
+
+  // ---- Mode toggle (Layout / Preview) ----
+  function setMode(m){
+    mode = m;
+    document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x.dataset.mode === m));
+    applyDocStyle(); renderInspector(); render();
+  }
+  document.querySelectorAll('#modeSeg button').forEach(x => x.addEventListener('click', () => setMode(x.dataset.mode)));
+
+  // ---- Block inspector (per-block content + style) ----
+  function renderInspector(){
+    const it = items().find(x => x.k === selK), show = !!it;
+    $('blockInspector').style.display = show ? '' : 'none';
+    $('docSettings').style.display = show ? 'none' : '';
+    if(show) fillInspector(it); else curItem = null;
+  }
+  function fillInspector(it){
+    curItem = it;
+    $('bi-name').textContent = instLabel(it);
+    $('bi-desc').textContent = instDesc(it);
+    const s = it.style;
+    fillBox(it,'pad'); fillBox(it,'mar'); fillRad(it);
+    const wm = s.wMode||'fill'; $('bs-wmode').value = wm; $('bs-wpx').value = s.wPx||480; $('bs-wpx').disabled = (wm !== 'fixed');
+    const hm = s.hMode||'auto'; $('bs-hmode').value = hm; $('bs-hval').value = s.hVal||120; $('bs-hval').disabled = (hm==='auto'||hm==='hug');
+    fillPaint('bg'); fillPaint('bc');
+    /* Content is keyed by primitive index in this build, so the admin's flat
+       Title / Body fields are pointed at the first matching primitive. */
+    const els = it.t === 'element' ? [it.id] : blockElements(instObj(it));
+    const titleAt = els.findIndex(e => ['heading','subheading','cover'].includes(e));
+    const bodyAt  = els.findIndex(e => ['paragraph','quote','callout'].includes(e));
+    $('bi-content-lbl').style.display = (titleAt>=0 || bodyAt>=0) ? '' : 'none';
+    let html = '';
+    if(titleAt >= 0) html += `<div class="ds-fld"><label>Title</label>${rteHtml('ct-title', slot(it,titleAt).title||'', titleAt, 'title')}</div>`;
+    if(bodyAt  >= 0) html += `<div class="ds-fld"><label>Body text</label>${rteHtml('ct-body', slot(it,bodyAt).body||'', bodyAt, 'body', true)}</div>`;
+    if(titleAt < 0 && bodyAt < 0) html = `<div class="fhint" style="margin:2px 0 4px">No editable text in this block &mdash; style it below, then check Preview.</div>`;
+    $('bi-content').innerHTML = html;
+    dbWireRte(it);
+  }
+  function blockElements(b){
+    const out = [];
+    (P2DOC[b.p] || []).forEach(row => row.cols.forEach(col => col.forEach(p => out.push(p))));
+    return out;
+  }
+  /* Rich-text editing for the inspector fields, kept from this prototype. */
+  function slot(it, pi){ return (it.content[pi] = it.content[pi] || {}); }
+  function dbWireRte(it){
+    // rteHtml carries the primitive index in data-rte and the field in data-k;
+    // the toolbar runs execCommand inline, so input covers typing and formatting.
+    document.querySelectorAll('#bi-content .srte-ed').forEach(box => {
+      const pi = +box.dataset.rte, field = box.dataset.k;
+      const push = () => { slot(it, pi)[field] = box.innerHTML; markDirty(DB.doc); if(mode === 'preview') render(); };
+      box.addEventListener('input', push);
+      box.addEventListener('blur', push);
+    });
+  }
+  const SIDES=['T','R','B','L'], AXES=['H','V'];
+  const boxClamp = v => Math.max(0,Math.min(200,Math.round(+v||0)));
+  const boxGet = (s,k) => s[k]!=null ? s[k] : (s[k.slice(0,3)]||0);
+  function figScrub(el, get, set){
+    el.addEventListener('pointerdown',e=>{ e.preventDefault(); const x0=e.clientX, v0=+get()||0; try{el.setPointerCapture(e.pointerId);}catch(_){}
+      const mv=ev=>set(v0+Math.round((ev.clientX-x0)/2)); const up=()=>{ el.removeEventListener('pointermove',mv); el.removeEventListener('pointerup',up); };
+      el.addEventListener('pointermove',mv); el.addEventListener('pointerup',up); });
+  }
+  function fillBox(it, prop){
+    const s = it.style, ctl = document.querySelector(`#blockInspector .fig-box[data-box="${prop}"]`); if(!ctl) return;
+    const sm = !!s[prop+'Sides'];
+    ctl.querySelector('[data-toggle]').classList.toggle('on', sm);
+    ctl.querySelector('.fig-hv').hidden = sm; ctl.querySelector('.fig-cross').hidden = !sm;
+    AXES.forEach(a => { const el = $('bs-'+prop+a); if(el) el.value = boxGet(s,prop+a); });
+    SIDES.forEach(x => { const el = $('bs-'+prop+x); if(el) el.value = s[prop+x]||0; });
+  }
+  function wireBox(prop){
+    const ctl = document.querySelector(`#blockInspector .fig-box[data-box="${prop}"]`); if(!ctl) return;
+    AXES.forEach(a => { const inp = $('bs-'+prop+a); if(!inp) return;
+      inp.addEventListener('input', () => { if(!curItem) return; curItem.style[prop+a] = boxClamp(inp.value); markDirty(DB.doc); render(); });
+      const ic = inp.parentElement.querySelector('.fig-ic'); if(ic) figScrub(ic, () => curItem?boxGet(curItem.style,prop+a):0, v => { if(!curItem) return; curItem.style[prop+a] = boxClamp(v); inp.value = curItem.style[prop+a]; render(); });
+    });
+    SIDES.forEach(x => { const inp = $('bs-'+prop+x); if(!inp) return;
+      inp.addEventListener('input', () => { if(!curItem) return; curItem.style[prop+x] = boxClamp(inp.value); markDirty(DB.doc); render(); });
+      const ic = inp.parentElement.querySelector('.fig-ic'); if(ic) figScrub(ic, () => curItem?(curItem.style[prop+x]||0):0, v => { if(!curItem) return; curItem.style[prop+x] = boxClamp(v); inp.value = curItem.style[prop+x]; render(); });
+    });
+    ctl.querySelector('[data-toggle]').addEventListener('click', () => {
+      if(!curItem) return; const s = curItem.style, sm = !s[prop+'Sides']; s[prop+'Sides'] = sm;
+      if(sm){ const h = boxGet(s,prop+'H'), v = boxGet(s,prop+'V'); if(!s[prop+'T'])s[prop+'T']=v; if(!s[prop+'B'])s[prop+'B']=v; if(!s[prop+'L'])s[prop+'L']=h; if(!s[prop+'R'])s[prop+'R']=h; }
+      else { s[prop+'H']=s[prop+'L']||s[prop+'R']||0; s[prop+'V']=s[prop+'T']||s[prop+'B']||0; }
+      fillBox(curItem,prop); render();
+    });
+  }
+  const CORNERS=['TL','TR','BR','BL'];
+  const radClamp = v => Math.max(0,Math.min(400,Math.round(+v||0)));
+  function fillRad(it){
+    const s = it.style, ctl = document.querySelector('#blockInspector .fig-box[data-box="rad"]'); if(!ctl) return;
+    const sm = !!s.radSides;
+    ctl.querySelector('[data-toggle]').classList.toggle('on', sm);
+    ctl.querySelector('.fig-solo').hidden = sm; ctl.querySelector('.fig-corners').hidden = !sm;
+    $('bs-rad').value = s.rad||0;
+    CORNERS.forEach(c => { const el = $('bs-rad'+c); if(el) el.value = s['rad'+c]||0; });
+  }
+  function wireRad(){
+    const ctl = document.querySelector('#blockInspector .fig-box[data-box="rad"]'); if(!ctl) return;
+    const uni = $('bs-rad');
+    uni.addEventListener('input', () => { if(!curItem) return; curItem.style.rad = radClamp(uni.value); markDirty(DB.doc); render(); });
+    CORNERS.forEach(c => { const inp = $('bs-rad'+c); if(!inp) return; inp.addEventListener('input', () => { if(!curItem) return; curItem.style['rad'+c] = radClamp(inp.value); render(); }); });
+    ctl.querySelector('[data-toggle]').addEventListener('click', () => {
+      if(!curItem) return; const s = curItem.style, sm = !s.radSides; s.radSides = sm;
+      if(sm) CORNERS.forEach(c => { if(!s['rad'+c]) s['rad'+c] = s.rad||0; });
+      else s.rad = Math.max(s.radTL||0,s.radTR||0,s.radBR||0,s.radBL||0);
+      fillRad(curItem); render();
+    });
+    const ic = ctl.querySelector('.fig-solo .fig-ic'); if(ic) figScrub(ic, () => curItem?curItem.style.rad||0:0, v => { if(!curItem) return; curItem.style.rad = radClamp(v); uni.value = curItem.style.rad; render(); });
+  }
+  wireBox('pad'); wireBox('mar'); wireRad();
+  (function(){
+    const M = $('bs-wmode'), V = $('bs-wpx');
+    M.addEventListener('change', () => { if(!curItem) return; curItem.style.wMode = M.value; V.disabled = (M.value !== 'fixed'); markDirty(DB.doc); render(); });
+    V.addEventListener('input', () => { if(!curItem) return; curItem.style.wPx = Math.max(0,Math.round(+V.value||0)); render(); });
+  })();
+  (function(){
+    const M = $('bs-hmode'), V = $('bs-hval');
+    const upd = () => { if(!curItem) return; curItem.style.hMode = M.value; V.disabled = (M.value==='auto'||M.value==='hug'); curItem.style.hVal = Math.max(0,Math.round(+V.value||0)); markDirty(DB.doc); render(); };
+    M.addEventListener('change', upd); V.addEventListener('input', upd);
+  })();
+  const clampA = v => Math.max(0,Math.min(100,Math.round(+v||0)));
+  function fillPaint(key){
+    if(!curItem) return; const s = curItem.style;
+    const sec = document.querySelector(`#blockInspector .fig-sec[data-paint="${key}"]`); if(!sec) return;
+    const paint = $('bs-'+key+'Paint');
+    $('bs-'+key).value = s[key]||'#000000';
+    $('bs-'+key+'H').value = (s[key]||'').replace('#','').toUpperCase();
+    $('bs-'+key+'A').value = (s[key+'A']!=null?s[key+'A']:100);
+    const on = !!s[key+'On'], vis = s[key+'Vis'] !== false;
+    paint.style.display = on ? '' : 'none';
+    sec.querySelector('[data-add]').style.display = on ? 'none' : '';
+    paint.classList.toggle('off', !vis);
+    sec.querySelector('[data-eye] .ms').textContent = vis ? 'visibility' : 'visibility_off';
+    if(key === 'bc'){ $('bs-bpos').value = s.bpos||'inside'; $('bs-bw').value = (s.bw!=null?s.bw:1); $('bs-strokeMeta').style.display = on ? '' : 'none'; }
+  }
+  function wirePaint(key){
+    const sec = document.querySelector(`#blockInspector .fig-sec[data-paint="${key}"]`); if(!sec) return;
+    const C = $('bs-'+key), H = $('bs-'+key+'H'), A = $('bs-'+key+'A');
+    const ensureOn = () => { if(!curItem.style[key+'On']){ curItem.style[key+'On'] = true; curItem.style[key+'Vis'] = true; } };
+    C.addEventListener('input', () => { if(!curItem) return; curItem.style[key] = C.value; ensureOn(); fillPaint(key); markDirty(DB.doc); render(); });
+    H.addEventListener('input', () => { if(!curItem) return; const v = H.value.trim().replace(/^#/,''); if(/^([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)){ curItem.style[key] = '#'+v; ensureOn(); fillPaint(key); render(); } });
+    A.addEventListener('input', () => { if(!curItem) return; curItem.style[key+'A'] = clampA(A.value); render(); });
+    sec.querySelector('[data-eye]').addEventListener('click', () => { if(!curItem) return; curItem.style[key+'Vis'] = !(curItem.style[key+'Vis'] !== false); fillPaint(key); render(); });
+    sec.querySelector('[data-rm]').addEventListener('click', () => { if(!curItem) return; curItem.style[key+'On'] = false; fillPaint(key); render(); });
+    sec.querySelector('[data-add]').addEventListener('click', () => { if(!curItem) return; curItem.style[key+'On'] = true; curItem.style[key+'Vis'] = true; fillPaint(key); render(); });
+    if(key === 'bc'){
+      $('bs-bpos').addEventListener('change', e => { if(!curItem) return; curItem.style.bpos = e.target.value; render(); });
+      $('bs-bw').addEventListener('input', e => { if(!curItem) return; curItem.style.bw = Math.max(0,Math.min(40,Math.round(+e.target.value||0))); render(); });
+    }
+  }
+  wirePaint('bg'); wirePaint('bc');
+  $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); });
+  canvas.addEventListener('click', e => { if(!e.target.closest('.doc-blk') && !e.target.closest('.pv-blk[data-k]')){ selK = null; renderInspector(); render(); } });
+
+  // ---- Responsive panels ----
+  const ed3 = document.querySelector('#db .ed3');
+  $('dStyleBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('st-on')); });
+  $('dElBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('el-on')); });
+
+  // ---- Open / save ----
+  window.dbOpen = cfg => {
+    DB = {doc: cfg.doc, backRoute: cfg.backRoute, title: cfg.title || cfg.doc.name, sub: cfg.sub || '',
+          onSave: cfg.onSave, backLabel: cfg.backLabel || 'Cancel'};
+    if(!DB.doc.bg) DB.doc.bg = newDocBg();
+    if(!DB.doc.docStyle) DB.doc.docStyle = {bg:'#ffffff', pad:36, gap:12, rad:4};
+    DB.doc.items.forEach(it => { if(!it.k) it.k = ++uid; });
+    selK = null; curItem = null; mode = 'layout'; pq = '';
+    document.getElementById('db').classList.add('open');
+    dbHead(); renderPalette(); showLeftTab('blocks'); syncTopLayer(); syncBgPane(); syncDocStyleInputs();
+    setMode('layout');
+  };
+  window.dbClose = () => { document.getElementById('db').classList.remove('open'); DB = null; };
+  window.dbSave = () => {
+    const d = DB.doc, cb = DB.onSave, back = DB.backRoute;
+    if(!d.items.length){ showToast('Add at least one block'); return; }
+    d.dirty = false;
+    dbClose();
+    if(cb) cb(d);
+    if(back) go(back);
+    showToast((d.isNew ? 'Created ' : 'Saved ') + (KIND_LABEL[d.kind]||'document') + ' - ' + d.name);
+  };
+  window.dbExit = () => exitEditor(DB.doc, DB.backRoute, () => dbClose(), window.dbSave);
+  window.dbRender = () => render();
+  window.dbToSimpleMode = () => {
+    const d = DB.doc, cb = DB.onSave, back = DB.backRoute;
+    dbClose();
+    smOpen({doc:d, backRoute:back, onSave:cb});
+  };
+  function dbHead(){
+    document.getElementById('dbHead').innerHTML = edHeadHtml({
+      doc: DB.doc, mode:'advanced', sub: DB.sub,
+      exit:'dbExit()', save:'dbSave()',
+      rename:"DB.doc.name=this.value;markDirty(DB.doc);var b=document.getElementById('doc-bar');if(b)b.textContent=this.value",
+    });
+    const b = document.getElementById('doc-bar'); if(b) b.textContent = DB.doc.name;
+  }
+})();
 
 /* \u2550\u2550\u2550 Documents built with the Document Builder \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    Resumes and Case Studies are now composed documents (an ordered list of
