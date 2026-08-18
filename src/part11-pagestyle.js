@@ -76,34 +76,31 @@ function psSide(){
   const d = PS.doc, isCover = PS.kind === 'cover';
   const sw = (which, list, cur) => list.map(c =>
     `<span class="swb ${String(c).toLowerCase() === String(cur).toLowerCase() ? 'on' : ''}" style="background:${c}" onclick="psPick('${which}','${c}')" title="${c}"></span>`).join('');
+  const paint = (which, label, cur) => `
+    <div class="fld"><label>${label}</label>
+      <div class="sub">Vibrant</div><div class="sws">${sw(which, PAL_VIBRANT, cur)}</div>
+      <div class="sub">Earthy</div><div class="sws">${sw(which, PAL_EARTHY, cur)}</div>
+      <div class="sub">Custom ${label}</div>
+      <div class="hexwrap"><input class="hexin" value="${esc(cur)}" oninput="psHex('${which}',this.value)"><span class="ms">palette</span></div>
+    </div>`;
+  // One card of .fld groups - the same structure, and so the same spacing, as
+  // live's dialog column.
   document.getElementById('psSide').innerHTML = `
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Cover' : 'Table of Content'} Font</h3>
-      <select class="selin" onchange="psFont(this.value)">
-        ${STYLE_FONTS.map(f => `<option${f === d.brand.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">Background Color</h3>
-      <div class="sub">Vibrant</div><div class="sws">${sw('bg', PAL_VIBRANT, d.brand.primary)}</div>
-      <div class="sub">Earthy</div><div class="sws">${sw('bg', PAL_EARTHY, d.brand.primary)}</div>
-      <div class="sub">Custom Background Color</div>
-      <div class="hexwrap"><input class="hexin" value="${esc(d.brand.primary)}" oninput="psHex('bg',this.value)"><span class="ms">palette</span></div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Text' : 'Secondary'} Color</h3>
-      <div class="sub">Vibrant</div><div class="sws">${sw('tx', PAL_VIBRANT, d.brand.secondary)}</div>
-      <div class="sub">Earthy</div><div class="sws">${sw('tx', PAL_EARTHY, d.brand.secondary)}</div>
-      <div class="sub">Custom ${isCover ? 'Text' : 'Secondary'} Color</div>
-      <div class="hexwrap"><input class="hexin" value="${esc(d.brand.secondary)}" oninput="psHex('tx',this.value)"><span class="ms">palette</span></div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Cover' : 'Table of Content'} Logo</h3>
-      <div class="logorow"><span class="fn">${esc(PS.rec.logoFile || PS.rec.logo || 'No logo')}</span>
-        <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
-        <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
+    <div class="card ps-controls">
+      <div class="fld"><label>${isCover ? 'Cover' : 'Table of Content'} Font</label>
+        <select class="selin" onchange="psFont(this.value)">
+          ${STYLE_FONTS.map(f => `<option${f === d.brand.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}
+        </select></div>
+      ${paint('bg', 'Background Color', d.brand.primary)}
+      ${paint('tx', (isCover ? 'Text' : 'Secondary') + ' Color', d.brand.secondary)}
+      <div class="fld" style="margin-bottom:0"><label>${isCover ? 'Cover' : 'Table of Content'} Logo</label>
+        <div class="logorow"><span class="fn">${esc(PS.rec.logoFile || PS.rec.logo || 'No logo')}</span>
+          <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
+          <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
+      </div>
     </div>`;
 }
+
 /* Middle: the same canvas and the same A4 pages the builder shows. */
 function psStage(){
   const note = PS.kind === 'cover'

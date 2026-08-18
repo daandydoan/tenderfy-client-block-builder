@@ -542,6 +542,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .db .tb-btn.on{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .db .tb-btn .ms{font-size:17px}
 .card{background:#fff;border:1px solid #E3E8E7;border-radius:10px;padding:13px}
+.ps-controls{padding:16px 16px 14px}
 .ed-h{font-size:13px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:#2E3C3B}
 .pal-cat{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9AA5A3;margin:14px 2px 7px}
 .pal-prev{height:58px;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:8px;pointer-events:none}
@@ -603,7 +604,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Simple mode ══════════════════════════════════════════════════════════ */
 #sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 #sm.open,#ps.open{display:flex}
-.sm-body{flex:1;min-height:0;overflow:auto;padding:24px 54px 40px}
+.sm-body{min-height:0;padding:0}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
 .sm-col.side{position:sticky;top:0}
@@ -651,9 +652,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* block canvas (case study) — measured from live: a full-width white card
    (radius 12, 1px #C3C3C3) holding a 900px centred column with 20px padding, so
    the working width is 860px. "+" bars are 72px tall, radius 8, 20px apart. */
-.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:12px;padding:0;
-  margin:0;min-height:calc(100vh - 178px)}
-.sm-col{width:900px;max-width:100%;margin:0 auto;padding:20px;box-sizing:border-box}
+.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:0;margin:0 auto;width:620px;max-width:100%}
+.sm-col{width:620px;max-width:100%;margin:0 auto;padding:0;box-sizing:border-box}
 .smb{display:flex;align-items:flex-start;gap:10px}
 .smb-grip{color:#B8C2C0;font-size:19px;cursor:grab;margin-top:12px;flex:none}
 .smb-body{flex:1;min-width:0;border:1px solid #E3E8E7;border-radius:4px;overflow:hidden;background:#fff}
@@ -1133,7 +1133,11 @@ textarea.fin{resize:vertical;line-height:1.5}
 <!-- Simple mode — the editor the live app offers today (resume form / block canvas) -->
 <div class="sm" id="sm">
   <div class="ed-top" id="smHead"></div>
-  <div class="sm-body" id="smBody"></div>
+  <div class="ed3 st-on el-on">
+    <div class="ed3-col" id="smSide"></div>
+    <div class="ed3-mid"><div class="vb-canvas"><div class="sm-body" id="smBody"></div></div></div>
+    <div class="ed3-col" id="smRight"></div>
+  </div>
 </div>
 
 <!-- Add Block dialog, matching the live case-study editor -->

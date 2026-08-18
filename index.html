@@ -3104,6 +3104,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .db .tb-btn.on{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .db .tb-btn .ms{font-size:17px}
 .card{background:#fff;border:1px solid #E3E8E7;border-radius:10px;padding:13px}
+.ps-controls{padding:16px 16px 14px}
 .ed-h{font-size:13px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:#2E3C3B}
 .pal-cat{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9AA5A3;margin:14px 2px 7px}
 .pal-prev{height:58px;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:8px;pointer-events:none}
@@ -3165,7 +3166,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* === Simple mode ========================================================== */
 #sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 #sm.open,#ps.open{display:flex}
-.sm-body{flex:1;min-height:0;overflow:auto;padding:24px 54px 40px}
+.sm-body{min-height:0;padding:0}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
 .sm-col.side{position:sticky;top:0}
@@ -3213,9 +3214,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* block canvas (case study) -- measured from live: a full-width white card
    (radius 12, 1px #C3C3C3) holding a 900px centred column with 20px padding, so
    the working width is 860px. "+" bars are 72px tall, radius 8, 20px apart. */
-.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:12px;padding:0;
-  margin:0;min-height:calc(100vh - 178px)}
-.sm-col{width:900px;max-width:100%;margin:0 auto;padding:20px;box-sizing:border-box}
+.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:0;margin:0 auto;width:620px;max-width:100%}
+.sm-col{width:620px;max-width:100%;margin:0 auto;padding:0;box-sizing:border-box}
 .smb{display:flex;align-items:flex-start;gap:10px}
 .smb-grip{color:#B8C2C0;font-size:19px;cursor:grab;margin-top:12px;flex:none}
 .smb-body{flex:1;min-width:0;border:1px solid #E3E8E7;border-radius:4px;overflow:hidden;background:#fff}
@@ -3695,7 +3695,11 @@ textarea.fin{resize:vertical;line-height:1.5}
 <!-- Simple mode &#x2014; the editor the live app offers today (resume form / block canvas) -->
 <div class="sm" id="sm">
   <div class="ed-top" id="smHead"></div>
-  <div class="sm-body" id="smBody"></div>
+  <div class="ed3 st-on el-on">
+    <div class="ed3-col" id="smSide"></div>
+    <div class="ed3-mid"><div class="vb-canvas"><div class="sm-body" id="smBody"></div></div></div>
+    <div class="ed3-col" id="smRight"></div>
+  </div>
 </div>
 
 <!-- Add Block dialog, matching the live case-study editor -->
@@ -6750,6 +6754,7 @@ function smRender(){
     rename:'SM.doc.name=this.value;markDirty(SM.doc)',
   });
   document.getElementById('smBody').innerHTML = isResume ? smResumeHtml() : smBlocksHtml();
+  smSidePanels(isResume);
   if(isResume) smWireResume(); else smWireBlocks();
 }
 
@@ -7061,6 +7066,31 @@ window.tplChoose = (kind, onPick) => {
   paint();
   ov.classList.add('open');
 };
+
+/* The side columns exist so the canvas sits where Advanced puts it. Simple has
+   no palette and no inspector, so they carry the document summary and a pointer
+   across, rather than controls that only belong in Advanced. */
+function smSidePanels(isResume){
+  const d = SM.doc;
+  document.getElementById('smSide').innerHTML = `
+    <div class="card">
+      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">description</span> Document</h3>
+      <div class="fhint">${esc(KIND_LABEL[d.kind] || 'Document')} &middot; ${d.items.length} block${d.items.length===1?'':'s'}</div>
+      <div class="fhint" style="margin-top:8px">${isResume
+        ? 'Fill in each section on the right. The preview updates as you type.'
+        : 'Add blocks with the + bars. Reorder them with the handle on the left.'}</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">dashboard_customize</span> Blocks &amp; layers</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> for the full block palette, the Layers panel and per-block styling.</div>
+    </div>`;
+  document.getElementById('smRight').innerHTML = `
+    <div class="card">
+      <h3 class="ed-h">Page</h3>
+      <div class="fhint">Letterhead ${d.header ? 'set' : 'none'} &middot; footer ${d.footer ? 'set' : 'none'}</div>
+      <div class="fhint" style="margin-top:8px">A4 &middot; ${d.items.length} block${d.items.length===1?'':'s'}</div>
+    </div>`;
+}
 
 /* \u2550\u2550\u2550 Block Builder \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    Ported from tenderfy-admin/block-edit.html. The editor logic below is that
@@ -7966,34 +7996,31 @@ function psSide(){
   const d = PS.doc, isCover = PS.kind === 'cover';
   const sw = (which, list, cur) => list.map(c =>
     `<span class="swb ${String(c).toLowerCase() === String(cur).toLowerCase() ? 'on' : ''}" style="background:${c}" onclick="psPick('${which}','${c}')" title="${c}"></span>`).join('');
+  const paint = (which, label, cur) => `
+    <div class="fld"><label>${label}</label>
+      <div class="sub">Vibrant</div><div class="sws">${sw(which, PAL_VIBRANT, cur)}</div>
+      <div class="sub">Earthy</div><div class="sws">${sw(which, PAL_EARTHY, cur)}</div>
+      <div class="sub">Custom ${label}</div>
+      <div class="hexwrap"><input class="hexin" value="${esc(cur)}" oninput="psHex('${which}',this.value)"><span class="ms">palette</span></div>
+    </div>`;
+  // One card of .fld groups - the same structure, and so the same spacing, as
+  // live's dialog column.
   document.getElementById('psSide').innerHTML = `
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Cover' : 'Table of Content'} Font</h3>
-      <select class="selin" onchange="psFont(this.value)">
-        ${STYLE_FONTS.map(f => `<option${f === d.brand.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">Background Color</h3>
-      <div class="sub">Vibrant</div><div class="sws">${sw('bg', PAL_VIBRANT, d.brand.primary)}</div>
-      <div class="sub">Earthy</div><div class="sws">${sw('bg', PAL_EARTHY, d.brand.primary)}</div>
-      <div class="sub">Custom Background Color</div>
-      <div class="hexwrap"><input class="hexin" value="${esc(d.brand.primary)}" oninput="psHex('bg',this.value)"><span class="ms">palette</span></div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Text' : 'Secondary'} Color</h3>
-      <div class="sub">Vibrant</div><div class="sws">${sw('tx', PAL_VIBRANT, d.brand.secondary)}</div>
-      <div class="sub">Earthy</div><div class="sws">${sw('tx', PAL_EARTHY, d.brand.secondary)}</div>
-      <div class="sub">Custom ${isCover ? 'Text' : 'Secondary'} Color</div>
-      <div class="hexwrap"><input class="hexin" value="${esc(d.brand.secondary)}" oninput="psHex('tx',this.value)"><span class="ms">palette</span></div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">${isCover ? 'Cover' : 'Table of Content'} Logo</h3>
-      <div class="logorow"><span class="fn">${esc(PS.rec.logoFile || PS.rec.logo || 'No logo')}</span>
-        <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
-        <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
+    <div class="card ps-controls">
+      <div class="fld"><label>${isCover ? 'Cover' : 'Table of Content'} Font</label>
+        <select class="selin" onchange="psFont(this.value)">
+          ${STYLE_FONTS.map(f => `<option${f === d.brand.font ? ' selected' : ''}>${esc(f)}</option>`).join('')}
+        </select></div>
+      ${paint('bg', 'Background Color', d.brand.primary)}
+      ${paint('tx', (isCover ? 'Text' : 'Secondary') + ' Color', d.brand.secondary)}
+      <div class="fld" style="margin-bottom:0"><label>${isCover ? 'Cover' : 'Table of Content'} Logo</label>
+        <div class="logorow"><span class="fn">${esc(PS.rec.logoFile || PS.rec.logo || 'No logo')}</span>
+          <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
+          <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
+      </div>
     </div>`;
 }
+
 /* Middle: the same canvas and the same A4 pages the builder shows. */
 function psStage(){
   const note = PS.kind === 'cover'
