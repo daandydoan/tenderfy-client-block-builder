@@ -541,7 +541,7 @@ function beNewBlock(){
   // ---- Open / save ----
   window.beOpen = block => {
     BE = {block: block || beNewBlock()};
-    const def = BE.block.id && CUSTOM_BLOCK_DEF[BE.block.id];
+    const def = BE.block.seedDef || (BE.block.id && CUSTOM_BLOCK_DEF[BE.block.id]);
     doc = def ? normDoc(clone(def.doc)) : (BE.block.seed ? normDoc(clone(BE.block.seed)) : []);
     blockStyle = def && def.blockStyle ? Object.assign(blockDef(), def.blockStyle) : blockDef();
     codeArea.value = (def && def.code) || '';
@@ -558,8 +558,15 @@ function beNewBlock(){
   window.beExit = () => exitEditor(BE.block, null, () => { beClose(); go('/file-manager/block-library'); }, window.beSave);
   /* Save asks for confirmation first, showing the block as the selector will
      show it and rendered with mock content. */
-  window.beCurrentDef = () => ({doc: clone(doc), blockStyle: clone(blockStyle), code: codeArea.value});
+  window.beCurrentDef = () => ({doc: clone(doc), blockStyle: clone(blockStyle), code: codeArea.value, mode});
   window.beHeadRefresh = () => { beHead(); $('bar-name').textContent = BE.block.name; };
+  /* Duplicate opens a copy as a brand-new block - the original is untouched
+     until the copy is saved under its own name. */
+  window.beDuplicate = () => {
+    const src = BE.block, def = beCurrentDef();
+    beOpen(Object.assign(beNewBlock(), {name: src.name + ' copy', cat: src.cat, desc: src.desc, slot: src.slot, seedDef: def}));
+    showToast('Duplicated - save the copy to add it to the library');
+  };
   window.beSave = () => {
     const b = BE.block;
     const n = doc.reduce((s,row)=>s+row.cols.reduce((a,c)=>a+c.length,0),0);
@@ -572,7 +579,9 @@ function beNewBlock(){
       `<div class="pub-row"><span>Name</span><strong>${esc(b.name)}</strong></div>` +
       `<div class="pub-row"><span>Category</span><strong>${esc(b.cat)}</strong></div>` +
       (b.slot ? `<div class="pub-row"><span>Save as</span><strong>${kindLabel}</strong></div>` : '') +
-      `<div class="pub-row"><span>Contents</span><strong>${n} element${n===1?'':'s'} in ${doc.length} row${doc.length===1?'':'s'}</strong></div>` +
+      `<div class="pub-row"><span>Contents</span><strong>${isCodeBlock(def)
+        ? 'Custom code - ' + (def.code.trim().split('\n').length) + ' line' + (def.code.trim().split('\n').length===1?'':'s')
+        : n + ' element' + (n===1?'':'s') + ' in ' + doc.length + ' row' + (doc.length===1?'':'s')}</strong></div>` +
       (b.desc ? `<div class="pub-row"><span>Description</span><strong>${esc(b.desc)}</strong></div>` : '') +
       `<div class="pub-row"><span>Available in</span><strong>Every builder in this account</strong></div>`;
     document.getElementById('bsOv').classList.add('open');
@@ -642,6 +651,7 @@ function beNewBlock(){
      same everywhere. Mirrors applyBlockStyle / applyElStyle as CSS strings. */
   window.customBlockHtml = (def, br, content) => {
     br = br || beBrand();
+    if(isCodeBlock(def)) return codeBlockHtml(def, br);
     const bs = Object.assign(blockDef(), def.blockStyle || {});
     const fill = st => { const bd = st.bgBind; if(!bd) return (st.bg && st.bg !== 'transparent') ? st.bg : ''; if(bd === 'none') return ''; return roleValue(br, bd); };
     const bcol = st => { const bd = st.bcolorBind; return bd ? roleValue(br, bd) : st.bcolor; };
@@ -714,9 +724,11 @@ function bnPreviewHtml(host, meta, def){
   // here is literally what lands in the picker.
   const tmp = '__bprev';
   P2DOC[tmp] = (def.doc || []).map(row => ({cols: row.cols.map(col => col.map(el => el.id))}));
-  const tile = blockSchematic({p: tmp, kind:'block'});
+  const tile = isCodeBlock(def) ? '<div class="blk-code"><span class="ms">code</span></div>'
+                                : blockSchematic({p: tmp, kind:'block'});
   delete P2DOC[tmp];
-  const mock = def.doc && def.doc.length ? customBlockHtml(def, beBrand())
+  const mock = isCodeBlock(def) ? codeBlockHtml(def, beBrand())
+    : def.doc && def.doc.length ? customBlockHtml(def, beBrand())
     : '<div class="fhint" style="text-align:center;padding:26px 0">Nothing on the block yet</div>';
   document.getElementById(host).innerHTML = `
     <div><div class="bprev-lbl">In the block selector</div>
@@ -816,3 +828,19 @@ function restoreCustomBlocks(){
 }
 window.forgetCustomBlocks = () => { try{ localStorage.removeItem(CBX_KEY); }catch(e){} };
 restoreCustomBlocks();
+
+
+/* ── Code-mode blocks ──────────────────────────────────────────────────────
+   A block written in Code mode has no primitives, so it renders from its
+   markup - in the brand's CSS variables, with scripts and inline handlers
+   stripped, and {{client.name}} resolved to the company. */
+function isCodeBlock(def){ return !!(def && def.mode === 'code' && (def.code||'').trim()) || !!(def && !(def.doc||[]).length && (def.code||'').trim()); }
+function codeBlockHtml(def, brand){
+  brand = brand || beBrand();
+  const safe = String(def.code || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\{\{\s*client\.name\s*\}\}/gi, esc(brand.company || 'Your company'));
+  const vars = `--brand-primary:${brand.primary};--brand-secondary:${brand.secondary};--brand-background:${brand.background};`;
+  return `<div style="${vars}">${safe}</div>`;
+}

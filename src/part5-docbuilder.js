@@ -190,7 +190,7 @@ function edHeadHtml(cfg){
     </div>
     <div class="sp">
       ${cfg.extras || ''}
-      <button class="lbtn icon-sm" data-toast="Duplicated as a new ${esc((KIND_LABEL[d.kind]||'document').toLowerCase())}" title="Duplicate"><span class="ms">content_copy</span></button>
+      <button class="lbtn icon-sm" ${cfg.dup ? `onclick="${cfg.dup}"` : `data-toast="Duplicated as a new ${esc((KIND_LABEL[d.kind]||'document').toLowerCase())}"`} title="Duplicate"><span class="ms">content_copy</span></button>
       ${smToggle(cfg.mode)}
       <button class="lbtn" onclick="${cfg.exit}">Cancel</button>
       <button class="lbtn pri" onclick="${cfg.save}"><span class="ms">save</span> ${esc(cfg.saveLabel || label)}</button>

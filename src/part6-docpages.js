@@ -236,7 +236,7 @@ window.bbKebab = (ev, id) => {
   const b = BLOCK_BY_ID[id];
   const items = [
     {label:'Edit block', run:() => beOpenExisting(id)},
-    {label:'Duplicate',  run:() => showToast('Duplicated "' + b.name + '"')},
+    {label:'Duplicate',  run:() => duplicateBlock(id)},
   ];
   if(b.custom) items.push({label:'Delete block', run:() => {
     BLOCKS.splice(BLOCKS.indexOf(b), 1); delete BLOCK_BY_ID[id]; delete CUSTOM_BLOCK_DEF[id]; delete P2DOC[id];
@@ -244,4 +244,20 @@ window.bbKebab = (ev, id) => {
     renderRoute(); showToast('Deleted "' + b.name + '"');
   }});
   openMenu(ev, items);
+};
+
+/* Duplicate a block in place - a real copy in the library, not a toast. */
+window.duplicateBlock = id => {
+  const b = BLOCK_BY_ID[id];
+  if(!b) return;
+  const nid = 'cx-' + Date.now().toString(36);
+  const name = b.name + ' copy';
+  const entry = {id:nid, name, label:name, cat:b.cat, desc:b.desc || '', p:nid, kind:'block', custom:true};
+  if(b.slot) entry.slot = b.slot;
+  P2DOC[nid] = JSON.parse(JSON.stringify(P2DOC[b.p] || [{cols:[[b.p]]}]));
+  if(CUSTOM_BLOCK_DEF[b.p]) CUSTOM_BLOCK_DEF[nid] = JSON.parse(JSON.stringify(CUSTOM_BLOCK_DEF[b.p]));
+  BLOCKS.push(entry); BLOCK_BY_ID[nid] = entry;
+  persistCustomBlocks();
+  renderRoute();
+  showToast('Duplicated - "' + name + '" added to the library');
 };

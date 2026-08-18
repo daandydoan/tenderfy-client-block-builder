@@ -220,6 +220,12 @@ function primSchematic(id, compact){
 }
 function blockSchematic(block){
   const bar = (w,h) => `<div class="blk-bar${h?' h':''}" style="width:${w}"></div>`;
+  // A block written in Code mode has no primitives to diagram, so the tile
+  // shows the markup's own shape instead of an empty frame.
+  if(typeof CUSTOM_BLOCK_DEF !== 'undefined'){
+    const cd = CUSTOM_BLOCK_DEF[block.p];
+    if(cd && isCodeBlock(cd)) return `<div class="blk-code"><span class="ms">code</span></div>`;
+  }
   switch(block.p){
     case 'lh-brand':  return `<div style="display:flex;align-items:center;gap:7px;border-bottom:2px solid #38988A;padding-bottom:8px"><span style="width:19px;height:19px;border-radius:5px;background:#38988A;flex:none"></span>${bar('44%',1)}</div>`;
     case 'lh-contact':return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #38988A;padding-bottom:8px">${bar('36%',1)}<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex:1">${bar('60%')}${bar('44%')}</div></div>`;
