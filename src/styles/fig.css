@@ -285,3 +285,8 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .bg-geo .g label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:var(--light);margin-bottom:2px;text-align:center}
 .bg-geo input{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:5px 4px;font-family:inherit;font-size:11px;text-align:center}
 .bg-css{width:100%;box-sizing:border-box;min-height:120px;border:1px solid var(--border);border-radius:8px;padding:9px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5;color:var(--ink);background:#fbfcfc;resize:vertical}
+
+/* Block editor page: content-driven height, from tenderfy-admin/block-edit.css */
+.be .vb-page{min-height:160px;padding:52px;box-sizing:border-box}
+.vb-block.drop-end::after{content:'';display:block;height:3px;background:var(--teal);border-radius:2px;margin:8px 2px 0}
+.fin.err{border-color:#d5493f;background:#fdf3f2}

@@ -749,7 +749,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
 .be .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
 .be .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.be .ed3:not(.el-on) #beLeft,.be .ed3:not(.st-on) #beRight{display:none}
+.be .ed3:not(.el-on) #leftCol,.be .ed3:not(.st-on) #rightCol{display:none}
 .be .vb-toolbar{padding:9px 14px;margin:0;border-bottom:1px solid #E3E8E7;background:#fff;flex-shrink:0;gap:10px}
 .be .tb-btn{width:auto;height:32px;padding:0 13px;gap:7px;font-size:12.5px;font-weight:600;border-radius:7px;
   border:1px solid #E3E8E7;background:#fff;color:#6B7674;display:inline-flex;align-items:center;
@@ -998,30 +998,170 @@ textarea.fin{resize:vertical;line-height:1.5}
   </div>
 </div>
 
-<!-- Block Builder — ported from tenderfy-admin/block-edit.html -->
+<!-- Block Builder - markup copied from tenderfy-admin/block-edit.html.
+     Only the super-admin controls are dropped: the client/brand preview
+     picker and the per-element Client permission segment. -->
 <div class="be" id="be">
   <div class="ed-top" id="beHead"></div>
-  <div class="ed3 st-on el-on">
-    <div class="ed3-col" id="beLeft"></div>
-    <div class="ed3-mid">
-      <!-- toolbar lifted from tenderfy-admin/block-edit.html -->
-      <div class="vb-toolbar">
-        <button class="tb-btn tb-lbl on" title="Toggle Elements panel" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('el-on'))"><span class="ms">widgets</span> Elements</button>
-        <span class="sel-pill" id="beSel"></span>
-        <span class="tb-group">
-          <button class="tb-btn" id="beUndo" title="Undo (Ctrl+Z)" onclick="beUndo()"><span class="ms">undo</span></button>
-          <button class="tb-btn" id="beRedo" title="Redo (Ctrl+Y)" onclick="beRedo()"><span class="ms">redo</span></button>
-          <button class="tb-btn" id="beHist" title="Version history" onclick="beHistory()"><span class="ms">history</span></button>
-        </span>
-        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
-          <span class="autosave" id="beAutosave"></span>
-          <button class="tb-btn tb-lbl on" title="Toggle Style panel" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('st-on'))"><span class="ms">tune</span> Style</button>
-        </span>
+<div class="ed3 st-on el-on">
+      <div class="ed3-col" id="leftCol">
+        <div class="vb-modes">
+          <button data-mode="visual" class="on"><span class="ms">dashboard_customize</span> Visual</button>
+          <button data-mode="code"><span class="ms">code</span> Code</button>
+        </div>
+        <div class="card" id="elementsCard">
+          <h3 class="ed-h">Elements</h3>
+          <div class="vb-pal" id="palette"></div>
+          <div class="fhint" style="margin-top:10px">Drag onto the page, or click to add.</div>
+        </div>
+        <div class="card" id="codeCard" style="display:none">
+          <h3 class="ed-h">Custom code</h3>
+          <a class="btn btn-outline btn-sm" id="genBtn" style="width:100%;justify-content:center;margin-bottom:14px"><span class="ms" style="font-size:16px">bolt</span> Generate from visual layout</a>
+          <div class="fhint" style="line-height:1.7"><code style="font-size:11px">var(--brand-primary)</code> · headings<br><code style="font-size:11px">var(--brand-secondary)</code> · accents<br><code style="font-size:11px">{{client.name}}</code> · merge field</div>
+        </div>
       </div>
-      <div class="vb-canvas" id="beCanvas"></div>
+
+      <div class="ed3-mid">
+        <div id="visualPanel">
+          <div class="vb-toolbar">
+            <button class="tb-btn tb-lbl" id="elBtn" title="Toggle Elements panel"><span class="ms">widgets</span> Elements</button>
+            <span class="sel-pill" id="selPill"></span>
+            <span class="tb-group">
+              <button class="tb-btn" id="undoBtn" title="Undo (Ctrl+Z)"><span class="ms">undo</span></button>
+              <button class="tb-btn" id="redoBtn" title="Redo (Ctrl+Y)"><span class="ms">redo</span></button>
+              <button class="tb-btn" id="histBtn" title="Version history"><span class="ms">history</span></button>
+            </span>
+            <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+              <span class="autosave" id="autosave"></span>
+              <button class="tb-btn tb-lbl on" id="styleBtn" title="Toggle Style panel"><span class="ms">tune</span> Style</button>
+            </span>
+          </div>
+          <div class="vb-canvas" id="cvWrap">
+            <div class="vb-bar">
+              <span class="ms" style="font-size:16px;color:var(--teal)">web</span>
+              <span id="bar-name">Untitled block</span>
+              <span class="muted" id="bar-count" style="font-weight:400"></span>
+            </div>
+            <div class="vb-page" id="page"></div>
+          </div>
+        </div>
+        <div id="codePanel" style="display:none">
+          <div class="code-split">
+            <div class="code-pane">
+              <div class="ph"><span class="ms" style="font-size:15px">code</span> HTML</div>
+              <textarea id="codeArea" class="code-ta" spellcheck="false" placeholder="<div>Your block markup…</div>"></textarea>
+            </div>
+            <div class="code-pane">
+              <div class="ph"><span class="ms" style="font-size:15px">visibility</span> Live preview</div>
+              <div class="code-prev"><div class="code-prev-page" id="codePrev"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed3-col" id="rightCol">
+        <div class="card" id="styleCard">
+          <h3 class="ed-h">Style</h3>
+          <div id="styleTarget"></div>
+          <div class="insp-actions">
+            <select class="insp-sel" id="s-preset"></select>
+            <button class="insp-ico" id="s-copy" title="Copy style"><span class="ms">content_copy</span></button>
+            <button class="insp-ico" id="s-paste" title="Paste style"><span class="ms">content_paste</span></button>
+            <button class="insp-ico" id="s-reset" title="Reset style"><span class="ms">restart_alt</span></button>
+          </div>
+
+          <div class="insp-sec" id="sec-field" style="display:none">
+            <div class="insp-h">Merge field</div>
+            <div class="insp-row"><label>Field</label><select class="insp-sel" id="s-field"></select></div>
+            <div class="fhint">Resolves to the client/project value when a document is generated.</div>
+          </div>
+
+          <div class="insp-sec" id="sec-imgsrc" style="display:none">
+            <div class="insp-h">Image source</div>
+            <div class="insp-row"><label>Source</label><div class="seg full" id="s-imgsrc">
+              <button data-src="placeholder">Placeholder</button>
+              <button data-src="client">Company asset</button>
+            </div></div>
+            <div class="fhint">Company asset pulls your logo from Company Settings.</div>
+          </div>
+
+
+          <div class="insp-sec" data-sec="layout" data-need="width">
+            <div class="insp-h">Layout</div>
+            <div class="fig-label" style="margin-bottom:6px">Resizing</div>
+            <div class="fig-resize">
+              <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="s-wpx" min="0"></span>
+              <select class="insp-sel" id="s-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option><option value="min">Min width</option><option value="max">Max width</option></select>
+            </div>
+            <div class="fig-resize" style="margin-top:6px">
+              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="s-hpx" min="0"></span>
+              <select class="insp-sel" id="s-hmode"><option value="fill">Fill height</option><option value="fixed">Fixed height</option><option value="max">Max height</option></select>
+            </div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-top:12px;align-items:start">
+              <div><div class="fig-label" style="margin-bottom:5px">Alignment</div>
+                <div class="fig-align" id="s-align3">
+                  <button type="button" data-h="left" data-v="top" title="Top left"></button><button type="button" data-h="center" data-v="top" title="Top"></button><button type="button" data-h="right" data-v="top" title="Top right"></button>
+                  <button type="button" data-h="left" data-v="middle" title="Left"></button><button type="button" data-h="center" data-v="middle" title="Centre"></button><button type="button" data-h="right" data-v="middle" title="Right"></button>
+                  <button type="button" data-h="left" data-v="bottom" title="Bottom left"></button><button type="button" data-h="center" data-v="bottom" title="Bottom"></button><button type="button" data-h="right" data-v="bottom" title="Bottom right"></button>
+                </div>
+              </div>
+              <div><div class="fig-label" style="margin-bottom:5px">Gap</div>
+                <span class="fig-wt"><span class="ms">width_normal</span><input type="number" id="s-sp" min="0" max="200"></span>
+              </div>
+            </div>
+          </div>
+          <div class="insp-sec" data-sec="dim" data-need="pad">
+            <div class="insp-h">Dimension</div>
+            <div class="fig-box" data-box="pad">
+              <div class="fig-box-head"><span class="fig-label">Padding</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="s-padH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="s-padV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="s-padT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="s-padR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="s-padB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="s-padL" placeholder="0"></span></div>
+            </div>
+            <div class="fig-box" data-box="mar">
+              <div class="fig-box-head"><span class="fig-label">Margin</span><button type="button" class="fig-toggle" data-toggle title="Edit sides individually"><span class="ms">border_outer</span></button></div>
+              <div class="fig-hv"><span class="fig-field"><span class="ms fig-ic" data-scrub title="Horizontal">width</span><input type="number" id="s-marH" min="0" max="200"></span><span class="fig-field"><span class="ms fig-ic" data-scrub title="Vertical">height</span><input type="number" id="s-marV" min="0" max="200"></span></div>
+              <div class="fig-cross" hidden><span class="fig-field"><span class="ms fig-ic" data-scrub="T">border_top</span><input type="number" id="s-marT" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="R">border_right</span><input type="number" id="s-marR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="B">border_bottom</span><input type="number" id="s-marB" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic" data-scrub="L">border_left</span><input type="number" id="s-marL" placeholder="0"></span></div>
+            </div>
+          </div>
+          <div class="insp-sec fig-sec" data-sec="fill" data-paint="bg" data-need="bg">
+            <div class="fig-sec-h"><span class="fig-sec-t">Fill</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add fill"><span class="ms">add</span></button></span></div>
+            <div class="fig-paint" id="s-bgLit" data-paint="bg"><span class="fig-sw"><input type="color" class="insp-color" id="s-bg"></span><input class="fig-hexin insp-hex" id="s-bgH" placeholder="FFFFFF"><span class="fig-op"><input type="number" id="s-bgA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+            <div class="bind-note" id="s-bgNote" style="display:none"></div>
+            <select class="insp-sel fig-bind" id="s-bgBind"></select>
+          </div>
+          <div class="insp-sec" data-sec="typo">
+            <div class="insp-h">Typography</div>
+            <div class="insp-row" data-field="font"><label>Font</label><select class="insp-sel" id="s-font"></select></div>
+            <div class="insp-row" data-field="weight"><label>Weight</label><select class="insp-sel" id="s-weight"><option value="">Inherit from brand</option><option value="400">400 · Regular</option><option value="500">500 · Medium</option><option value="600">600 · Semibold</option><option value="700">700 · Bold</option></select></div>
+            <div class="insp-row" data-field="sizelh"><label>Size</label><div class="insp-ctl"><input type="number" class="insp-num" id="s-size" placeholder="brand"><span class="insp-unit">px</span><input type="number" class="insp-num" id="s-lh" placeholder="brand"><span class="insp-unit">line</span></div></div>
+            <div class="insp-row" data-field="color"><label>Colour</label><div class="insp-ctl"><input type="color" class="insp-color" id="s-color"><input type="text" class="insp-hex" id="s-colorH" placeholder="Inherit from brand"></div></div>
+            <div class="insp-row" data-field="align"><label>Align</label><div class="seg" id="s-align">
+              <button data-al="left" title="Left"><span class="ms">format_align_left</span></button>
+              <button data-al="center" title="Centre"><span class="ms">format_align_center</span></button>
+              <button data-al="right" title="Right"><span class="ms">format_align_right</span></button>
+              <button data-al="justify" title="Justify"><span class="ms">format_align_justify</span></button>
+            </div></div>
+            <div class="fhint" style="margin:2px 0 0">Blank fields inherit your brand &amp; styling.</div>
+          </div>
+          <div class="insp-sec" data-sec="border" data-need="rad,bcolor,bwstyle">
+            <div class="insp-h">Appearance</div>
+            <div class="fig-box" data-box="rad" data-field="rad">
+              <div class="fig-box-head"><span class="fig-label">Corner radius</span><button type="button" class="fig-toggle" data-toggle title="Edit corners individually"><span class="ms">rounded_corner</span></button></div>
+              <div class="fig-solo"><span class="fig-field"><span class="ms fig-ic" data-scrub>rounded_corner</span><input type="number" id="s-rad" min="0" max="400"></span></div>
+              <div class="fig-corners" hidden><span class="fig-field"><span class="ms fig-ic cn cn-tl">rounded_corner</span><input type="number" id="s-radTL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-tr">rounded_corner</span><input type="number" id="s-radTR" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-bl">rounded_corner</span><input type="number" id="s-radBL" placeholder="0"></span><span class="fig-field"><span class="ms fig-ic cn cn-br">rounded_corner</span><input type="number" id="s-radBR" placeholder="0"></span></div>
+            </div>
+            <div class="fig-sec" data-sec="stroke" data-paint="bcolor" style="margin-top:14px">
+              <div class="fig-sec-h"><span class="fig-sec-t">Stroke</span><span class="fig-acts"><button type="button" class="fig-a" data-add title="Add stroke"><span class="ms">add</span></button></span></div>
+              <div class="fig-paint" id="s-bcolorLit" data-paint="bcolor"><span class="fig-sw"><input type="color" class="insp-color" id="s-bcolor"></span><input class="fig-hexin insp-hex" id="s-bcolorH" placeholder="EAEDEC"><span class="fig-op"><input type="number" id="s-bcolorA" min="0" max="100"><span class="fig-op-u">%</span></span><button type="button" class="fig-a" data-eye title="Show / hide"><span class="ms">visibility</span></button><button type="button" class="fig-a" data-rm title="Remove"><span class="ms">remove</span></button></div>
+              <div class="bind-note" id="s-bcolorNote" style="display:none"></div>
+              <select class="insp-sel fig-bind" id="s-bcolorBind"></select>
+              <div class="fig-strokerow"><div><label>Position</label><select class="insp-sel" id="s-bpos"><option value="inside">Inside</option><option value="center">Center</option><option value="outside">Outside</option></select></div><div><label>Weight</label><span class="fig-wt"><span class="ms">line_weight</span><input type="number" id="s-bw" min="0" max="40"></span></div></div>
+              <div class="insp-row" data-field="bwstyle" style="margin-top:8px"><label>Style</label><select class="insp-sel" id="s-bstyle"><option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option></select></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="ed3-col" id="beRight"></div>
-  </div>
 </div>
 
 <!-- Version history - from tenderfy-admin/block-edit.html #verModal -->

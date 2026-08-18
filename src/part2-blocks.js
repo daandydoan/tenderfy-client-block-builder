@@ -167,12 +167,10 @@ function renderStationery(p, b){
 // rows -> columns -> primitives, in a brand. `content` overrides per primitive index.
 function composeBlock(block, brand, content){
   if(/^l[hf]-/.test(block.p)) return renderStationery(block.p, brand);
-  // Blocks built in the Block Builder carry their own element styles.
+  // Blocks built in the Block Builder carry their own row/column layout and
+  // per-element styles; the editor exposes the renderer so both agree.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[block.p]){
-    const def = CUSTOM_BLOCK_DEF[block.p];
-    const vars = `--brand-primary:${brand.primary};--brand-secondary:${brand.secondary};--brand-background:${brand.background};`;
-    return `<div style="${vars}${beBlockCss(def.style)}">` + def.elements.map((e,i) =>
-      `<div style="${beElStyleCss(e.style)}">${renderPrimitive(e.id, brand, (content||{})[i] || e.content)}</div>`).join('') + '</div>';
+    return customBlockHtml(CUSTOM_BLOCK_DEF[block.p], brand, content);
   }
   const doc = P2DOC[block.p] || [{cols:[[block.p]]}];
   let n = -1;
