@@ -18,7 +18,8 @@ const BE_TAGS = {heading:'Text',subheading:'Text',paragraph:'Text',list:'Text',q
   signature:'Sign-off', divider:'Layout',spacer:'Layout',button:'Layout'};
 const BE_NAME = {heading:'Heading',subheading:'Sub-heading',paragraph:'Paragraph',list:'Bulleted list',
   quote:'Quote',image:'Image',table:'Table',keyvalue:'Key / Value',signature:'Signature',divider:'Divider',
-  spacer:'Spacer',field:'Merge field',callout:'Callout',stat:'Stat',button:'Button',toc:'Contents'};
+  spacer:'Spacer',field:'Merge field',callout:'Callout',stat:'Stat',button:'Button',toc:'Contents',
+  cover:'Cover',pagebreak:'Page break'};
 const BE_DESC = {heading:'A section heading.',subheading:'A smaller heading.',paragraph:'A block of body text.',
   list:'A bulleted list.',quote:'A pull quote.',image:'An image placeholder.',table:'A simple data table.',
   keyvalue:'Label and value pairs.',signature:'A sign-off block.',divider:'A horizontal rule.',
