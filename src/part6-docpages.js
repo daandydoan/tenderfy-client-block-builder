@@ -41,6 +41,45 @@ function seedCaseDoc(c){
   ];
   return d;
 }
+/* Cover pages and contents pages get the same treatment as everything else:
+   the style dialog is Simple mode (what live offers today), and Advanced opens
+   them in the Document Builder as a composed page. The seed mirrors what the
+   dialog produces, so switching over does not change how the page looks. */
+function seedCoverDoc(c){
+  const d = newDoc('cover', c ? c.name : 'Untitled Cover Page');
+  d.srcId = c && c.id;
+  d.brand.primary = c ? c.bg : '#172E39';
+  d.brand.secondary = c ? c.tx : '#B4D33B';
+  d.brand.font = d.brand.bodyFont = (c && c.font === 'Tungsten-Narrow') ? 'Manrope' : (c ? c.font : 'Outfit');
+  d.header = null; d.footer = null;
+  d.docStyle = {bg: c ? c.bg : '#172E39', pad:44, gap:14, rad:4};
+  d.bg = newDocBg();
+  d.bg.regions.push(Object.assign(mkRegion(d.brand), {shape:'band-top', h:430, color:d.brand.primary, op:1}));
+  d.items = [
+    docItem('element','image', {0:{src:'client'}}, {marV:6, wMode:'fixed', wPx:190}),
+    docItem('element','cover', {0:{kicker:'Submission', title:'Enter title',
+      meta:'Prepared for - enter client'}}, {marV:10}),
+    docItem('block','doc-details', {0:{title:'Tender'}, 1:{pairs:[
+      ['Tender number','Enter tender number'],['Prepared for','Enter prepared for'],['Date','Enter date']]}},
+      {bgOn:true, bg:'#FFFFFF', bgA:92, padH:18, padV:16, rad:10}),
+  ];
+  return d;
+}
+function seedTocDoc(t){
+  const d = newDoc('toc', t ? t.name : 'Untitled Contents');
+  d.srcId = t && t.id;
+  d.brand.primary = t ? t.bg : '#2C3232';
+  d.brand.secondary = t ? t.sec : '#38988A';
+  d.brand.font = d.brand.bodyFont = (t && (t.font === 'Tungsten-Narrow' || t.font === 'Manrope-Regular')) ? 'Manrope' : (t ? t.font : 'Outfit');
+  d.header = null; d.footer = 'lf-page';
+  d.docStyle = {bg: isLight(d.brand.primary) ? '#FFFFFF' : d.brand.primary, pad:40, gap:12, rad:4};
+  d.items = [
+    docItem('element','heading', {0:{title:'Contents'}}, {marV:4}),
+    docItem('element','paragraph', {0:{body:'Tender - Commercial in Confidence'}}, {marV:10}),
+    docItem('element','toc', {}, {}),
+  ];
+  return d;
+}
 function seedBlankDoc(){
   const d = newDoc('page', 'Untitled Document');
   d.header = 'lh-brand'; d.footer = 'lf-page';
@@ -55,6 +94,8 @@ function docFor(kind, id){
   if(!DOC_STORE[key]){
     DOC_STORE[key] = kind === 'resume'     ? seedResumeDoc(RESUMES.find(r=>r.id===id))
                    : kind === 'case-study' ? seedCaseDoc(CASE_STUDIES.find(c=>c.id===id))
+                   : kind === 'cover'      ? seedCoverDoc(COVERS.find(c=>c.id===id))
+                   : kind === 'toc'        ? seedTocDoc(TOCS.find(t=>t.id===id))
                    : seedBlankDoc();
     DOC_STORE[key].isNew = !id;
     if(id) DOC_STORE[key].status = (kind==='resume' ? RESUMES : CASE_STUDIES).find(x=>x.id===id)?.status || 'draft';
@@ -95,6 +136,33 @@ function pgCaseStudyEdit(){
   const id = q('id');
   return pgDocEditor('case-study', id ? '/file-manager/case-studies/case-study/?id=' + id : '/file-manager/case-studies',
     id ? 'Edit Case Study' : 'Create Case Studies');
+}
+
+/* Advanced editing for cover pages and contents pages. Both open straight into
+   the Document Builder; the style dialogs stay as Simple mode. */
+function pgCoverEdit(){
+  const id = q('id');
+  const c = COVERS.find(x => x.id === id) || COVERS[0];
+  const doc = docFor('cover', c.id);
+  setTimeout(() => dbOpen({
+    doc, backRoute:'/file-manager/cover-pages', sub:'Cover page - Advanced',
+    onSave: d => { c.doc = d; },
+  }), 0);
+  return `<div class="phead"><div class="h">${esc(c.name)}</div></div>
+    <div class="pbody"><div class="stub"><span class="ms">edit_note</span>
+      <b>Opening the Cover Page Builder&hellip;</b>Close it to come back here.</div></div>`;
+}
+function pgTocEdit(){
+  const id = q('id');
+  const t = TOCS.find(x => x.id === id) || TOCS[0];
+  const doc = docFor('toc', t.id);
+  setTimeout(() => dbOpen({
+    doc, backRoute:'/file-manager/table-of-contents', sub:'Table of Contents - Advanced',
+    onSave: d => { t.doc = d; },
+  }), 0);
+  return `<div class="phead"><div class="h">${esc(t.name)}</div></div>
+    <div class="pbody"><div class="stub"><span class="ms">edit_note</span>
+      <b>Opening the Contents Builder&hellip;</b>Close it to come back here.</div></div>`;
 }
 
 /* ═══ Block Library — lives under File manager ═════════════════════════════

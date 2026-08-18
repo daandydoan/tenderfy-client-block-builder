@@ -165,7 +165,8 @@ function renderDocBg(bg, pi){
   return (bg.regions||[]).filter(r => !r.firstOnly || pi === 0).map(r =>
     `<div style="position:absolute;z-index:0;${bgGeom(r)};background:${bgFill(r)};opacity:${r.op}"></div>`).join('');
 }
-const KIND_LABEL = {page:'Page', section:'Section', resume:'Resume', 'case-study':'Case Study', block:'Block'};
+const KIND_LABEL = {page:'Page', section:'Section', resume:'Resume', 'case-study':'Case Study',
+  block:'Block', cover:'Cover Page', toc:'Contents'};
 function newDoc(kind, name){
   return {name: name || 'Untitled Document', kind: kind || 'page', status:'draft',
     header:null, footer:null, items:[], bg:newDocBg(),
@@ -705,11 +706,32 @@ let DB = null;
   };
   window.dbExit = () => exitEditor(DB.doc, DB.backRoute, () => dbClose(), window.dbSave);
   window.dbRender = () => render();
+  /* Simple mode differs by document kind: resumes and case studies use the
+     Simple editor, while cover pages and contents pages use the style dialog
+     that live offers today. Hand over to whichever fits. */
   window.dbToSimpleMode = () => {
-    const d = DB.doc, cb = DB.onSave, back = DB.backRoute;
+    const d = DB.doc, cb = DB.onSave, back = DB.backRoute, kind = d.kind;
+    if(kind === 'cover' || kind === 'toc'){
+      const id = (back||'').includes('cover') ? null : null;
+      dbClose(); go(back);
+      setTimeout(() => { const t = simpleTargetFor(kind, d); if(t) t(); }, 0);
+      return;
+    }
     dbClose();
     smOpen({doc:d, backRoute:back, onSave:cb});
   };
+  /* The dialog edits the source record, so push the builder's brand back onto
+     it first - otherwise Simple would reopen showing the pre-Advanced colours. */
+  function simpleTargetFor(kind, d){
+    if(kind === 'cover'){
+      const c = COVERS.find(x => x.id === d.srcId) || COVERS[0];
+      Object.assign(c, {bg:d.brand.primary, tx:d.brand.secondary, font:d.brand.font});
+      return () => csOpenCover(c.id);
+    }
+    const t = TOCS.find(x => x.id === d.srcId) || TOCS[0];
+    Object.assign(t, {bg:d.brand.primary, sec:d.brand.secondary, font:d.brand.font});
+    return () => tcOpen(t.id);
+  }
   function dbHead(){
     document.getElementById('dbHead').innerHTML = edHeadHtml({
       doc: DB.doc, mode:'advanced', sub: DB.sub,

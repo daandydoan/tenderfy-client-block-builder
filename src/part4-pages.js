@@ -379,6 +379,19 @@ function isLight(hex){
   const n = parseInt(h,16);
   return (((n>>16&255)*299 + (n>>8&255)*587 + (n&255)*114) / 1000) > 150;
 }
+/* A cover page or contents page can be styled in the dialog (Simple) or built
+   block by block (Advanced). Once it has a composed document, that is what the
+   listing, the library picker and Build Tender all render. */
+function coverPageHtml(c){
+  return c && c.doc
+    ? `<div style="background:${c.doc.docStyle.bg};min-height:100%">${renderComposedDoc(c.doc.items, c.doc.brand, {header:c.doc.header, footer:c.doc.footer, bg:c.doc.bg})}</div>`
+    : coverHtml(c);
+}
+function tocPageHtml(t){
+  return t && t.doc
+    ? `<div style="background:${t.doc.docStyle.bg};min-height:100%">${renderComposedDoc(t.doc.items, t.doc.brand, {header:t.doc.header, footer:t.doc.footer, bg:t.doc.bg})}</div>`
+    : tocHtml(t);
+}
 function docPageHtml(title, desc){
   return `<div style="padding:34px;font-family:Outfit,sans-serif;min-height:460px;text-align:left">
     <div style="display:flex;align-items:center;gap:9px;padding-bottom:12px;border-bottom:2px solid #38988A">
@@ -463,6 +476,16 @@ function csLoad(c){
   document.getElementById('csOv').classList.add('open');
 }
 window.csRevert = () => { Object.assign(CS, CS.orig); csRender(); showToast('Reverted to the original style'); };
+/* Simple -> Advanced. The dialog's style is applied first so the composed page
+   opens looking exactly like the preview you just left. */
+window.csToAdvanced = () => {
+  const id = csTarget || (COVERS[0] && COVERS[0].id);
+  const c = COVERS.find(x => x.id === id) || COVERS[0];
+  Object.assign(c, {bg:CS.bg, tx:CS.tx, font:CS.font});
+  delete DOC_STORE['cover:' + c.id];
+  csClose();
+  go('/file-manager/cover-pages/edit/?id=' + c.id);
+};
 window.csClose = () => document.getElementById('csOv').classList.remove('open');
 window.csSync = () => { CS.font = document.getElementById('csFont').value; csRender(); };
 window.csHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)){ CS[which] = v; csRender(true); } };
@@ -531,6 +554,13 @@ function tcRender(skipInputs){
   }
   document.getElementById('tcPrev').innerHTML = tocHtml(TC);
 }
+window.tcToAdvanced = () => {
+  const t = TOCS.find(x => x.id === tcTarget) || TOCS[0];
+  Object.assign(t, {bg:TC.bg, sec:TC.sec, font:TC.font});
+  delete DOC_STORE['toc:' + t.id];
+  tcClose();
+  go('/file-manager/table-of-contents/edit/?id=' + t.id);
+};
 window.tcSave = () => {
   const t = TOCS.find(x => x.id === tcTarget);
   if(t) Object.assign(t, {bg:TC.bg, sec:TC.sec, font:TC.font});
@@ -540,7 +570,12 @@ document.getElementById('tcOv').addEventListener('click', e => { if(e.target.id 
 
 /* Both listings offer a single Edit action, as on live. */
 window.styleMenu = (ev, kind, id) => {
-  openMenu(ev, [{label:'Edit', run:() => kind === 'cover' ? csOpenCover(id) : tcOpen(id)}]);
+  openMenu(ev, [
+    {label:'Edit',     run:() => kind === 'cover' ? csOpenCover(id) : tcOpen(id)},
+    {label:'Advanced', run:() => go(kind === 'cover'
+      ? '/file-manager/cover-pages/edit/?id=' + id
+      : '/file-manager/table-of-contents/edit/?id=' + id)},
+  ]);
 };
 
 
@@ -578,8 +613,8 @@ window.attRender = () => {
 };
 function libDocHtml(f){
   const p = f.prev || {};
-  if(p.kind === 'cover'){ const c = COVERS.find(x=>x.id===p.id); return coverHtml(c); }
-  if(p.kind === 'toc'){ const t = TOCS.find(x=>x.id===p.id) || TOCS[0]; return tocHtml(t); }
+  if(p.kind === 'cover'){ const c = COVERS.find(x=>x.id===p.id); return coverPageHtml(c); }
+  if(p.kind === 'toc'){ const t = TOCS.find(x=>x.id===p.id) || TOCS[0]; return tocPageHtml(t); }
   if(p.kind === 'resume'){ const r = RESUMES.find(x=>x.id===p.id); return renderResume({layout:r.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:r.accent}), data:r.data || RESUME_DATA}); }
   if(p.kind === 'case'){ const c = CASE_STUDIES.find(x=>x.id===p.id); return renderCaseStudy({layout:c.layout, brand:Object.assign({}, RESUME_BRAND_DEFAULT, {secondary:c.accent}), data:c.data || CS_DATA}); }
   return docPageHtml(p.title || f.n, p.desc || '');
@@ -700,14 +735,14 @@ function fmCards(slug){
     <div class="lcard bare" onclick="csOpenCover('${c.id}')">
       <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(c.name)}</span>
         <span class="ms" onclick="event.stopPropagation();styleMenu(event,'cover','${c.id}')" title="Cover options">more_vert</span></div>
-      ${shrink(coverHtml(c), .55, 430)}
+      ${shrink(coverPageHtml(c), .55, 430)}
     </div>`).join('');
 
   if(slug === 'table-of-contents') return TOCS.map(t => `
     <div class="lcard bare" onclick="tcOpen('${t.id}')">
       <div class="ctop"><span class="cname" style="flex:1;min-width:0;font-size:16px">${esc(t.name)}</span>
         <span class="ms" onclick="event.stopPropagation();styleMenu(event,'toc','${t.id}')" title="Contents options">more_vert</span></div>
-      ${shrink(tocHtml(t), .55, 430)}
+      ${shrink(tocPageHtml(t), .55, 430)}
     </div>`).join('');
 
   return (OTHER_DOCS[slug] || []).map(d => {
