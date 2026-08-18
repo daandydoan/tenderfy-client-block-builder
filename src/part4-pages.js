@@ -328,7 +328,7 @@ function btDocHtml(f){
   }
   if(p.kind === 'blocks'){
     const d = p.doc;
-    return `<div class="a4" style="width:430px;min-height:0;box-shadow:none;border:1px solid #E3E8E7">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, density:.72})}</div>`;
+    return `<div class="a4" style="width:430px;min-height:0;box-shadow:none;border:1px solid #E3E8E7">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg, density:.72})}</div>`;
   }
   return `<div class="a4" style="width:430px;min-height:0;box-shadow:none;border:1px solid #E3E8E7">${docPageHtml(p.title || f.n, p.desc || '')}</div>`;
 }

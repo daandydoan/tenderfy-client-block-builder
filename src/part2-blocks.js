@@ -35,7 +35,10 @@ function renderPrimitive(id, b, c){
     case 'quote':
       return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"<span ${F('body')}>${r(c.body,'Delivered ahead of schedule with zero safety incidents.')}</span>"</blockquote>`;
     case 'image':
-      return `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
+      // "Company asset" stands in for the logo pulled from Company Settings.
+      return c.src === 'client'
+        ? `<div style="height:118px;background:${b.primary}12;border:1px solid ${b.primary}44;border-radius:8px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;color:${b.primary}"><span class="ms" style="font-size:30px">domain</span><span style="font-size:11px;font-weight:600">${esc(b.company||'Company logo')}</span></div>`
+        : `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
     case 'table':{
       const headers = c.headers || ['Item','Qty','Rate'];
       const rows = c.rows || [['Traffic management','1','$8,400'],['Earthworks','320 m3','$46/m3'],['Drainage','1','$21,750']];

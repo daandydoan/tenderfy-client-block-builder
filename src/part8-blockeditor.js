@@ -19,9 +19,10 @@ const BE_NAME = {heading:'Heading',subheading:'Sub-heading',paragraph:'Paragraph
 
 const BE_EL_STYLE = Object.assign({}, DOC_ITEM_STYLE_DEFAULT, {
   wMode:'fill', wPx:240, hMode:'fill', hVal:120,
-  fSize:0, fWeight:'', fAlign:'', fColor:'', fBind:'',        // typography (0/'' = inherit)
-  bgBind:'', bcBind:'',                                       // brand-token binding
+  fFont:'', fSize:0, fLh:0, fWeight:'', fAlign:'', fColor:'', // typography ('' / 0 = inherit)
+  bstyle:'solid', bgBind:'', bcBind:'',                       // stroke style, brand-token binding
 });
+const BE_FONTS = ['Outfit','Inter','Poppins','Lora','Roboto'];
 const BRAND_ROLES = [['','Custom colour'],['primary','Brand primary'],['secondary','Brand accent'],['background','Brand background']];
 
 let BE = null;
@@ -30,15 +31,62 @@ function beNewBlock(){
     elements:[], style:{alignH:'left', alignV:'top', gap:20, dir:'col',
       padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0, rad:0,radSides:false,
       bgOn:false,bg:'#ffffff',bgA:100,bgVis:true,bgBind:'',
-      bcOn:false,bc:'#dbe3e0',bcA:100,bcVis:true,bw:1,bpos:'inside',bcBind:''}};
+      bcOn:false,bc:'#dbe3e0',bcA:100,bcVis:true,bw:1,bpos:'inside',bstyle:'solid',bcBind:''}};
 }
 window.beOpen = (block) => {
   BE = {block: block || beNewBlock(), sel:null, mode:'visual', code:'', brand:'',
-        undo:[], redo:[]};
+        hist:[], hidx:-1, restoring:false, clip:null, autoT:null};
   document.getElementById('be').classList.add('open');
+  bePushHist('Opened');
   beRenderAll();
 };
-window.beClose = () => { document.getElementById('be').classList.remove('open'); BE = null; };
+window.beClose = () => { document.getElementById('be').classList.remove('open'); if(BE) clearTimeout(BE.autoT); BE = null; };
+
+/* ── Undo / redo / history / autosave, from tenderfy-admin/block-edit.html ──
+   Each commit snapshots the block; restoring replaces the canvas outright.  */
+function beSnapshot(){ return JSON.stringify({elements:BE.block.elements, style:BE.block.style, code:BE.code}); }
+function bePushHist(label){
+  if(BE.restoring) return;
+  const snap = beSnapshot();
+  if(BE.hidx >= 0 && BE.hist[BE.hidx].snap === snap) return;
+  BE.hist = BE.hist.slice(0, BE.hidx + 1);
+  BE.hist.push({snap, label: label || 'Edit', at: beClock()});
+  if(BE.hist.length > 60) BE.hist.shift();
+  BE.hidx = BE.hist.length - 1;
+  beAutosave();
+}
+function beClock(){ const t = new Date(); return t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+function beAutosave(){
+  clearTimeout(BE.autoT);
+  BE.autoT = setTimeout(() => {
+    const el = document.getElementById('beAutosave');
+    if(el) el.innerHTML = `<span class="ms">cloud_done</span> Autosaved &middot; ${beClock()}`;
+  }, 700);
+}
+function beRestore(i){
+  const h = BE.hist[i]; if(!h) return;
+  const st = JSON.parse(h.snap);
+  BE.restoring = true;
+  BE.block.elements = st.elements; BE.block.style = st.style; BE.code = st.code || '';
+  BE.hidx = i; BE.sel = null;
+  markDirty(BE.block); beRenderAll();
+  BE.restoring = false;
+}
+window.beUndo = () => { if(BE.hidx > 0) beRestore(BE.hidx - 1); else showToast('Nothing to undo'); };
+window.beRedo = () => { if(BE.hidx < BE.hist.length - 1) beRestore(BE.hidx + 1); else showToast('Nothing to redo'); };
+window.beHistory = () => {
+  document.getElementById('verList').innerHTML = BE.hist.length
+    ? BE.hist.map((h,i) => `<div class="ver-row">
+        <span class="vv">v${i+1}</span>
+        <span class="vi"><div class="vt">${esc(h.label)}</div><div class="vm">${h.at}</div></span>
+        ${i===BE.hidx ? '<span class="fhint">Current</span>'
+          : `<button class="lbtn sm" onclick="beRestore(${i});verClose()">Restore</button>`}
+      </div>`).reverse().join('')
+    : '<div class="ver-empty">No versions yet.</div>';
+  document.getElementById('verOv').classList.add('open');
+};
+window.beRestore = beRestore;
+window.verClose = () => document.getElementById('verOv').classList.remove('open');
 window.beExit = () => exitEditor(BE.block, null, () => { beClose(); go('/file-manager/block-library'); }, window.beSave);
 window.beSave = () => {
   const b = BE.block;
@@ -75,7 +123,7 @@ function beHead(){
 }
 // The client has one brand, so blocks always preview in it.
 function beBrand(){
-  return {primary:'#27535C', secondary:'#38988A', background:'#F7F9F8', font:'Outfit', bodyFont:'Outfit'};
+  return {primary:'#27535C', secondary:'#38988A', background:'#F7F9F8', font:'Outfit', bodyFont:'Outfit', company:'Tenderfy Civil'};
 }
 
 /* ── Left: Visual | Code, elements palette ───────────────────────────────── */
@@ -90,7 +138,7 @@ function beLeft(){
       <h3 class="ed-h">Elements</h3>
       ${BE_TAG_ORDER.map(tag => {
         const pool = BE_ELEMENTS.filter(e => BE_TAGS[e] === tag);
-        return `<div class="pal-cat">${tag}</div><div class="vb-pal">${pool.map(e => `
+        return `<div class="pal-tag">${tag}</div><div class="vb-pal">${pool.map(e => `
           <div class="vb-widget" draggable="true" data-el="${e}" title="${esc(BE_NAME[e])}">
             <div class="pal-prev">${primSchematic(e)}</div>
             <span class="vb-el"><span class="el-ic ms">${PRIM_ICON[e]||'article'}</span>${esc(BE_NAME[e])}</span>
@@ -113,7 +161,7 @@ function beLeft(){
 window.beGenCode = () => {
   BE.code = `<div class="block">\n${BE.block.elements.map(e =>
     '  ' + renderPrimitive(e.id, beBrand(), e.content).replace(/\n\s*/g,' ')).join('\n')}\n</div>`;
-  beCanvas(); showToast('Generated from the visual layout');
+  bePushHist('Generated code'); beCanvas(); showToast('Generated from the visual layout');
 };
 
 /* ── Middle: canvas ──────────────────────────────────────────────────────── */
@@ -122,16 +170,17 @@ function beAdd(id, at){
   const el = {id, content:{}, style:Object.assign({}, BE_EL_STYLE)};
   if(typeof at === 'number') BE.block.elements.splice(at, 0, el); else BE.block.elements.push(el);
   BE.sel = typeof at === 'number' ? at : BE.block.elements.length - 1;
+  bePushHist('Added ' + BE_NAME[id]);
   beRenderAll(); showToast('Added: ' + BE_NAME[id]);
 }
-window.beDel = i => { markDirty(BE.block); BE.block.elements.splice(i,1); BE.sel = null; beRenderAll(); };
-window.beDup = i => { markDirty(BE.block); const c = JSON.parse(JSON.stringify(BE.block.elements[i])); BE.block.elements.splice(i+1,0,c); BE.sel=i+1; beRenderAll(); };
+window.beDel = i => { markDirty(BE.block); const n=BE_NAME[BE.block.elements[i].id]; BE.block.elements.splice(i,1); BE.sel = null; bePushHist('Removed '+n); beRenderAll(); };
+window.beDup = i => { markDirty(BE.block); const c = JSON.parse(JSON.stringify(BE.block.elements[i])); BE.block.elements.splice(i+1,0,c); BE.sel=i+1; bePushHist('Duplicated '+BE_NAME[c.id]); beRenderAll(); };
 window.beMove = (i,d) => { const j=i+d; if(j<0||j>=BE.block.elements.length) return; markDirty(BE.block);
-  const [x]=BE.block.elements.splice(i,1); BE.block.elements.splice(j,0,x); BE.sel=j; beRenderAll(); };
+  const [x]=BE.block.elements.splice(i,1); BE.block.elements.splice(j,0,x); BE.sel=j; bePushHist('Reordered'); beRenderAll(); };
 window.beSel = i => { BE.sel = i; beCanvas(); beInspector(); };
 
 function beElStyleCss(s){
-  let c = `box-sizing:border-box;padding:${boxCss(s,'pad')};border-radius:${radCss(s)};`;
+  let c = `box-sizing:border-box;padding:${boxCss(s,'pad')};margin:${boxCss(s,'mar')};border-radius:${radCss(s)};`;
   if(s.wMode==='fixed' && s.wPx>0) c += `width:${s.wPx}px;`;
   else if(s.wMode==='min' && s.wPx>0) c += `min-width:${s.wPx}px;`;
   else if(s.wMode==='max' && s.wPx>0) c += `max-width:${s.wPx}px;`;
@@ -143,11 +192,15 @@ function beElStyleCss(s){
   if(s.bgOn && s.bgVis !== false) c += `background:${bg};`;
   if(s.bcOn && s.bcVis !== false){
     const col = s.bcBind ? `var(--brand-${s.bcBind})` : paintCss(s.bc, s.bcA);
-    c += s.bpos==='inside' ? `box-shadow:inset 0 0 0 ${s.bw}px ${col};`
-       : s.bpos==='center' ? `outline:${s.bw}px solid ${col};outline-offset:${-s.bw/2}px;`
-       : `border:${s.bw}px solid ${col};`;
+    const st = s.bstyle || 'solid';
+    c += s.bpos==='center' ? `outline:${s.bw}px ${st} ${col};outline-offset:${-s.bw/2}px;`
+       : s.bpos==='outside' ? `border:${s.bw}px ${st} ${col};`
+       : st === 'solid' ? `box-shadow:inset 0 0 0 ${s.bw}px ${col};`
+       : `outline:${s.bw}px ${st} ${col};outline-offset:${-s.bw}px;`;
   }
+  if(s.fFont)  c += `font-family:'${s.fFont}',sans-serif;`;
   if(s.fSize)  c += `font-size:${s.fSize}px;`;
+  if(s.fLh)    c += `line-height:${s.fLh};`;
   if(s.fWeight)c += `font-weight:${s.fWeight};`;
   if(s.fAlign) c += `text-align:${s.fAlign};`;
   if(s.fColor) c += `color:${s.fColor};`;
@@ -161,7 +214,9 @@ function beBlockCss(s){
     + `align-items:${AL_CROSS[s.alignH]||'flex-start'};justify-content:${AL_MAIN[s.alignV]||'flex-start'};`
     + `padding:${boxCss(s,'pad')};border-radius:${radCss(s)};`
     + (s.bgOn && s.bgVis!==false ? `background:${s.bgBind?`var(--brand-${s.bgBind})`:paintCss(s.bg,s.bgA)};` : '')
-    + (s.bcOn && s.bcVis!==false ? `box-shadow:inset 0 0 0 ${s.bw}px ${s.bcBind?`var(--brand-${s.bcBind})`:paintCss(s.bc,s.bcA)};` : '');
+    + (s.bcOn && s.bcVis!==false ? ((s.bstyle||'solid')==='solid'
+        ? `box-shadow:inset 0 0 0 ${s.bw}px ${s.bcBind?`var(--brand-${s.bcBind})`:paintCss(s.bc,s.bcA)};`
+        : `outline:${s.bw}px ${s.bstyle} ${s.bcBind?`var(--brand-${s.bcBind})`:paintCss(s.bc,s.bcA)};outline-offset:${-s.bw}px;`) : '');
 }
 function beCanvas(){
   const b = BE.block, brand = beBrand();
@@ -170,15 +225,18 @@ function beCanvas(){
     document.getElementById('beCanvas').innerHTML = `<div class="code-split">
       <div class="code-pane"><div class="ph"><span class="ms">data_object</span> HTML</div>
         <textarea class="code-ta" spellcheck="false" placeholder="&lt;div&gt;Your block markup...&lt;/div&gt;"
-          oninput="BE.code=this.value;markDirty(BE.block);document.getElementById('bePrev').innerHTML=this.value">${esc(BE.code)}</textarea></div>
+          oninput="BE.code=this.value;markDirty(BE.block);beAutosave();document.getElementById('bePrev').innerHTML=this.value">${esc(BE.code)}</textarea></div>
       <div class="code-pane"><div class="ph"><span class="ms">visibility</span> Live preview</div>
         <div class="code-prev"><div class="code-prev-page" id="bePrev" style="${vars}">${BE.code}</div></div></div>
     </div>`;
     return;
   }
   const sel = BE.sel;
-  const pill = sel == null ? 'Block' : BE_NAME[b.elements[sel].id];
-  document.getElementById('beSel').textContent = pill;
+  const pillEl = document.getElementById('beSel');
+  pillEl.className = 'sel-pill' + (sel == null ? '' : ' on');
+  pillEl.innerHTML = sel == null
+    ? `<span class="ms">dashboard</span> Whole block`
+    : `<span class="ms">check_circle</span> ${esc(BE_NAME[b.elements[sel].id])}<span class="ms x" onclick="beSel(null)" title="Select the whole block">close</span>`;
   const body = b.elements.map((e,i) => `
     <div class="be-el ${sel===i?'sel':''}" data-i="${i}" draggable="true" onclick="event.stopPropagation();beSel(${i})"
          style="${beElStyleCss(e.style)}">
@@ -234,40 +292,46 @@ function beInspector(){
   const t = isBlock ? BE.block : BE.block.elements[BE.sel];
   const s = t.style || BE.block.style;
   const num = (k,v,max) => `<input type="number" data-s="${k}" value="${v==null?'':v}" min="0"${max?` max="${max}"`:''}>`;
+  const opt = (list, cur) => list.map(([v,n])=>`<option value="${v}"${String(cur||'')===v?' selected':''}>${n}</option>`).join('');
+  // Padding / Margin, both in the admin's fig-box shape.
   const boxSec = (key,label) => `
-    <div class="fig-box">
+    <div class="fig-box" data-box="${key}">
       <div class="fig-box-head"><span class="fig-label">${label}</span>
-        <button type="button" class="fig-toggle ${s[key+'Sides']?'on':''}" data-sides="${key}"><span class="ms">border_outer</span></button></div>
+        <button type="button" class="fig-toggle ${s[key+'Sides']?'on':''}" data-sides="${key}" title="Edit sides individually"><span class="ms">border_outer</span></button></div>
       <div class="fig-hv" ${s[key+'Sides']?'hidden':''}>
-        <span class="fig-field"><span class="ms fig-ic">width</span>${num(key+'H',s[key+'H'],200)}</span>
-        <span class="fig-field"><span class="ms fig-ic">height</span>${num(key+'V',s[key+'V'],200)}</span></div>
+        <span class="fig-field"><span class="ms fig-ic" title="Horizontal">width</span>${num(key+'H',s[key+'H'],200)}</span>
+        <span class="fig-field"><span class="ms fig-ic" title="Vertical">height</span>${num(key+'V',s[key+'V'],200)}</span></div>
       <div class="fig-cross" ${s[key+'Sides']?'':'hidden'}>
         ${[['T','border_top'],['R','border_right'],['B','border_bottom'],['L','border_left']]
           .map(([k,ic])=>`<span class="fig-field"><span class="ms fig-ic">${ic}</span>${num(key+k,s[key+k])}</span>`).join('')}</div>
     </div>`;
-  const paint = (on,kind,hex,a,vis,bind,label) => `
-    <div class="fig-sec">
-      <div class="fig-sec-h"><span class="fig-sec-t">${label}</span>
-        <span class="fig-acts"><button type="button" class="fig-a" data-paint="${kind}"><span class="ms">${on?'remove':'add'}</span></button></span></div>
+  // Fill / Stroke share the admin's fig-sec paint row, with the brand binding below.
+  const paint = (kind, label) => {
+    const on   = kind==='fill' ? s.bgOn : s.bcOn;
+    const key  = kind==='fill' ? 'bg' : 'bc';
+    const hex  = kind==='fill' ? s.bg : s.bc;
+    const a    = kind==='fill' ? s.bgA : s.bcA;
+    const vis  = kind==='fill' ? s.bgVis : s.bcVis;
+    const bind = (kind==='fill' ? s.bgBind : s.bcBind) || '';
+    const role = (BRAND_ROLES.find(r => r[0] === bind)||[])[1];
+    return `<div class="fig-sec-h"><span class="fig-sec-t">${label}</span>
+        <span class="fig-acts"><button type="button" class="fig-a" data-paint="${kind}" title="${on?'Remove':'Add'} ${label.toLowerCase()}"><span class="ms">${on?'remove':'add'}</span></button></span></div>
       ${on ? `<div class="fig-paint">
-          <input type="color" class="fig-sw" data-s="${kind==='fill'?'bg':'bc'}" value="${hex}" ${bind?'disabled':''}>
-          <input class="fig-hexin" data-s="${kind==='fill'?'bg':'bc'}" value="${bind?'brand token':hex}" ${bind?'disabled':''}>
-          <span class="fig-op"><input type="number" data-s="${kind==='fill'?'bgA':'bcA'}" value="${a}" min="0" max="100"><span class="fig-op-u">%</span></span>
-          <button type="button" class="fig-a" data-vis="${kind==='fill'?'bgVis':'bcVis'}"><span class="ms">${vis?'visibility':'visibility_off'}</span></button></div>
-        <div class="insp-row" style="margin-top:7px"><label>Bind</label>
-          <select class="insp-sel" data-s="${kind==='fill'?'bgBind':'bcBind'}">
-            ${BRAND_ROLES.map(([v,n])=>`<option value="${v}"${bind===v?' selected':''}>${n}</option>`).join('')}</select></div>` : ''}
-    </div>`;
+        <span class="fig-sw"><input type="color" class="insp-color" data-s="${key}" value="${hex}" ${bind?'disabled':''}></span>
+        <input class="fig-hexin insp-hex" data-s="${key}" value="${bind?'':hex.toUpperCase()}" placeholder="${bind?'brand token':'FFFFFF'}" ${bind?'disabled':''}>
+        <span class="fig-op"><input type="number" data-s="${key}A" value="${a}" min="0" max="100"><span class="fig-op-u">%</span></span>
+        <button type="button" class="fig-a" data-vis="${key}Vis" title="${vis?'Hide':'Show'}"><span class="ms">${vis?'visibility':'visibility_off'}</span></button></div>
+      ${bind?`<div class="bind-note"><span class="ms" style="font-size:14px">link</span> Follows ${esc(role||bind)}</div>`:''}
+      <select class="insp-sel fig-bind" data-s="${key}Bind">${opt(BRAND_ROLES, bind)}</select>` : ''}`;
+  };
 
   el.innerHTML = `<div class="card">
     <h3 class="ed-h">Style</h3>
-    <div class="insp-target"><span class="ms">${isBlock?'widgets':(PRIM_ICON[t.id]||'article')}</span>
-      ${isBlock?'Whole block':esc(BE_NAME[t.id])}
-      ${isBlock?'':`<span class="insp-x" onclick="beSel(null)" title="Select the block"><span class="ms">close</span></span>`}</div>
+    <div id="styleTarget"><span class="ms"${isBlock?' style="color:var(--light)"':''}>${isBlock?'dashboard':'check_circle'}</span> Editing: ${isBlock?'whole block':esc(BE_NAME[t.id]||'element')}</div>
     <div class="insp-actions">
-      <select class="insp-sel" onchange="showToast('Preset: '+this.value)"><option>No preset</option><option>Card</option><option>Panel</option><option>Quiet</option></select>
-      <button class="insp-ico" data-toast="Style copied"><span class="ms">content_copy</span></button>
-      <button class="insp-ico" data-toast="Style pasted"><span class="ms">content_paste</span></button>
+      <select class="insp-sel" data-preset><option value="">No preset</option><option>Card</option><option>Panel</option><option>Quiet</option></select>
+      <button class="insp-ico" data-copy title="Copy style"><span class="ms">content_copy</span></button>
+      <button class="insp-ico" data-pasteb title="Paste style" ${BE.clip?'':'disabled'}><span class="ms">content_paste</span></button>
       <button class="insp-ico" onclick="beReset()" title="Reset style"><span class="ms">restart_alt</span></button>
     </div>
 
@@ -276,59 +340,69 @@ function beInspector(){
         ${['Client name','Project name','Tender number','Date','Prepared by'].map(f=>`<option${(t.content.field===f)?' selected':''}>${f}</option>`).join('')}</select></div>
       <div class="fhint">Resolves to the client/project value when a document is generated.</div></div>` : ''}
 
-
+    ${!isBlock && t.id === 'image' ? `<div class="insp-sec"><div class="insp-h">Image source</div>
+      <div class="insp-row"><label>Source</label><div class="seg full" data-imgsrc>
+        <button data-src="placeholder" class="${(t.content.src||'placeholder')==='placeholder'?'on':''}">Placeholder</button>
+        <button data-src="client" class="${t.content.src==='client'?'on':''}">Company asset</button>
+      </div></div>
+      <div class="fhint">&ldquo;Company asset&rdquo; pulls your logo from Company Settings.</div></div>` : ''}
 
     <div class="insp-sec"><div class="insp-h">Layout</div>
       <div class="fig-label" style="margin-bottom:6px">Resizing</div>
       <div class="fig-resize">
         <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span>${num('wPx',s.wPx)}</span>
-        <select class="insp-sel" data-s="wMode">${[['fill','Fill container'],['fixed','Fixed width'],['min','Min width'],['max','Max width']]
-          .map(([v,n])=>`<option value="${v}"${s.wMode===v?' selected':''}>${n}</option>`).join('')}</select></div>
+        <select class="insp-sel" data-s="wMode">${opt([['fill','Fill container'],['fixed','Fixed width'],['min','Min width'],['max','Max width']], s.wMode)}</select></div>
       <div class="fig-resize" style="margin-top:6px">
         <span class="fig-wt" title="Height"><span class="ms">swap_vert</span>${num('hVal',s.hVal)}</span>
-        <select class="insp-sel" data-s="hMode">${[['fill','Fill height'],['fixed','Fixed height'],['max','Max height']]
-          .map(([v,n])=>`<option value="${v}"${s.hMode===v?' selected':''}>${n}</option>`).join('')}</select></div>
+        <select class="insp-sel" data-s="hMode">${opt([['fill','Fill height'],['fixed','Fixed height'],['max','Max height']], s.hMode)}</select></div>
       ${isBlock ? `<div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-top:12px;align-items:start">
         <div><div class="fig-label" style="margin-bottom:5px">Alignment</div>
           <div class="fig-align">${['top','middle','bottom'].map(v=>['left','center','right'].map(h=>
             `<button type="button" data-al="${h}|${v}" class="${s.alignH===h&&s.alignV===v?'on':''}" title="${v} ${h}"></button>`).join('')).join('')}</div></div>
         <div><div class="fig-label" style="margin-bottom:5px">Gap</div>
-          <span class="fig-wt"><span class="ms">height</span>${num('gap',s.gap,200)}</span></div>
+          <span class="fig-wt"><span class="ms">width_normal</span>${num('gap',s.gap,200)}</span></div>
       </div>` : ''}
     </div>
 
-    <div class="insp-sec"><div class="insp-h">Dimension</div>${boxSec('pad','Padding')}</div>
+    <div class="insp-sec"><div class="insp-h">Dimension</div>
+      ${boxSec('pad','Padding')}
+      ${isBlock ? '' : boxSec('mar','Margin')}</div>
 
-    ${paint(s.bgOn,'fill',s.bg,s.bgA,s.bgVis,s.bgBind,'Fill')}
-
-    <div class="insp-sec"><div class="insp-h">Appearance</div>
-      <div class="fig-box">
-        <div class="fig-box-head"><span class="fig-label">Corner radius</span>
-          <button type="button" class="fig-toggle ${s.radSides?'on':''}" data-sides="rad"><span class="ms">border_outer</span></button></div>
-        <div class="fig-hv" ${s.radSides?'hidden':''}>
-          <span class="fig-field"><span class="ms fig-ic">rounded_corner</span>${num('rad',s.rad,400)}</span></div>
-        <div class="fig-corners" ${s.radSides?'':'hidden'}>
-          ${[['radTL',''],['radTR','cn-tr'],['radBR','cn-br'],['radBL','cn-bl']]
-            .map(([k,cn])=>`<span class="fig-field"><span class="ms fig-ic ${cn}">rounded_corner</span>${num(k,s[k],400)}</span>`).join('')}</div>
-      </div></div>
-
-    ${paint(s.bcOn,'stroke',s.bc,s.bcA,s.bcVis,s.bcBind,'Stroke')}
-    ${s.bcOn ? `<div class="fig-resize" style="margin:6px 0 0">
-      <span class="fig-wt" title="Weight"><span class="ms">line_weight</span>${num('bw',s.bw,40)}</span>
-      <select class="insp-sel" data-s="bpos">${[['inside','Inside'],['center','Center'],['outside','Outside']]
-        .map(([v,n])=>`<option value="${v}"${s.bpos===v?' selected':''}>${n}</option>`).join('')}</select></div>` : ''}
+    <div class="insp-sec fig-sec">${paint('fill','Fill')}</div>
 
     ${!isBlock ? `<div class="insp-sec"><div class="insp-h">Typography</div>
-      <div class="fig-resize">
-        <span class="fig-wt" title="Size"><span class="ms">format_size</span>${num('fSize',s.fSize,120)}</span>
-        <select class="insp-sel" data-s="fWeight">${[['','Inherit'],['400','Regular'],['500','Medium'],['600','Semibold'],['700','Bold']]
-          .map(([v,n])=>`<option value="${v}"${s.fWeight===v?' selected':''}>${n}</option>`).join('')}</select></div>
-      <div class="insp-row stack" style="margin-top:7px"><label>Align</label><span class="segp">
-        ${[['','Auto'],['left','Left'],['center','Centre'],['right','Right']].map(([v,n])=>
-          `<button class="${(s.fAlign||'')===v?'on':''}" data-falign="${v}">${n}</button>`).join('')}</span></div>
-      <div class="insp-row" style="margin-top:7px"><label>Colour</label>
-        <input type="color" class="fig-sw" data-s="fColor" value="${s.fColor||'#2E3C3B'}"></div>
+      <div class="insp-row"><label>Font</label><select class="insp-sel" data-s="fFont">
+        <option value="">Inherit from brand</option>${BE_FONTS.map(f=>`<option${s.fFont===f?' selected':''}>${f}</option>`).join('')}</select></div>
+      <div class="insp-row" style="margin-top:7px"><label>Weight</label><select class="insp-sel" data-s="fWeight">
+        ${opt([['','Inherit from brand'],['400','400 &middot; Regular'],['500','500 &middot; Medium'],['600','600 &middot; Semibold'],['700','700 &middot; Bold']], s.fWeight)}</select></div>
+      <div class="insp-row" style="margin-top:7px"><label>Size</label><div class="insp-ctl">
+        <input type="number" class="insp-num" data-s="fSize" value="${s.fSize||''}" placeholder="brand"><span class="insp-unit">px</span>
+        <input type="number" class="insp-num" data-s="fLh" value="${s.fLh||''}" placeholder="brand"><span class="insp-unit">line</span></div></div>
+      <div class="insp-row" style="margin-top:7px"><label>Colour</label><div class="insp-ctl">
+        <input type="color" class="insp-color" data-s="fColor" value="${s.fColor||'#2E3C3B'}">
+        <input type="text" class="insp-hex" data-s="fColor" value="${s.fColor?s.fColor.toUpperCase():''}" placeholder="Inherit from brand"></div></div>
+      <div class="insp-row" style="margin-top:7px"><label>Align</label><div class="seg" data-falign>
+        ${[['left','format_align_left','Left'],['center','format_align_center','Centre'],['right','format_align_right','Right'],['justify','format_align_justify','Justify']]
+          .map(([v,ic,ti])=>`<button data-al2="${v}" class="${s.fAlign===v?'on':''}" title="${ti}"><span class="ms">${ic}</span></button>`).join('')}</div></div>
+      <div class="fhint" style="margin:8px 0 0">Blank fields inherit the client&rsquo;s brand &amp; styling.</div>
     </div>` : ''}
+
+    <div class="insp-sec"><div class="insp-h">Appearance</div>
+      <div class="fig-box" data-box="rad">
+        <div class="fig-box-head"><span class="fig-label">Corner radius</span>
+          <button type="button" class="fig-toggle ${s.radSides?'on':''}" data-sides="rad" title="Edit corners individually"><span class="ms">rounded_corner</span></button></div>
+        <div class="fig-solo" ${s.radSides?'hidden':''}>
+          <span class="fig-field"><span class="ms fig-ic">rounded_corner</span>${num('rad',s.rad,400)}</span></div>
+        <div class="fig-corners" ${s.radSides?'':'hidden'}>
+          ${[['radTL','cn cn-tl'],['radTR','cn cn-tr'],['radBL','cn cn-bl'],['radBR','cn cn-br']]
+            .map(([k,cn])=>`<span class="fig-field"><span class="ms fig-ic ${cn}">rounded_corner</span>${num(k,s[k],400)}</span>`).join('')}</div>
+      </div>
+      <div class="fig-sec" style="margin-top:14px">${paint('stroke','Stroke')}
+        ${s.bcOn ? `<div class="fig-strokerow">
+          <div><label>Position</label><select class="insp-sel" data-s="bpos">${opt([['inside','Inside'],['center','Center'],['outside','Outside']], s.bpos)}</select></div>
+          <div><label>Weight</label><span class="fig-wt"><span class="ms">line_weight</span>${num('bw',s.bw,40)}</span></div></div>
+        <div class="insp-row" style="margin-top:8px"><label>Style</label><select class="insp-sel" data-s="bstyle">${opt([['solid','Solid'],['dashed','Dashed'],['dotted','Dotted']], s.bstyle)}</select></div>` : ''}
+      </div></div>
 
     ${!isBlock ? `<div style="display:flex;gap:8px;margin-top:12px">
       <button class="lbtn sm" style="flex:1" onclick="beDup(${BE.sel})"><span class="ms">content_copy</span> Duplicate</button>
@@ -336,42 +410,73 @@ function beInspector(){
   </div>`;
   beWireInspector(t, s);
 }
+const BE_PRESETS = {
+  Card:  {padH:20, padV:18, rad:12, bgOn:true, bg:'#ffffff', bgA:100, bcOn:true, bc:'#E3E8E7', bcA:100, bw:1, bpos:'inside'},
+  Panel: {padH:22, padV:20, rad:14, bgOn:true, bg:'#F2F6F5', bgA:100, bcOn:false},
+  Quiet: {padH:0,  padV:0,  rad:0,  bgOn:false, bcOn:false},
+};
 window.beReset = () => {
   const t = BE.sel == null ? BE.block : BE.block.elements[BE.sel];
   if(BE.sel == null) BE.block.style = beNewBlock().style;
   else t.style = Object.assign({}, BE_EL_STYLE);
-  markDirty(BE.block); beCanvas(); beInspector(); showToast('Style reset');
+  markDirty(BE.block); bePushHist('Reset style'); beCanvas(); beInspector(); showToast('Style reset');
 };
 function beWireInspector(t, s){
   const root = document.getElementById('beRight');
   const touch = () => { markDirty(BE.block); beCanvas(); };
+  const commit = label => { bePushHist(label || 'Style change'); };
   root.querySelectorAll('[data-s]').forEach(el => {
     const ev = el.type === 'color' || el.tagName === 'SELECT' ? 'change' : 'input';
     el.addEventListener(ev, () => {
-      s[el.dataset.s] = el.type === 'number' ? (el.value === '' ? 0 : +el.value) : el.value;
-      touch();
+      const k = el.dataset.s;
+      if(el.classList.contains('insp-hex') || el.classList.contains('fig-hexin')){
+        let v = el.value.trim(); if(v && v[0] !== '#') v = '#' + v;
+        if(v && !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return;
+        s[k] = v;
+      } else {
+        s[k] = el.type === 'number' ? (el.value === '' ? 0 : +el.value) : el.value;
+      }
+      touch(); commit();
       if(el.tagName === 'SELECT' || el.type === 'color') beInspector();
     });
   });
   root.querySelectorAll('[data-sides]').forEach(b => b.addEventListener('click', () => {
-    s[b.dataset.sides+'Sides'] = !s[b.dataset.sides+'Sides']; touch(); beInspector();
+    s[b.dataset.sides+'Sides'] = !s[b.dataset.sides+'Sides']; touch(); commit(); beInspector();
   }));
   root.querySelectorAll('[data-paint]').forEach(b => b.addEventListener('click', () => {
-    s[b.dataset.paint === 'fill' ? 'bgOn' : 'bcOn'] = !s[b.dataset.paint === 'fill' ? 'bgOn' : 'bcOn'];
-    touch(); beInspector();
+    const k = b.dataset.paint === 'fill' ? 'bgOn' : 'bcOn';
+    s[k] = !s[k]; touch(); commit(); beInspector();
   }));
   root.querySelectorAll('[data-vis]').forEach(b => b.addEventListener('click', () => {
-    s[b.dataset.vis] = s[b.dataset.vis] === false; touch(); beInspector();
+    s[b.dataset.vis] = s[b.dataset.vis] === false; touch(); commit(); beInspector();
   }));
   root.querySelectorAll('[data-al]').forEach(b => b.addEventListener('click', () => {
-    const [h,v] = b.dataset.al.split('|'); s.alignH = h; s.alignV = v; touch(); beInspector();
+    const [h,v] = b.dataset.al.split('|'); s.alignH = h; s.alignV = v; touch(); commit('Alignment'); beInspector();
   }));
-  root.querySelectorAll('[data-falign]').forEach(b => b.addEventListener('click', () => {
-    s.fAlign = b.dataset.falign; touch(); beInspector();
+  root.querySelectorAll('[data-al2]').forEach(b => b.addEventListener('click', () => {
+    s.fAlign = s.fAlign === b.dataset.al2 ? '' : b.dataset.al2; touch(); commit('Text align'); beInspector();
+  }));
+  root.querySelectorAll('[data-imgsrc] button').forEach(b => b.addEventListener('click', () => {
+    t.content.src = b.dataset.src; touch(); commit('Image source'); beInspector();
   }));
   root.querySelectorAll('[data-c]').forEach(el => el.addEventListener('change', () => {
-    t.content[el.dataset.c] = el.value; touch();
+    t.content[el.dataset.c] = el.value; touch(); commit('Content');
   }));
+  // Preset / copy / paste, as on the admin inspector.
+  const preset = root.querySelector('[data-preset]');
+  if(preset) preset.addEventListener('change', () => {
+    const p = BE_PRESETS[preset.value];
+    if(!p) return;
+    Object.assign(s, p); touch(); commit('Preset: ' + preset.value); beInspector();
+    showToast('Applied preset - ' + preset.value);
+  });
+  const copy = root.querySelector('[data-copy]');
+  if(copy) copy.addEventListener('click', () => { BE.clip = JSON.parse(JSON.stringify(s)); beInspector(); showToast('Style copied'); });
+  const paste = root.querySelector('[data-pasteb]');
+  if(paste) paste.addEventListener('click', () => {
+    if(!BE.clip) return;
+    Object.assign(s, JSON.parse(JSON.stringify(BE.clip))); touch(); commit('Pasted style'); beInspector(); showToast('Style pasted');
+  });
 }
 
 // Open an existing block for editing. Built-ins are opened as a starting point.

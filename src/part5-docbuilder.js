@@ -68,15 +68,55 @@ function renderComposedDoc(items, brand, opts){
   const pad = opts.density ? Math.round(46*opts.density) : 46;
   const body = (items||[]).map(it => docItemHtml(it, brand)).join('');
   const band = id => id ? `<div style="padding:${Math.round(pad*.6)}px ${Math.round(pad*1.09)}px">${renderStationery(BLOCK_BY_ID[id].p, brand)}</div>` : '';
-  return `<div style="display:flex;flex-direction:column;min-height:100%;text-align:left">
-    ${band(opts.header)}
-    <div style="flex:1;padding:${pad}px ${Math.round(pad*1.09)}px;display:flex;flex-direction:column;gap:0">${body}</div>
-    ${band(opts.footer)}</div>`;
+  return `<div style="position:relative;display:flex;flex-direction:column;min-height:100%;text-align:left">
+    ${renderDocBg(opts.bg, opts.page||0)}
+    <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column">
+      ${band(opts.header)}
+      <div style="flex:1;padding:${pad}px ${Math.round(pad*1.09)}px;display:flex;flex-direction:column;gap:0">${body}</div>
+      ${band(opts.footer)}</div></div>`;
+}
+
+/* ── Background layer ──────────────────────────────────────────────────────
+   Ported from tenderfy-admin/document-edit.html. Fill regions sit behind the
+   content on every page; "first page only" regions render on page 0 alone.
+   Custom CSS is an escape hatch for a gradient or an SVG data URI.           */
+const BG_SHAPES = [['full','Full page'],['band-top','Top band'],['band-bottom','Bottom band'],
+  ['half-top','Top half'],['half-bottom','Bottom half'],['half-left','Left half'],['half-right','Right half'],
+  ['col-left','Left column'],['col-right','Right column'],['region','Custom region']];
+let bgUid = 0;
+function newDocBg(){ return {mode:'regions', regions:[], css:''}; }
+function mkRegion(brand){
+  return {id:++bgUid, shape:'band-top', h:120, w:200, x:40, y:40,
+    color:(brand?brand.primary:'#27535C'), gradOn:false, color2:(brand?brand.secondary:'#38988A'),
+    op:1, firstOnly:false};
+}
+function bgGeom(r){ switch(r.shape){
+    case 'full': return 'inset:0';
+    case 'band-top': return `left:0;right:0;top:0;height:${r.h}px`;
+    case 'band-bottom': return `left:0;right:0;bottom:0;height:${r.h}px`;
+    case 'half-top': return 'left:0;right:0;top:0;height:50%';
+    case 'half-bottom': return 'left:0;right:0;bottom:0;height:50%';
+    case 'half-left': return 'top:0;bottom:0;left:0;width:50%';
+    case 'half-right': return 'top:0;bottom:0;right:0;width:50%';
+    case 'col-left': return `top:0;bottom:0;left:0;width:${r.w}px`;
+    case 'col-right': return `top:0;bottom:0;right:0;width:${r.w}px`;
+    case 'region': return `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;
+    default: return 'inset:0';
+} }
+function bgFill(r){ return r.gradOn ? `linear-gradient(135deg, ${r.color}, ${r.color2})` : r.color; }
+function renderDocBg(bg, pi){
+  if(!bg) return '';
+  if(bg.mode === 'code'){
+    const css = (bg.css||'').replace(/[<>]/g,'').replace(/"/g,"'");
+    return css ? `<div style="position:absolute;inset:0;z-index:0;${css}"></div>` : '';
+  }
+  return (bg.regions||[]).filter(r => !r.firstOnly || pi === 0).map(r =>
+    `<div style="position:absolute;z-index:0;${bgGeom(r)};background:${bgFill(r)};opacity:${r.op}"></div>`).join('');
 }
 const KIND_LABEL = {page:'Page', section:'Section', resume:'Resume', 'case-study':'Case Study', block:'Block'};
 function newDoc(kind, name){
   return {name: name || 'Untitled Document', kind: kind || 'page', status:'draft',
-    header:null, footer:null, items:[],
+    header:null, footer:null, items:[], bg:newDocBg(),
     brand:{primary:'#27535C', secondary:'#38988A', background:'#F7F9F8', font:'Outfit', bodyFont:'Outfit', company:'Tenderfy Civil'}};
 }
 const docItem = (t, id, content, style) => ({t, id, content: content||{}, style: Object.assign({}, DOC_ITEM_STYLE_DEFAULT, style||{})});
@@ -94,7 +134,9 @@ function dbOpen(cfg){
     doc: cfg.doc, backRoute: cfg.backRoute, title: cfg.title || cfg.doc.name, sub: cfg.sub || '',
     onSave: cfg.onSave, backLabel: cfg.backLabel || 'Cancel',
     sel: null, mode: 'layout', tab: 'blocks', q: '', showLeft: true, showRight: true,
+    accClosed: {},                       // Layers accordions, kept across re-renders
   };
+  if(!DB.doc.bg) DB.doc.bg = newDocBg();
   document.getElementById('db').classList.add('open');
   dbRenderAll();
 }
@@ -172,44 +214,47 @@ function dbLeft(){
           </div>`).join('')}</div>`).join('') || '<div class="fhint">No blocks match that search.</div>'}
     </div>`;
   };
-  const layerRow = (it,i) => `<div class="lyr-fld ${DB.sel===i?'on':''}" onclick="dbSel(${i})" draggable="true" data-lyr="${i}">
-      <span class="ms" style="font-size:15px;color:var(--live-cta)">${it.t==='element'?(PRIM_ICON[it.id]||'article'):'dashboard_customize'}</span>
-      <span class="nm">${esc((BLOCK_BY_ID[it.id]||{}).label || it.id)}</span>
-      <span class="ms" style="font-size:15px;color:#A9B4B2" onclick="event.stopPropagation();dbDel(${i})" title="Remove">close</span></div>`;
+  /* Layers, lifted from tenderfy-admin/document-edit.html #paneLayers:
+     Background (fills behind content) / Main (the document body) / Top
+     (letterhead + footer). Accordion state survives a re-render.             */
+  const acc = (key, icon, title, bodyHtml) => `
+    <div class="acc ${DB.accClosed[key]?'closed':''}" data-acc data-acck="${key}">
+      <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">${icon}</span></span> ${title}</span><span class="ms acc-caret">expand_more</span></button>
+      <div class="acc-body">${bodyHtml}</div>
+    </div>`;
+  const slotFld = (which, label, none) => `
+    <div class="lyr-fld"${which==='footer'?' style="margin-bottom:2px"':''}><label>${label}</label>
+      <select class="lyr-sel" onchange="DB.doc.${which}=this.value||null;markDirty(DB.doc);dbCanvas();dbLeft()">
+        <option value="">${none}</option>
+        ${BLOCKS.filter(b=>b.slot===which).map(b=>`<option value="${b.id}"${d[which]===b.id?' selected':''}>${esc(b.label)}</option>`).join('')}
+      </select>
+      <div class="lyr-mini">${d[which] ? renderStationery(BLOCK_BY_ID[d[which]].p, d.brand) : '<span class="empty">None</span>'}</div>
+    </div>`;
   const layersPane = () => `
     <div class="side-title">Layers</div>
-    <div class="acc" data-acc>
-      <button class="acc-h" onclick="this.parentNode.classList.toggle('open')"><span class="acc-title">Top layer</span><span class="ms acc-caret">expand_more</span></button>
-      <div class="acc-body">
-        <div class="lyr-fld"><span class="ms" style="font-size:15px">vertical_align_top</span>
-          <select class="lyr-sel" onchange="DB.doc.header=this.value||null;dbCanvas();dbLeft()">
-            <option value="">No letterhead</option>
-            ${BLOCKS.filter(b=>b.slot==='header').map(b=>`<option value="${b.id}"${d.header===b.id?' selected':''}>${esc(b.label)}</option>`).join('')}
-          </select></div>
-        <div class="lyr-mini">${d.header ? renderStationery(BLOCK_BY_ID[d.header].p, d.brand) : '<span class="fhint">None</span>'}</div>
-        <div class="lyr-fld" style="margin-top:10px"><span class="ms" style="font-size:15px">vertical_align_bottom</span>
-          <select class="lyr-sel" onchange="DB.doc.footer=this.value||null;dbCanvas();dbLeft()">
-            <option value="">No footer</option>
-            ${BLOCKS.filter(b=>b.slot==='footer').map(b=>`<option value="${b.id}"${d.footer===b.id?' selected':''}>${esc(b.label)}</option>`).join('')}
-          </select></div>
-        <div class="lyr-mini">${d.footer ? renderStationery(BLOCK_BY_ID[d.footer].p, d.brand) : '<span class="fhint">None</span>'}</div>
-        <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
+    ${acc('bg','wallpaper','Background', `
+      <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
+      <div class="bg-modeseg" id="bgModeSeg">
+        <button data-bgm="regions" class="${d.bg.mode==='regions'?'on':''}">Regions</button>
+        <button data-bgm="code" class="${d.bg.mode==='code'?'on':''}">Custom CSS</button>
       </div>
-    </div>
-    <div class="acc open" data-acc>
-      <button class="acc-h" onclick="this.parentNode.classList.toggle('open')"><span class="acc-title">Page content <span class="muted">${d.items.length}</span></span><span class="ms acc-caret">expand_more</span></button>
-      <div class="acc-body" id="dbLayerList">${d.items.length ? d.items.map(layerRow).join('') : '<div class="fhint">Nothing on the page yet.</div>'}</div>
-    </div>
-    <div class="acc" data-acc>
-      <button class="acc-h" onclick="this.parentNode.classList.toggle('open')"><span class="acc-title">Background</span><span class="ms acc-caret">expand_more</span></button>
-      <div class="acc-body">
-        <div class="ds-lbl">Company name</div><input class="fin" value="${esc(d.brand.company)}" oninput="DB.doc.brand.company=this.value;dbCanvas()">
-        <div class="ds-lbl">Primary</div><div class="swatches">${ACCENTS.concat(['#27535C','#172E39']).map(c=>`<span class="sw ${c.toLowerCase()===d.brand.primary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.primary='${c}';dbCanvas();dbLeft()"></span>`).join('')}</div>
-        <div class="ds-lbl">Accent</div><div class="swatches">${ACCENTS.map(c=>`<span class="sw ${c.toLowerCase()===d.brand.secondary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.secondary='${c}';dbCanvas();dbLeft()"></span>`).join('')}</div>
-        <div class="ds-lbl">Heading font</div><select class="fin" onchange="DB.doc.brand.font=this.value;dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.font?' selected':''}>${f}</option>`).join('')}</select>
-        <div class="ds-lbl">Body font</div><select class="fin" onchange="DB.doc.brand.bodyFont=this.value;dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.bodyFont?' selected':''}>${f}</option>`).join('')}</select>
+      <div id="bgRegionsPane"${d.bg.mode==='regions'?'':' style="display:none"'}>
+        <div id="bgRegions"></div>
+        <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
       </div>
-    </div>`;
+      <div id="bgCodePane"${d.bg.mode==='code'?'':' style="display:none"'}>
+        <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);">${esc(d.bg.css||'')}</textarea>
+        <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
+      </div>
+      <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties &#9654; Style).</div>`)}
+    ${acc('main','layers','Main', `
+      <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big">${d.items.length}</span><span class="muted">block${d.items.length===1?'':'s'} on the page</span></div>
+      <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>`)}
+    ${acc('top','flip_to_front','Top', `
+      <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer &mdash; repeats on every page</div>
+      ${slotFld('header','Letterhead','No letterhead')}
+      ${slotFld('footer','Footer','No footer')}
+      <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>`)}`;
 
   document.getElementById('dbLeft').innerHTML = `
     <div class="lt-tabs">
@@ -222,11 +267,74 @@ function dbLeft(){
     el.addEventListener('click', () => dbAdd(el.dataset.add));
     el.addEventListener('dragstart', e => e.dataTransfer.setData('text','add:'+el.dataset.add));
   });
-  document.querySelectorAll('#dbLeft [data-lyr]').forEach(el => {
-    el.addEventListener('dragstart', e => e.dataTransfer.setData('text','move:'+el.dataset.lyr));
-    el.addEventListener('dragover', e => e.preventDefault());
-    el.addEventListener('drop', e => { e.preventDefault(); dbDrop(e.dataTransfer.getData('text'), +el.dataset.lyr); });
+  // Accordions collapse the same way as the admin sidebar.
+  document.querySelectorAll('#dbLeft .acc-h').forEach(h => h.addEventListener('click', () => {
+    const a = h.parentElement; a.classList.toggle('closed');
+    DB.accClosed[a.dataset.acck] = a.classList.contains('closed');
+  }));
+  if(DB.tab === 'layers') dbWireBg();
+}
+
+/* Background-layer editor, ported from tenderfy-admin/document-edit.html. */
+function bgGeoFields(r){
+  const num = (k,l) => `<div class="g"><label>${l}</label><input type="number" data-geo="${k}" value="${r[k]}"></div>`;
+  if(r.shape==='band-top'||r.shape==='band-bottom') return num('h','Height');
+  if(r.shape==='col-left'||r.shape==='col-right') return num('w','Width');
+  if(r.shape==='region') return num('x','X')+num('y','Y')+num('w','W')+num('h','H');
+  return '';
+}
+function bgRegionRow(r){
+  const colorInput = (f,v) => `<div class="samp-row" style="margin-bottom:8px"><input type="color" data-f="${f}" value="${v}" style="width:30px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;flex:none"><input class="ds-hex" data-f="${f}H" value="${v.toUpperCase()}" style="flex:1"></div>`;
+  const geo = bgGeoFields(r);
+  return `<div class="bg-reg" data-id="${r.id}">
+    <div class="bg-reg-h"><select class="ds-sel" data-f="shape">${BG_SHAPES.map(x=>`<option value="${x[0]}"${x[0]===r.shape?' selected':''}>${x[1]}</option>`).join('')}</select><button class="bg-del" title="Remove"><span class="ms">delete</span></button></div>
+    ${geo?`<div class="bg-geo">${geo}</div>`:''}
+    ${colorInput('color', r.color)}
+    <label class="bi-tog" style="margin-bottom:8px"><input type="checkbox" data-f="gradOn"${r.gradOn?' checked':''}>Gradient</label>
+    ${r.gradOn?colorInput('color2', r.color2):''}
+    <div class="ds-row" style="margin-bottom:8px"><label>Opacity</label><div class="ds-ctl"><input type="range" data-f="op" min="0" max="100" value="${Math.round(r.op*100)}"><span class="ds-u">${Math.round(r.op*100)}%</span></div></div>
+    <label class="bi-tog"><input type="checkbox" data-f="firstOnly"${r.firstOnly?' checked':''}>First page only</label>
+  </div>`;
+}
+function dbWireBg(){
+  const bg = DB.doc.bg, paint = () => { markDirty(DB.doc); dbCanvas(); };
+  const wrap = document.getElementById('bgRegions');
+  if(!wrap) return;
+  wrap.innerHTML = bg.regions.length ? bg.regions.map(bgRegionRow).join('')
+    : `<div class="fhint" style="margin:2px 0 10px">No fill regions yet &mdash; add one, or switch to Custom CSS.</div>`;
+  wrap.querySelectorAll('.bg-reg').forEach(el => {
+    const r = bg.regions.find(x => x.id == el.dataset.id);
+    el.querySelector('.bg-del').addEventListener('click', () => {
+      bg.regions = bg.regions.filter(x => x !== r); dbWireBg(); paint();
+    });
+    el.querySelectorAll('[data-f]').forEach(inp => {
+      const f = inp.dataset.f, ev = inp.type === 'checkbox' ? 'change' : 'input';
+      inp.addEventListener(ev, () => {
+        if(f==='shape'){ r.shape=inp.value; dbWireBg(); }
+        else if(f==='gradOn'){ r.gradOn=inp.checked; dbWireBg(); }
+        else if(f==='firstOnly'){ r.firstOnly=inp.checked; }
+        else if(f==='color'||f==='color2'){ r[f]=inp.value; const h=el.querySelector(`[data-f=${f}H]`); if(h)h.value=inp.value.toUpperCase(); }
+        else if(f==='colorH'||f==='color2H'){ const v=inp.value.trim(); if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return;
+          r[f.slice(0,-1)]=v; const c=el.querySelector(`[data-f=${f.slice(0,-1)}]`); if(c)c.value=v; }
+        else if(f==='op'){ r.op=(+inp.value)/100; inp.nextElementSibling.textContent=inp.value+'%'; }
+        paint();
+      });
+    });
+    el.querySelectorAll('[data-geo]').forEach(inp => inp.addEventListener('input', () => {
+      r[inp.dataset.geo] = Math.max(0, Math.round(+inp.value||0)); paint();
+    }));
   });
+  document.getElementById('bgAdd').addEventListener('click', () => {
+    bg.regions.push(mkRegion(DB.doc.brand)); dbWireBg(); paint();
+  });
+  document.querySelectorAll('#bgModeSeg button').forEach(b => b.addEventListener('click', () => {
+    bg.mode = b.dataset.bgm;
+    document.querySelectorAll('#bgModeSeg button').forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('bgRegionsPane').style.display = bg.mode === 'regions' ? '' : 'none';
+    document.getElementById('bgCodePane').style.display = bg.mode === 'code' ? '' : 'none';
+    paint();
+  }));
+  document.getElementById('bgCss').addEventListener('input', e => { bg.css = e.target.value; paint(); });
 }
 
 /* ── Middle: canvas, Layout | Preview ────────────────────────────────────── */
@@ -277,7 +385,7 @@ function dbCanvas(){
     const body = d.items.map((it,i) =>
       docItemHtml(it, d.brand, 'doc-blk-r db-pv' + (DB.sel===i?' sel':''), `data-i="${i}" onclick="dbSel(${i})"`)).join('');
     const band = id => id ? `<div class="db-slot">${renderStationery(BLOCK_BY_ID[id].p, d.brand)}</div>` : '';
-    page = `<div class="vb-page">${band(d.header)}<div class="db-body">${body}</div>${band(d.footer)}</div>`;
+    page = `<div class="vb-page">${renderDocBg(d.bg,0)}<div class="db-layer">${band(d.header)}<div class="db-body">${body}</div>${band(d.footer)}</div></div>`;
   } else {
     const slot = (which,label) => d[which]
       ? `<div class="db-slot" title="${label}">${renderStationery(BLOCK_BY_ID[d[which]].p, d.brand)}
@@ -296,7 +404,7 @@ function dbCanvas(){
           ${docItemHtml(it, d.brand, 'db-inner')}</div>`;
     }).join('') + `<div class="db-line" data-at="${d.items.length}"></div>`
       : `<div class="vb-tail"><span class="ms">dashboard_customize</span>Drag a block here, or click one in the palette.</div>`;
-    page = `<div class="vb-page">${slot('header','Letterhead')}<div class="db-body" id="dbBody">${rows}</div>${slot('footer','Footer')}</div>`;
+    page = `<div class="vb-page">${renderDocBg(d.bg,0)}<div class="db-layer">${slot('header','Letterhead')}<div class="db-body" id="dbBody">${rows}</div>${slot('footer','Footer')}</div></div>`;
   }
 
   document.getElementById('dbCanvas').innerHTML = bar + `<div class="vb-stage">${page}</div>`;
@@ -361,11 +469,19 @@ function dbWireCanvas(){
 function dbInspector(){
   const el = document.getElementById('dbRight');
   if(DB.sel == null || !DB.doc.items[DB.sel]){
-    el.innerHTML = `<div class="card"><h3 class="ed-h">Document</h3>
+    // Properties, with the brand Style block the Layers panel points at.
+    const d = DB.doc;
+    el.innerHTML = `<div class="card"><h3 class="ed-h">Properties</h3>
       <div class="fhint">Select a block on the page to style it. Blocks are clickable in Layout and Preview, and the selection carries across both.</div>
-      <div class="ds-lbl">Composition</div>
-      <div class="fhint">${DB.doc.items.length} item${DB.doc.items.length===1?'':'s'} &middot; letterhead ${DB.doc.header?'set':'none'} &middot; footer ${DB.doc.footer?'set':'none'}</div>
-      </div>`;
+      <div class="insp-sec"><div class="insp-h">Composition</div>
+        <div class="fhint">${d.items.length} item${d.items.length===1?'':'s'} &middot; letterhead ${d.header?'set':'none'} &middot; footer ${d.footer?'set':'none'}</div></div>
+      <div class="insp-sec"><div class="insp-h">Style</div>
+        <div class="ds-lbl" style="margin-top:0">Company name</div><input class="fin" value="${esc(d.brand.company)}" oninput="DB.doc.brand.company=this.value;markDirty(DB.doc);dbCanvas()">
+        <div class="ds-lbl">Primary</div><div class="swatches">${ACCENTS.concat(['#27535C','#172E39']).map(c=>`<span class="sw ${c.toLowerCase()===d.brand.primary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.primary='${c}';markDirty(DB.doc);dbCanvas();dbInspector()"></span>`).join('')}</div>
+        <div class="ds-lbl">Accent</div><div class="swatches">${ACCENTS.map(c=>`<span class="sw ${c.toLowerCase()===d.brand.secondary.toLowerCase()?'on':''}" style="background:${c}" onclick="DB.doc.brand.secondary='${c}';markDirty(DB.doc);dbCanvas();dbInspector()"></span>`).join('')}</div>
+        <div class="ds-lbl">Heading font</div><select class="fin" onchange="DB.doc.brand.font=this.value;markDirty(DB.doc);dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.font?' selected':''}>${f}</option>`).join('')}</select>
+        <div class="ds-lbl">Body font</div><select class="fin" onchange="DB.doc.brand.bodyFont=this.value;markDirty(DB.doc);dbCanvas()">${FONTS.map(f=>`<option${f===d.brand.bodyFont?' selected':''}>${f}</option>`).join('')}</select>
+      </div></div>`;
     return;
   }
   const i = DB.sel, it = DB.doc.items[i], def = BLOCK_BY_ID[it.id] || {name:it.id, label:it.id};

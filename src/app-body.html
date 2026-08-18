@@ -306,7 +306,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
   background-image:radial-gradient(#d4dcd9 1px,transparent 1px);background-size:16px 16px}
 .rb-canvas.form{background:#fff;background-image:none;padding:20px 24px}
 .rb-canvas::-webkit-scrollbar{width:9px}.rb-canvas::-webkit-scrollbar-thumb{background:#c3ccc9;border-radius:9px}
-.a4{width:620px;min-height:877px;margin:0 auto;background:#fff;border-radius:4px;
+.a4{position:relative;width:620px;min-height:877px;margin:0 auto;background:#fff;border-radius:4px;
   box-shadow:0 10px 34px rgba(20,45,38,.16);overflow:hidden;text-align:left}
 .rb-arrange{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .rb-region{border:1px solid #E3E8E7;border-radius:12px;background:#fff;overflow:hidden}
@@ -687,11 +687,10 @@ textarea.fin{resize:vertical;line-height:1.5}
 .be .tb-btn:hover{border-color:var(--live-cta);color:var(--live-cta)}
 .be .tb-btn.on{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .be .tb-btn .ms{font-size:17px}
-.sel-pill{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--live-cta);
-  background:rgba(56,152,138,.12);border-radius:100px;padding:5px 12px}
 .hdr-brand{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#6B7674}
 .hdr-brand .ms{font-size:16px;color:var(--live-cta)}
 .fin-sm{width:auto;padding:6px 9px;font-size:12.5px;border:1px solid #E3E8E7;border-radius:7px;font-family:inherit}
+.db-layer{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;min-height:0}
 .be-page{position:relative;width:620px;max-width:100%;min-height:160px;margin:0 auto;background:#fff;
   border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column;
   border:1.5px solid transparent;text-align:left;box-sizing:border-box}
@@ -707,6 +706,15 @@ textarea.fin{resize:vertical;line-height:1.5}
 .be-el.sel .be-bar,.be-el:hover .be-bar{display:flex}
 .be-bar .ms{font-size:15px;color:#fff;padding:3px;cursor:pointer;border-radius:3px}
 .be-bar .ms:hover{background:rgba(255,255,255,.24)}
+.ver-list{max-height:320px;overflow:auto;scrollbar-width:none;-ms-overflow-style:none}
+.ver-list::-webkit-scrollbar{width:0;height:0;display:none}
+.ver-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #EDF1F0}
+.ver-row:last-child{border-bottom:none}
+.ver-row .vv{font-weight:600;width:38px}
+.ver-row .vi{flex:1;min-width:0}
+.ver-row .vt{font-weight:600;font-size:13px}
+.ver-row .vm{font-size:11.5px;color:#6B7674}
+.ver-empty{color:#9AA5A3;font-size:12.5px;text-align:center;padding:26px 0}
 .insp-target{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#2E3C3B;
   background:#F2F6F5;border-radius:7px;padding:9px 11px;margin-bottom:10px}
 .insp-target .ms{font-size:17px;color:var(--live-cta)}
@@ -882,14 +890,35 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed3 st-on el-on">
     <div class="ed3-col" id="beLeft"></div>
     <div class="ed3-mid">
+      <!-- toolbar lifted from tenderfy-admin/block-edit.html -->
       <div class="vb-toolbar">
-        <button class="tb-btn on" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('el-on'))"><span class="ms">widgets</span> Elements</button>
-        <span class="sel-pill" id="beSel">Block</span>
-        <button class="tb-btn on" style="margin-left:auto" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('st-on'))"><span class="ms">tune</span> Style</button>
+        <button class="tb-btn tb-lbl on" title="Toggle Elements panel" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('el-on'))"><span class="ms">widgets</span> Elements</button>
+        <span class="sel-pill" id="beSel"></span>
+        <span class="tb-group">
+          <button class="tb-btn" id="beUndo" title="Undo (Ctrl+Z)" onclick="beUndo()"><span class="ms">undo</span></button>
+          <button class="tb-btn" id="beRedo" title="Redo (Ctrl+Y)" onclick="beRedo()"><span class="ms">redo</span></button>
+          <button class="tb-btn" id="beHist" title="Version history" onclick="beHistory()"><span class="ms">history</span></button>
+        </span>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span class="autosave" id="beAutosave"></span>
+          <button class="tb-btn tb-lbl on" title="Toggle Style panel" onclick="this.classList.toggle('on',document.querySelector('#be .ed3').classList.toggle('st-on'))"><span class="ms">tune</span> Style</button>
+        </span>
       </div>
       <div class="vb-canvas" id="beCanvas"></div>
     </div>
     <div class="ed3-col" id="beRight"></div>
+  </div>
+</div>
+
+<!-- Version history - from tenderfy-admin/block-edit.html #verModal -->
+<div class="ov" id="verOv">
+  <div class="dlg" style="width:460px">
+    <div class="dlg-h"><span>Version history</span><span class="ms x" onclick="verClose()">close</span></div>
+    <div style="padding:20px 24px">
+      <div class="fhint" style="margin-bottom:12px">Saved versions of this block. Restoring replaces the current canvas.</div>
+      <div class="ver-list" id="verList"></div>
+    </div>
+    <div class="dlg-f"><button class="lbtn" onclick="verClose()">Close</button></div>
   </div>
 </div>
 

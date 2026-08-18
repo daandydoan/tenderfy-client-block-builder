@@ -216,7 +216,7 @@ function smResumePreview(){
   const f = ensureForm(SM.doc);
   const t = RESUME_TEMPLATES.find(x => x.id === f.template) || RESUME_TEMPLATES[0];
   const brand = Object.assign({}, SM.doc.brand, {primary:t.primary, secondary:t.accent});
-  return `<div class="a4 sm-a4">${renderComposedDoc(formToItems(f), brand, {header:SM.doc.header, footer:SM.doc.footer, density:.62})}</div>`;
+  return `<div class="a4 sm-a4">${renderComposedDoc(formToItems(f), brand, {header:SM.doc.header, footer:SM.doc.footer, bg:SM.doc.bg, density:.62})}</div>`;
 }
 function smWireResume(){
   document.querySelectorAll('#smBody [data-f]').forEach(el => el.addEventListener('input', () => {
