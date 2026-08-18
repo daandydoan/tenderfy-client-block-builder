@@ -76,6 +76,58 @@ function renderComposedDoc(items, brand, opts){
       ${band(opts.footer)}</div></div>`;
 }
 
+/* ── A4 pagination ─────────────────────────────────────────────────────────
+   One paginator for the builder's Preview and the read-only view pages, so a
+   document breaks into the same A4 sheets wherever it is shown. Ported from
+   document-edit.html's renderPreview, lifted out so both callers share it.   */
+const A4_W = 620, A4_H = 877;             // A4 at 620px wide (297/210 = 1.414)
+function docFurniture(doc){
+  const hb = doc.header && BLOCK_BY_ID[doc.header], fb = doc.footer && BLOCK_BY_ID[doc.footer];
+  return {
+    head: hb ? `<div class="pv-furn" style="margin-bottom:22px">${renderStationery(hb.p, doc.brand)}</div>` : '',
+    foot: fb ? `<div class="pv-furn" style="margin-top:auto;padding-top:22px">${renderStationery(fb.p, doc.brand)}</div>` : ''
+  };
+}
+function docStyleOf(doc){ return doc.docStyle || (doc.docStyle = {bg:'#ffffff', pad:36, gap:12, rad:4}); }
+/* Measures the real rendered heights inside `host`, then groups blocks into
+   pages. Returns an array of arrays of block HTML. */
+function docSplitPages(host, doc, blocks, head, foot){
+  const ds = docStyleOf(doc);
+  try{
+    const meas = document.createElement('div');
+    meas.style.cssText = `position:absolute;left:-9999px;top:0;width:${A4_W}px;box-sizing:border-box;padding:${ds.pad}px;visibility:hidden`;
+    meas.innerHTML = head + blocks.join('') + foot; host.appendChild(meas);
+    const kids = [...meas.children];
+    const headH = head ? kids[0].getBoundingClientRect().height + 22 : 0;
+    const footH = foot ? kids[kids.length-1].getBoundingClientRect().height + 16 : 0;
+    const bEls = kids.slice(head?1:0, foot?kids.length-1:kids.length);
+    const hts = bEls.map(el => { const cs = getComputedStyle(el); return el.getBoundingClientRect().height + (parseFloat(cs.marginBottom)||0); });
+    meas.remove();
+    const usable = Math.max(120, A4_H - 2*ds.pad - headH - footH);
+    const pages = []; let cur = [], acc = 0;
+    for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(cur.length && acc+h > usable){ pages.push(cur); cur = []; acc = 0; } cur.push(blocks[i]); acc += h; }
+    if(cur.length || !pages.length) pages.push(cur);
+    return pages;
+  }catch(e){ return [blocks]; }
+}
+/* Fills `host` with the document as A4 sheets. cls picks the page chrome:
+   'vb-page' inside the builder, 'vpage' on the view pages.                   */
+function renderDocPages(host, doc, opts){
+  opts = opts || {};
+  const ds = docStyleOf(doc);
+  const {head, foot} = docFurniture(doc);
+  const blocks = doc.items.map(opts.blockHtml || (it => docItemHtml(it, doc.brand, 'pv-blk')));
+  const pages = blocks.length ? docSplitPages(host, doc, blocks, head, foot) : [[]];
+  const n = pages.length;
+  host.innerHTML = pages.map((pg,pi) =>
+    `<div class="${opts.cls||'vpage'} a4-fixed" style="background:${ds.bg};border-radius:${ds.rad}px">
+       <div class="doc-bg">${renderDocBg(doc.bg, pi)}</div>
+       <div class="doc-body" style="padding:${ds.pad}px;gap:0">${head}${pg.join('')}${foot}</div>
+       ${n>1||opts.alwaysNumber ? `<span class="pg-num">Page ${pi+1} / ${n}</span>` : ''}
+     </div>`).join('');
+  return n;
+}
+
 /* ── Background layer ──────────────────────────────────────────────────────
    Ported from tenderfy-admin/document-edit.html. Fill regions sit behind the
    content on every page; "first page only" regions render on page 0 alone.
@@ -294,18 +346,7 @@ let DB = null;
     return {hts, usable: Math.max(120, A4H - 2*ds.pad - headH - footH)};
   }
   function renderPreview(){
-    const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);
-    let pages;
-    try{
-      const {hts, usable} = measure(blocks, head, foot);
-      pages = []; let cur = [], acc = 0;
-      for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(cur.length && acc+h > usable){ pages.push(cur); cur = []; acc = 0; } cur.push(blocks[i]); acc += h; }
-      if(cur.length || !pages.length) pages.push(cur);
-    }catch(e){ pages = [blocks]; }
-    const n = pages.length;
-    canvas.innerHTML = pages.map((pg,pi) =>
-      `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg, pi)}</div><div class="doc-body">${head}${pg.join('')}${foot}</div><span class="pg-num">Page ${pi+1} / ${n}</span></div>`).join('');
-    return n;
+    return renderDocPages(canvas, DB.doc, {cls:'vb-page', alwaysNumber:true, blockHtml:renderBlockInstance});
   }
   function measurePages(){
     const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);

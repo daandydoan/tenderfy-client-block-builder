@@ -169,8 +169,8 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .tb-btn.tb-lbl{width:auto;padding:0 11px;gap:6px;font-size:12.5px;font-weight:600}
 .autosave{font-size:11px;color:var(--light);display:flex;align-items:center;gap:5px}
 .autosave .ms{font-size:13px}
-.vb-page{width:620px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
-.vb-page.band{min-height:96px;padding:22px 30px}
+.be .vb-page{width:620px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
+.be .vb-page.band{min-height:96px;padding:22px 30px}
 .vb-block{display:flex;flex-direction:column;min-width:0}
 .vb-row{position:relative;display:flex;gap:14px;padding:3px;border-radius:8px}
 .vb-row:hover{box-shadow:inset 0 0 0 1px rgba(38,152,138,.3)}
@@ -343,3 +343,9 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .pv-blk[data-k]{cursor:pointer}
 .pv-blk[data-k]:hover{outline:1.5px solid var(--teal);outline-offset:2px}
 .pv-blk.sel{outline:2px solid var(--teal);outline-offset:2px}
+
+/* A4 sheets: 620 x 877 is 210 x 297mm at this scale. Fixed height, because the
+   paginator has already split the content to fit. */
+.a4-fixed{position:relative;width:620px;max-width:100%;height:877px;flex:none;overflow:hidden;
+  display:flex;flex-direction:column;box-sizing:border-box;text-align:left}
+.vstage{flex-direction:column;align-items:center;gap:22px}

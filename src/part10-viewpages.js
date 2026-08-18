@@ -28,13 +28,12 @@ function pgResumePreview(){
   const id = q('id');
   const r = RESUMES.find(x => x.id === id) || RESUMES[0];
   const d = docFor('resume', r.id);
+  setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   return vheadHtml({
     title:'Resume Preview', back:'/file-manager/resumes',
     editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`,
     del:`viewDelete('resume','${r.id}')`,
-  }) + `<div class="vbody">
-    <div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div>
-  </div>`;
+  }) + `<div class="vbody"><div class="vstage" id="vStage"></div></div>`;
 }
 
 /* ── Case Study view ─────────────────────────────────────────────────────── */
@@ -42,13 +41,15 @@ function pgCaseStudyView(){
   const id = q('id');
   const c = CASE_STUDIES.find(x => x.id === id) || CASE_STUDIES[0];
   const d = docFor('case-study', c.id);
+  // Same paginator the builder's Preview uses, so the sheets match exactly.
+  setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   const fld = (k,v) => `<div class="vfld"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`;
   return vheadHtml({
     title:c.title, back:'/file-manager/case-studies', panel:true,
     editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`,
     del:`viewDelete('case-study','${c.id}')`,
   }) + `<div class="vbody vsplit">
-    <div class="vcard"><div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div></div>
+    <div class="vcard"><div class="vstage" id="vStage"></div></div>
     ${viewPanel ? `<aside class="vpanel"><h3>Case Study Details</h3>${fld('Name', c.title)}</aside>` : ''}
   </div>`;
 }

@@ -2326,8 +2326,8 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .tb-btn.tb-lbl{width:auto;padding:0 11px;gap:6px;font-size:12.5px;font-weight:600}
 .autosave{font-size:11px;color:var(--light);display:flex;align-items:center;gap:5px}
 .autosave .ms{font-size:13px}
-.vb-page{width:620px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
-.vb-page.band{min-height:96px;padding:22px 30px}
+.be .vb-page{width:620px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
+.be .vb-page.band{min-height:96px;padding:22px 30px}
 .vb-block{display:flex;flex-direction:column;min-width:0}
 .vb-row{position:relative;display:flex;gap:14px;padding:3px;border-radius:8px}
 .vb-row:hover{box-shadow:inset 0 0 0 1px rgba(38,152,138,.3)}
@@ -2501,6 +2501,12 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .pv-blk[data-k]:hover{outline:1.5px solid var(--teal);outline-offset:2px}
 .pv-blk.sel{outline:2px solid var(--teal);outline-offset:2px}
 
+/* A4 sheets: 620 x 877 is 210 x 297mm at this scale. Fixed height, because the
+   paginator has already split the content to fit. */
+.a4-fixed{position:relative;width:620px;max-width:100%;height:877px;flex:none;overflow:hidden;
+  display:flex;flex-direction:column;box-sizing:border-box;text-align:left}
+.vstage{flex-direction:column;align-items:center;gap:22px}
+
 /* --- listing cards (tenderfy-admin/components.css) --- */
 .kebab-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;flex-direction:column;min-width:190px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.15);padding:6px;z-index:30}
 .kebab-menu.open{display:flex}
@@ -2656,7 +2662,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .vbody{padding:20px 40px 40px}
 .vsplit{display:flex;align-items:flex-start;gap:20px}
 .vstage{display:flex;justify-content:center}
-.vpage{position:relative;width:620px;max-width:100%;min-height:877px;background:#fff;overflow:hidden;text-align:left}
+.vpage{background:#fff;box-shadow:0 10px 34px rgba(20,45,38,.10)}
 .vcard{flex:1;min-width:0;border:1px solid #C3C3C3;border-radius:12px;background:#fff;padding:20px}
 .vpanel{width:30%;min-width:300px;flex:none;border:1px solid #EAEDEC;border-radius:14px;background:#fff;
   padding:20px;box-shadow:0 3px 6px rgba(0,0,0,.16)}
@@ -5635,6 +5641,58 @@ function renderComposedDoc(items, brand, opts){
       ${band(opts.footer)}</div></div>`;
 }
 
+/* \u2500\u2500 A4 pagination \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   One paginator for the builder's Preview and the read-only view pages, so a
+   document breaks into the same A4 sheets wherever it is shown. Ported from
+   document-edit.html's renderPreview, lifted out so both callers share it.   */
+const A4_W = 620, A4_H = 877;             // A4 at 620px wide (297/210 = 1.414)
+function docFurniture(doc){
+  const hb = doc.header && BLOCK_BY_ID[doc.header], fb = doc.footer && BLOCK_BY_ID[doc.footer];
+  return {
+    head: hb ? `<div class="pv-furn" style="margin-bottom:22px">${renderStationery(hb.p, doc.brand)}</div>` : '',
+    foot: fb ? `<div class="pv-furn" style="margin-top:auto;padding-top:22px">${renderStationery(fb.p, doc.brand)}</div>` : ''
+  };
+}
+function docStyleOf(doc){ return doc.docStyle || (doc.docStyle = {bg:'#ffffff', pad:36, gap:12, rad:4}); }
+/* Measures the real rendered heights inside `host`, then groups blocks into
+   pages. Returns an array of arrays of block HTML. */
+function docSplitPages(host, doc, blocks, head, foot){
+  const ds = docStyleOf(doc);
+  try{
+    const meas = document.createElement('div');
+    meas.style.cssText = `position:absolute;left:-9999px;top:0;width:${A4_W}px;box-sizing:border-box;padding:${ds.pad}px;visibility:hidden`;
+    meas.innerHTML = head + blocks.join('') + foot; host.appendChild(meas);
+    const kids = [...meas.children];
+    const headH = head ? kids[0].getBoundingClientRect().height + 22 : 0;
+    const footH = foot ? kids[kids.length-1].getBoundingClientRect().height + 16 : 0;
+    const bEls = kids.slice(head?1:0, foot?kids.length-1:kids.length);
+    const hts = bEls.map(el => { const cs = getComputedStyle(el); return el.getBoundingClientRect().height + (parseFloat(cs.marginBottom)||0); });
+    meas.remove();
+    const usable = Math.max(120, A4_H - 2*ds.pad - headH - footH);
+    const pages = []; let cur = [], acc = 0;
+    for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(cur.length && acc+h > usable){ pages.push(cur); cur = []; acc = 0; } cur.push(blocks[i]); acc += h; }
+    if(cur.length || !pages.length) pages.push(cur);
+    return pages;
+  }catch(e){ return [blocks]; }
+}
+/* Fills `host` with the document as A4 sheets. cls picks the page chrome:
+   'vb-page' inside the builder, 'vpage' on the view pages.                   */
+function renderDocPages(host, doc, opts){
+  opts = opts || {};
+  const ds = docStyleOf(doc);
+  const {head, foot} = docFurniture(doc);
+  const blocks = doc.items.map(opts.blockHtml || (it => docItemHtml(it, doc.brand, 'pv-blk')));
+  const pages = blocks.length ? docSplitPages(host, doc, blocks, head, foot) : [[]];
+  const n = pages.length;
+  host.innerHTML = pages.map((pg,pi) =>
+    `<div class="${opts.cls||'vpage'} a4-fixed" style="background:${ds.bg};border-radius:${ds.rad}px">
+       <div class="doc-bg">${renderDocBg(doc.bg, pi)}</div>
+       <div class="doc-body" style="padding:${ds.pad}px;gap:0">${head}${pg.join('')}${foot}</div>
+       ${n>1||opts.alwaysNumber ? `<span class="pg-num">Page ${pi+1} / ${n}</span>` : ''}
+     </div>`).join('');
+  return n;
+}
+
 /* \u2500\u2500 Background layer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
    Ported from tenderfy-admin/document-edit.html. Fill regions sit behind the
    content on every page; "first page only" regions render on page 0 alone.
@@ -5853,18 +5911,7 @@ let DB = null;
     return {hts, usable: Math.max(120, A4H - 2*ds.pad - headH - footH)};
   }
   function renderPreview(){
-    const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);
-    let pages;
-    try{
-      const {hts, usable} = measure(blocks, head, foot);
-      pages = []; let cur = [], acc = 0;
-      for(let i=0;i<blocks.length;i++){ const h = hts[i]||0; if(cur.length && acc+h > usable){ pages.push(cur); cur = []; acc = 0; } cur.push(blocks[i]); acc += h; }
-      if(cur.length || !pages.length) pages.push(cur);
-    }catch(e){ pages = [blocks]; }
-    const n = pages.length;
-    canvas.innerHTML = pages.map((pg,pi) =>
-      `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg, pi)}</div><div class="doc-body">${head}${pg.join('')}${foot}</div><span class="pg-num">Page ${pi+1} / ${n}</span></div>`).join('');
-    return n;
+    return renderDocPages(canvas, DB.doc, {cls:'vb-page', alwaysNumber:true, blockHtml:renderBlockInstance});
   }
   function measurePages(){
     const {head,foot} = furnHTML(), blocks = items().map(renderBlockInstance);
@@ -7622,13 +7669,12 @@ function pgResumePreview(){
   const id = q('id');
   const r = RESUMES.find(x => x.id === id) || RESUMES[0];
   const d = docFor('resume', r.id);
+  setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   return vheadHtml({
     title:'Resume Preview', back:'/file-manager/resumes',
     editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`,
     del:`viewDelete('resume','${r.id}')`,
-  }) + `<div class="vbody">
-    <div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div>
-  </div>`;
+  }) + `<div class="vbody"><div class="vstage" id="vStage"></div></div>`;
 }
 
 /* \u2500\u2500 Case Study view \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
@@ -7636,13 +7682,15 @@ function pgCaseStudyView(){
   const id = q('id');
   const c = CASE_STUDIES.find(x => x.id === id) || CASE_STUDIES[0];
   const d = docFor('case-study', c.id);
+  // Same paginator the builder's Preview uses, so the sheets match exactly.
+  setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   const fld = (k,v) => `<div class="vfld"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`;
   return vheadHtml({
     title:c.title, back:'/file-manager/case-studies', panel:true,
     editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`,
     del:`viewDelete('case-study','${c.id}')`,
   }) + `<div class="vbody vsplit">
-    <div class="vcard"><div class="vstage"><div class="vpage">${renderComposedDoc(d.items, d.brand, {header:d.header, footer:d.footer, bg:d.bg})}</div></div></div>
+    <div class="vcard"><div class="vstage" id="vStage"></div></div>
     ${viewPanel ? `<aside class="vpanel"><h3>Case Study Details</h3>${fld('Name', c.title)}</aside>` : ''}
   </div>`;
 }
