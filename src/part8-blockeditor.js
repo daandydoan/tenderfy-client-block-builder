@@ -556,26 +556,85 @@ function beNewBlock(){
   };
   window.beClose = () => { document.getElementById('be').classList.remove('open'); clearTimeout(autoT); BE = null; };
   window.beExit = () => exitEditor(BE.block, null, () => { beClose(); go('/file-manager/block-library'); }, window.beSave);
+  /* Save asks for confirmation first, showing the block as the selector will
+     show it and rendered with mock content. */
+  window.beCurrentDef = () => ({doc: clone(doc), blockStyle: clone(blockStyle), code: codeArea.value});
+  window.beHeadRefresh = () => { beHead(); $('bar-name').textContent = BE.block.name; };
   window.beSave = () => {
     const b = BE.block;
     const n = doc.reduce((s,row)=>s+row.cols.reduce((a,c)=>a+c.length,0),0);
     if(!n && !codeArea.value.trim()){ showToast('Add at least one element before saving'); return; }
+    if(!b.name || b.name === 'New Custom Block'){ bnOpenEdit(); return; }
+    const def = beCurrentDef();
+    bnPreviewHtml('bsPrev', b, def);
+    const kindLabel = b.slot === 'header' ? 'Letterhead' : b.slot === 'footer' ? 'Footer' : 'Block';
+    document.getElementById('bsSum').innerHTML =
+      `<div class="pub-row"><span>Name</span><strong>${esc(b.name)}</strong></div>` +
+      `<div class="pub-row"><span>Category</span><strong>${esc(b.cat)}</strong></div>` +
+      (b.slot ? `<div class="pub-row"><span>Save as</span><strong>${kindLabel}</strong></div>` : '') +
+      `<div class="pub-row"><span>Contents</span><strong>${n} element${n===1?'':'s'} in ${doc.length} row${doc.length===1?'':'s'}</strong></div>` +
+      (b.desc ? `<div class="pub-row"><span>Description</span><strong>${esc(b.desc)}</strong></div>` : '') +
+      `<div class="pub-row"><span>Available in</span><strong>Every builder in this account</strong></div>`;
+    document.getElementById('bsOv').classList.add('open');
+  };
+  window.beCommitSave = () => {
+    const b = BE.block;
     const id = b.id || ('cx-' + Date.now().toString(36));
     b.id = id;
     // P2DOC keeps the row/column shape so every palette and preview renders it.
     P2DOC[id] = doc.map(row => ({cols: row.cols.map(col => col.map(el => el.id))}));
-    CUSTOM_BLOCK_DEF[id] = {doc: clone(doc), blockStyle: clone(blockStyle), code: codeArea.value};
-    const entry = {id, name:b.name, label:b.name, cat:b.cat, p:id, kind:'block', custom:true};
+    CUSTOM_BLOCK_DEF[id] = beCurrentDef();
+    const entry = {id, name:b.name, label:b.name, cat:b.cat, desc:b.desc || '', p:id, kind:'block', custom:true};
+    if(b.slot) entry.slot = b.slot;
     const at = BLOCKS.findIndex(x => x.id === id);
     if(at >= 0) BLOCKS[at] = entry; else BLOCKS.push(entry);
     BLOCK_BY_ID[id] = entry;
     saveVersion('Saved ' + b.name);
+    persistCustomBlocks();
     b.dirty = false;
     beClose();
     if(currentPath() === '/file-manager/block-library') renderRoute();
     else go('/file-manager/block-library');
-    showToast('Saved block - ' + b.name + ' - now available in every builder');
+    const what = b.slot === 'header' ? 'letterhead' : b.slot === 'footer' ? 'footer' : 'block';
+    showToast('Saved ' + what + ' - ' + b.name + ' - now available in every builder');
   };
+
+  /* ── Preview ────────────────────────────────────────────────────────────────
+     Two things a client wants to see before saving: how the block reads in the
+     selector they will pick it from, and how it lands on a page with real-
+     looking content. Both are rendered from the block as it stands right now,
+     saved or not. */
+  window.bePreview = () => {
+    const b = BE.block;
+    const n = doc.reduce((s,row) => s + row.cols.reduce((a,c) => a + c.length, 0), 0);
+    if(!n){ showToast('Add an element before previewing'); return; }
+    const name = b.name || 'Untitled block';
+    // Register the in-progress block under a scratch id so the palette
+    // schematic and the composed renderer can both read it.
+    const PID = '__bepreview';
+    P2DOC[PID] = doc.map(row => ({cols: row.cols.map(col => col.map(el => el.id))}));
+    const entry = {id:PID, name, label:name, cat:b.cat, p:PID, kind:'block', custom:true};
+    const def = {doc: clone(doc), blockStyle: clone(blockStyle), code: codeArea.value};
+
+    const tile = `<div class="vb-widget" style="cursor:default">
+        <div class="pal-prev blk-preview">${blockSchematic(entry)}</div>
+        <span class="pal-lbl">${esc(name)}</span></div>`;
+    const card = `<div class="lst-card" style="cursor:default">
+        <div class="lst-top"><span class="lst-name">${esc(name)}</span>
+          <span class="lst-count">${n} element${n===1?'':'s'}</span></div>
+        <div class="lst-prev">${blockSchematic(entry)}</div>
+        <div class="lst-foot"><span class="lst-cat">${esc(b.cat)}</span></div></div>`;
+
+    document.getElementById('bpvSel').innerHTML =
+      `<div class="bpv-lbl">Document Builder palette</div><div class="vb-pal" style="grid-template-columns:1fr">${tile}</div>
+       <div class="bpv-lbl" style="margin-top:16px">Block Library</div>${card}`;
+    document.getElementById('bpvPage').innerHTML = customBlockHtml(def, brand);
+    document.getElementById('bpvName').textContent = name;
+    document.getElementById('bpvOv').classList.add('open');
+    delete P2DOC[PID];
+  };
+  window.bpvClose = () => document.getElementById('bpvOv').classList.remove('open');
+
   window.beRenderAll = () => { render(); syncInspector(); };
 
   /* Renders a saved block outside the editor - the palettes, the Document
@@ -623,7 +682,7 @@ function beNewBlock(){
       doc: BE.block, mode:'block', sub:"Build visually or in code. Rendered in your brand.",
       exit:'beExit()', save:'beSave()', saveLabel:'Save Block',
       rename:"BE.block.name=this.value;markDirty(BE.block);var b=document.getElementById('bar-name');if(b)b.textContent=this.value",
-      extras:`<button class="lbtn icon-sm" data-toast="Block details - name and category" title="Details"><span class="ms">tune</span></button>`,
+      extras:`<button class="lbtn icon-sm" onclick="bePreview()" title="Preview this block"><span class="ms">visibility</span></button>`,
     });
   }
 
@@ -638,3 +697,122 @@ window.beOpenExisting = id => {
   beOpen(Object.assign(beNewBlock(), {name:b.name, cat:b.cat, seed: JSON.parse(JSON.stringify(P2DOC[b.p] || [{cols:[[b.p]]}]))}));
   showToast('Editing a copy of "' + b.name + '"');
 };
+
+/* ═══ New block / Save block dialogs ═══════════════════════════════════════
+   Structure, copy and styling from tenderfy-admin's #saveModal and #pubModal.
+   Details are asked for once, up front (as the admin editor does), and again
+   in a confirmation before saving - which shows the block exactly as it will
+   appear in the block selector, and rendered with mock content.
+
+   Dropped from the admin versions: Ray drafting, the preview-image override,
+   and the publish-to-every-client step.                                      */
+
+let BN = null;   // {mode:'new'|'edit', name, cat, desc, slot}
+
+function bnPreviewHtml(host, meta, def){
+  // The selector tile is the same markup the palettes use, so what you see
+  // here is literally what lands in the picker.
+  const tmp = '__bprev';
+  P2DOC[tmp] = (def.doc || []).map(row => ({cols: row.cols.map(col => col.map(el => el.id))}));
+  const tile = blockSchematic({p: tmp, kind:'block'});
+  delete P2DOC[tmp];
+  const mock = def.doc && def.doc.length ? customBlockHtml(def, beBrand())
+    : '<div class="fhint" style="text-align:center;padding:26px 0">Nothing on the block yet</div>';
+  document.getElementById(host).innerHTML = `
+    <div><div class="bprev-lbl">In the block selector</div>
+      <div class="bprev-tile"><div class="pal-prev">${tile}</div><div class="nm">${esc(meta.name || 'Untitled block')}</div></div></div>
+    <div><div class="bprev-lbl">With mock content</div>
+      <div class="bprev-mock">${mock}</div></div>`;
+}
+function bnFields(){
+  document.getElementById('bn-name').value = BN.name;
+  document.getElementById('bn-desc').value = BN.desc || '';
+  const cats = BLOCK_CATS.slice();
+  if(!cats.includes('Headers & Footers')) cats.push('Headers & Footers');
+  document.getElementById('bn-cat').innerHTML = cats.map(c => `<option${c === BN.cat ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  bnSlotRow();
+}
+/* Save-as letterhead / footer, from the admin dialog's #slotFld - shown when
+   the block is filed under Headers & Footers. */
+function bnSlotRow(){
+  const wrap = document.getElementById('bnSlot');
+  const on = document.getElementById('bn-cat').value === 'Headers & Footers';
+  wrap.style.display = on ? '' : 'none';
+  if(!on){ BN.slot = null; return; }
+  BN.slot = BN.slot || 'header';
+  wrap.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.slot === BN.slot));
+}
+window.bnOpen = (slot) => {                   // before editing a brand-new block
+  BN = {mode:'new', name:'', cat: slot ? 'Headers & Footers' : 'Text Blocks', desc:'', slot: slot || null};
+  document.getElementById('bnTitle').textContent = 'New block';
+  document.getElementById('bnSub').innerHTML = 'Name it so it reads clearly in the Block Builder &mdash; you can tweak this any time.';
+  document.getElementById('bnGo').innerHTML = '<span class="ms">arrow_forward</span> Start editing';
+  bnFields();
+  bnPreviewHtml('bnPrev', BN, {doc:[]});
+  document.getElementById('bnOv').classList.add('open');
+  setTimeout(() => document.getElementById('bn-name').focus(), 30);
+};
+window.bnOpenEdit = () => {                   // change the details of the block being edited
+  const b = BE.block;
+  BN = {mode:'edit', name:b.name === 'New Custom Block' ? '' : b.name, cat:b.cat, desc:b.desc || '', slot:b.slot || null};
+  document.getElementById('bnTitle').textContent = 'Block details';
+  document.getElementById('bnSub').textContent = 'How this block is named and filed in the Block Builder.';
+  document.getElementById('bnGo').innerHTML = '<span class="ms">check</span> Apply';
+  bnFields();
+  bnPreviewHtml('bnPrev', BN, beCurrentDef());
+  document.getElementById('bnOv').classList.add('open');
+};
+window.bnClose = () => document.getElementById('bnOv').classList.remove('open');
+window.bnSlot = s => { BN.slot = s; bnSlotRow(); };
+function bnCollect(){
+  const name = document.getElementById('bn-name').value.trim();
+  const err = document.getElementById('bn-name-err');
+  if(!name){ err.classList.add('show'); document.getElementById('bn-name').classList.add('err'); return null; }
+  err.classList.remove('show'); document.getElementById('bn-name').classList.remove('err');
+  return {name, cat:document.getElementById('bn-cat').value, desc:document.getElementById('bn-desc').value.trim(),
+          slot: document.getElementById('bn-cat').value === 'Headers & Footers' ? BN.slot : null};
+}
+document.getElementById('bn-cat').addEventListener('change', bnSlotRow);
+document.getElementById('bn-name').addEventListener('input', () => {
+  const t = document.querySelector('#bnPrev .nm'); if(t) t.textContent = document.getElementById('bn-name').value.trim() || 'Untitled block';
+});
+document.getElementById('bnGo').addEventListener('click', () => {
+  const v = bnCollect(); if(!v) return;
+  bnClose();
+  if(BN.mode === 'new'){ beOpen(Object.assign(beNewBlock(), v)); }
+  else { Object.assign(BE.block, v); markDirty(BE.block); beHeadRefresh(); showToast('Details updated'); }
+});
+document.getElementById('bnOv').addEventListener('click', e => { if(e.target.id === 'bnOv') bnClose(); });
+
+window.bsClose = () => document.getElementById('bsOv').classList.remove('open');
+document.getElementById('bsOv').addEventListener('click', e => { if(e.target.id === 'bsOv') bsClose(); });
+document.getElementById('bsGo').addEventListener('click', () => { bsClose(); beCommitSave(); });
+
+
+/* ── Custom blocks survive a reload ────────────────────────────────────────
+   Blocks the client builds are theirs; keeping them only in memory meant a
+   refresh threw them away. Stored alongside the editor's own drafts. */
+const CBX_KEY = 'tf_custom_blocks';
+function persistCustomBlocks(){
+  try{
+    const out = BLOCKS.filter(b => b.custom).map(b => ({
+      meta: {id:b.id, name:b.name, label:b.label, cat:b.cat, desc:b.desc||'', p:b.p, kind:'block', custom:true, slot:b.slot||null},
+      def: CUSTOM_BLOCK_DEF[b.id], p2: P2DOC[b.id],
+    }));
+    localStorage.setItem(CBX_KEY, JSON.stringify(out));
+  }catch(e){}
+}
+function restoreCustomBlocks(){
+  let saved = [];
+  try{ saved = JSON.parse(localStorage.getItem(CBX_KEY)) || []; }catch(e){ return; }
+  saved.forEach(x => {
+    if(!x || !x.meta || !x.meta.id || BLOCK_BY_ID[x.meta.id]) return;
+    const entry = Object.assign({}, x.meta);
+    if(!entry.slot) delete entry.slot;
+    BLOCKS.push(entry); BLOCK_BY_ID[entry.id] = entry;
+    if(x.def) CUSTOM_BLOCK_DEF[entry.id] = x.def;
+    if(x.p2)  P2DOC[entry.id] = x.p2;
+  });
+}
+window.forgetCustomBlocks = () => { try{ localStorage.removeItem(CBX_KEY); }catch(e){} };
+restoreCustomBlocks();

@@ -542,7 +542,38 @@ textarea.fin{resize:vertical;line-height:1.5}
 .db .tb-btn.on{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .db .tb-btn .ms{font-size:17px}
 .card{background:#fff;border:1px solid #E3E8E7;border-radius:10px;padding:13px}
+/* Block dialogs - .cfm card and .pub-sum summary from tenderfy-admin. */
+.cfm{background:#fff;border-radius:16px;padding:28px;max-width:460px;width:100%;text-align:left;
+  box-shadow:0 24px 70px rgba(0,0,0,.3);max-height:92vh;overflow:auto;box-sizing:border-box}
+.cfm h3{margin:0 0 2px;font-size:19px;font-weight:700;color:#2E3C3B}
+.cfm .sub{color:#6B7674;font-size:12.5px;margin-bottom:14px}
+.cfm-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.cfm-acts .lbtn{min-width:110px;justify-content:center}
+.fld-err{display:none;color:#F95246;font-size:11.5px;margin-top:4px}
+.fld-err.show{display:block}
+.fld-opt{color:#9AA5A3;font-weight:400;font-size:11px}
+.pub-sum{border:1px solid #E3E8E7;border-radius:9px;overflow:hidden;margin-bottom:4px}
+.pub-row{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid #E3E8E7;font-size:12.5px}
+.pub-row:last-child{border-bottom:none}
+.pub-row span{color:#6B7674}
+.pub-row strong{color:#2E3C3B;font-weight:600;text-align:right}
+/* Side-by-side: the tile as it appears in the selector, and a mock render. */
+.bprev{display:grid;grid-template-columns:180px 1fr;gap:14px;margin-bottom:16px;align-items:start}
+.bprev-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#9AA5A3;font-weight:700;margin-bottom:6px}
+.bprev-tile{border:1px solid #E3E8E7;border-radius:9px;background:#fff;padding:12px 8px;text-align:center}
+.bprev-tile .pal-prev{margin-bottom:6px}
+.bprev-tile .nm{font-size:11.5px;font-weight:500;color:#2E3C3B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bprev-mock{border:1px solid #E3E8E7;border-radius:9px;background:#fff;padding:14px;max-height:230px;overflow:auto}
+.bprev-mock .dp{display:block}
+
 .ps-controls{padding:16px 16px 14px}
+/* Block preview dialog */
+.bpv-body{display:grid;grid-template-columns:270px 1fr;gap:26px;padding:22px 24px;overflow:auto}
+.bpv-h{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#7C8886;margin:0 0 12px}
+.bpv-lbl{font-size:11px;color:#8B9694;margin:0 0 7px}
+.bpv-col{min-width:0}
+.bpv-sheet{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:46px 50px;
+  max-height:52vh;overflow:auto}
 .ed-h{font-size:13px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:#2E3C3B}
 .pal-cat{font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#9AA5A3;margin:14px 2px 7px}
 .pal-prev{height:58px;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:8px;pointer-events:none}
@@ -1330,6 +1361,64 @@ textarea.fin{resize:vertical;line-height:1.5}
         </div>
       </div>
     </div>
+</div>
+
+<!-- Block preview: how it reads in the selector, and on a page -->
+<div class="ov" id="bpvOv">
+  <div class="dlg" style="width:940px">
+    <div class="dlg-h">Preview <span class="ms x" onclick="bpvClose()">close</span></div>
+    <div class="bpv-body">
+      <div class="bpv-col">
+        <h4 class="bpv-h">In the block selector</h4>
+        <div id="bpvSel"></div>
+        <div class="fhint" style="margin-top:12px">This is how <strong id="bpvName"></strong> appears wherever a block is chosen.</div>
+      </div>
+      <div class="bpv-col">
+        <h4 class="bpv-h">With mock content</h4>
+        <div class="bpv-sheet"><div id="bpvPage"></div></div>
+        <div class="fhint" style="margin-top:12px">Placeholder text stands in for the copy a tender supplies.</div>
+      </div>
+    </div>
+    <div class="dlg-f"><button class="lbtn" onclick="bpvClose()">Close</button></div>
+  </div>
+</div>
+
+<!-- New block / Save block - structure and copy from tenderfy-admin's
+     #saveModal and #pubModal, minus the super-admin fields. -->
+<div class="ov" id="bnOv">
+  <div class="cfm">
+    <h3 id="bnTitle">New block</h3>
+    <div class="sub" id="bnSub">Name it so it reads clearly in the Block Builder &mdash; you can tweak this any time.</div>
+    <div class="bprev" id="bnPrev"></div>
+    <div class="fld"><label for="bn-name">Name</label>
+      <input class="fin" id="bn-name" placeholder="e.g. Branded Callout"><span class="fld-err" id="bn-name-err">Give the block a name</span></div>
+    <div class="fld"><label for="bn-cat">Category</label><select class="fin" id="bn-cat"></select></div>
+    <div class="fld" id="bnSlot" style="display:none"><label>Save as</label>
+      <div class="seg full">
+        <button type="button" data-slot="header" onclick="bnSlot('header')"><span class="ms" style="font-size:16px">flip_to_front</span> Letterhead</button>
+        <button type="button" data-slot="footer" onclick="bnSlot('footer')"><span class="ms" style="font-size:16px">flip_to_back</span> Footer</button>
+      </div></div>
+    <div class="fld" style="margin-bottom:0"><label for="bn-desc">Helper description <span class="fld-opt">&middot; optional &mdash; shown as the palette tooltip</span></label>
+      <input class="fin" id="bn-desc" placeholder="e.g. A coloured box for key text."></div>
+    <div class="cfm-acts">
+      <button class="lbtn" onclick="bnClose()">Cancel</button>
+      <button class="lbtn pri" id="bnGo"><span class="ms">arrow_forward</span> Start editing</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="bsOv">
+  <div class="cfm">
+    <h3>Save block?</h3>
+    <div class="sub">This is how it will appear in the block selector, and how it renders with mock content.</div>
+    <div class="bprev" id="bsPrev"></div>
+    <div class="pub-sum" id="bsSum"></div>
+    <div class="cfm-acts">
+      <button class="lbtn" onclick="bsClose()">Keep editing</button>
+      <button class="lbtn ghost" onclick="bsClose();bnOpenEdit()"><span class="ms">tune</span> Edit details</button>
+      <button class="lbtn pri" id="bsGo"><span class="ms">save</span> Save block</button>
+    </div>
+  </div>
 </div>
 
 <!-- Version history - from tenderfy-admin/block-edit.html #verModal -->

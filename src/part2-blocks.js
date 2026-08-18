@@ -145,6 +145,9 @@ const P2DOC = {
 
 function renderStationery(p, b){
   b = b || {primary:'#27535C', secondary:'#38988A', font:'Outfit', bodyFont:'Outfit'};
+  // A letterhead or footer built in the Block Builder renders from its own
+  // composition, like any other custom block.
+  if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[p]) return customBlockHtml(CUSTOM_BLOCK_DEF[p], b);
   const H = `font-family:'${b.font}',sans-serif`, T = `font-family:'${b.bodyFont}',sans-serif`;
   const co = b.company || 'Meridian Civil';
   switch(p){

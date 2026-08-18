@@ -180,9 +180,9 @@ function pgBBBlocks(){
   return `<div class="phead">
       <div class="h">Block Library</div>
       <div class="sp">${hf
-        ? `<button class="lbtn" onclick="beOpen()"><span class="ms">vertical_align_bottom</span> New footer</button>
-           <button class="lbtn pri" onclick="beOpen()"><span class="ms">vertical_align_top</span> New letterhead</button>`
-        : `<button class="lbtn pri" onclick="beOpen()"><span class="ms">add</span> New Block</button>`}</div>
+        ? `<button class="lbtn" onclick="bnOpen('footer')"><span class="ms">vertical_align_bottom</span> New footer</button>
+           <button class="lbtn pri" onclick="bnOpen('header')"><span class="ms">vertical_align_top</span> New letterhead</button>`
+        : `<button class="lbtn pri" onclick="bnOpen()"><span class="ms">add</span> New Block</button>`}</div>
     </div>
     <div class="pbody">
       <div class="fhint" style="margin:-4px 0 18px;max-width:720px">The building blocks behind the Block Builder.
@@ -239,7 +239,8 @@ window.bbKebab = (ev, id) => {
     {label:'Duplicate',  run:() => showToast('Duplicated "' + b.name + '"')},
   ];
   if(b.custom) items.push({label:'Delete block', run:() => {
-    BLOCKS.splice(BLOCKS.indexOf(b), 1); delete BLOCK_BY_ID[id]; delete CUSTOM_BLOCK_DEF[id];
+    BLOCKS.splice(BLOCKS.indexOf(b), 1); delete BLOCK_BY_ID[id]; delete CUSTOM_BLOCK_DEF[id]; delete P2DOC[id];
+    persistCustomBlocks();
     renderRoute(); showToast('Deleted "' + b.name + '"');
   }});
   openMenu(ev, items);
