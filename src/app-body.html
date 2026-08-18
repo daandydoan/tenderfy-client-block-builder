@@ -8,6 +8,10 @@
   --live-nav:#394645; --live-top:#38988A; --live-page:#FAFCFB;
   --live-cta:#38988A; --live-cta-dark:#2F8276; --live-gold:#FFBE0B;
   --side-w:88px; --side-w-open:273px; --top-h:56px;
+  /* The ported editors style themselves from --teal, which the subbie-portal
+     sheet sets to its own green. Re-point it at the live Tenderfy palette so
+     the whole app uses one colour. */
+  --teal:#38988A; --teal-tint:rgba(56,152,138,.15); --teal-bright:#6ADDB5;
 }
 body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color:var(--ink);margin:0}
 .ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;line-height:1;
@@ -130,8 +134,8 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .lbtn:hover{border-color:var(--live-cta);color:var(--live-cta)}
 .lbtn.pri{background:var(--live-cta);color:#fff;border-color:var(--live-cta)}
 .lbtn.pri:hover{background:var(--live-cta-dark);color:#fff}
-.lbtn.danger{color:#C0392B;border-color:#EBC3BF;background:#FFF9F8}
-.lbtn.danger:hover{border-color:#C0392B;color:#8E2B20}
+.lbtn.danger{color:#F95246;border-color:#FBC7C2;background:#FFF6F5}
+.lbtn.danger:hover{border-color:#F95246;color:#E23B2F}
 .lbtn.gold{color:#B4530A;border-color:#F0D5A8;background:#FFFCF5}
 .lbtn.gold:hover{border-color:var(--live-gold);color:#8a4008}
 .lbtn.sm{font-size:13.5px;padding:8px 15px;border-radius:7px}
@@ -395,7 +399,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
 .rb-sec .sic{color:var(--live-cta);font-size:17px}
 .rb-sec .nm{flex:1;font-weight:500}
 .rb-sec .rm{color:#A9B4B2;cursor:pointer;font-size:17px}
-.rb-sec .rm:hover{color:#c0392b}
+.rb-sec .rm:hover{color:#F95246}
 .rb-region-empty{color:#A9B4B2;font-size:12px;text-align:center;padding:9px;border:1.5px dashed #E3E8E7;border-radius:8px}
 .ps{padding:16px;border-bottom:1px solid #E3E8E7}
 .ps h4{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6B7674;margin-bottom:11px}
@@ -667,7 +671,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .smb-ok{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   cursor:pointer;color:#fff;background:var(--live-cta)}
 .smb-del{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;color:#fff;background:#E04A3F}
+  cursor:pointer;color:#fff;background:#F95246}
 .smb-ok .ms,.smb-del .ms{font-size:16px}
 .sm-plus{height:72px;border-radius:8px;background:var(--live-cta);color:#fff;display:flex;align-items:center;
   justify-content:center;cursor:pointer;margin:20px 0}

@@ -161,7 +161,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .sel-pill.on{color:var(--teal);background:var(--teal-tint);border-color:#bfe0d9}
 .sel-pill .ms{font-size:15px}
 .sel-pill .x{cursor:pointer;font-size:16px;border-radius:50%;padding:1px}
-.sel-pill .x:hover{color:#d5493f}
+.sel-pill .x:hover{color:#F95246}
 .tb-group{display:inline-flex;gap:3px}
 .tb-btn{width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:7px;color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .tb-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}
@@ -179,7 +179,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .vb-row:hover>.vb-rowtools{opacity:1}
 .vb-rowtools .rb{width:23px;height:23px;border-radius:6px;background:#3a4a52;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.25)}
 .vb-rowtools .rb.grab{cursor:grab}
-.vb-rowtools .rb.del{background:#d5493f}
+.vb-rowtools .rb.del{background:#F95246}
 .vb-rowtools .rb .ms{font-size:14px}
 .vb-col{flex:1;min-width:0;display:flex;flex-direction:column;border-radius:8px;position:relative}
 .vb-col.over{background:var(--teal-tint);box-shadow:inset 0 0 0 1.5px var(--teal)}
@@ -204,7 +204,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .vb-tools .tb{width:24px;height:24px;border-radius:6px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.3)}
 .vb-tools .tb:hover{filter:brightness(1.09)}
 .vb-tools .tb.grab{cursor:grab}
-.vb-tools .tb.del{background:#d5493f}
+.vb-tools .tb.del{background:#F95246}
 .vb-tools .tb .ms{font-size:15px}
 .vb-empty{border:1.5px dashed #b3beba;border-radius:10px;padding:40px 20px;text-align:center;color:var(--gray);margin:auto;width:100%;max-width:460px}
 .vb-empty .ms.big{font-size:32px;color:var(--light);display:block;margin-bottom:8px}
@@ -278,7 +278,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .bg-reg{border:1px solid var(--border);border-radius:9px;padding:10px;margin-bottom:9px;background:#fbfcfc}
 .bg-reg-h{display:flex;gap:6px;align-items:center;margin-bottom:8px}
 .bg-del{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
-.bg-del:hover{border-color:#d5493f;color:#d5493f}
+.bg-del:hover{border-color:#F95246;color:#F95246}
 .bg-del .ms{font-size:15px}
 .bg-geo{display:flex;gap:5px;margin-bottom:8px}
 .bg-geo .g{flex:1;min-width:0}
@@ -289,7 +289,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 /* Block editor page: content-driven height, from tenderfy-admin/block-edit.css */
 .be .vb-page{min-height:160px;padding:52px;box-sizing:border-box}
 .vb-block.drop-end::after{content:'';display:block;height:3px;background:var(--teal);border-radius:2px;margin:8px 2px 0}
-.fin.err{border-color:#d5493f;background:#fdf3f2}
+.fin.err{border-color:#F95246;background:#FFF6F5}
 
 /* Document canvas - from tenderfy-admin/document-edit.css (Layout list,
    page-break markers, Top-layer slots, paginated Preview). */
@@ -312,7 +312,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .doc-compact .cmp-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--gray);background:#eef3f1;border-radius:100px;padding:2px 8px;flex-shrink:0}
 .doc-compact .cmp-tag.el{color:var(--teal);background:var(--teal-tint)}
 .doc-compact .cmp-rm{color:var(--light);cursor:pointer;font-size:18px;flex-shrink:0}
-.doc-compact .cmp-rm:hover{color:#c0392b}
+.doc-compact .cmp-rm:hover{color:#F95246}
 .doc-empty{border:1.5px dashed #b3beba;border-radius:10px;padding:44px 20px;text-align:center;color:var(--gray);margin:auto;width:100%}
 .doc-empty .ms.big{font-size:32px;color:var(--light);display:block;margin-bottom:8px}
 .doc-blk{position:relative;margin-bottom:0;cursor:grab}
