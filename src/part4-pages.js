@@ -71,84 +71,78 @@ window.railToggle = id => document.getElementById(id).classList.toggle('clps');
 
 let rqMode = 'out';
 function pgTenderDetail(){
-  const name = q('tender') || 'biebly cover page';
-  return `<div class="phead">
-      <button class="lbtn" onclick="go('/tenders')"><span class="ms">keyboard_arrow_left</span> Back</button>
-      <div class="h">${esc(name)}</div>
-      <div class="sp">
-        <button class="lbtn" data-toast="Start time tracking"><span class="ms" style="color:#F95246">play_circle</span> Start Time</button>
-        <button class="lbtn pri" onclick="go('/tenders/build-tender/?tender=${encodeURIComponent(name)}')">Build Tender</button>
-        <button class="lbtn gold" data-toast="Update tender">Update Tender</button>
-        <span class="ms" onclick="tenderMenu(event,'${esc(name)}')" style="color:#7C8886;cursor:pointer" title="Tender options">more_vert</span>
+  const name = q('tender') || (TENDERS[0] && TENDERS[0].name) || 'biebly cover page';
+  const t = TENDERS.find(x => x.name === name) || {};
+  const fld = (label, val, cal) => `<div class="tf-fld${val?' filled':''}">
+      <label>${label}</label><input value="${esc(val||'')}" placeholder="${label}">
+      ${cal?'<span class="ms cal">calendar_today</span>':''}</div>`;
+  // Header, section bars and the two-column split are measured from live.
+  return `<div class="vhead">
+      <button class="vbtn amber" onclick="go('/tenders')"><span class="ms">keyboard_arrow_left</span> Back</button>
+      <div class="vtitle">${esc(name)}</div>
+      <div class="vacts">
+        <button class="vbtn plain" data-toast="Start time tracking"><span class="ms" style="color:#F95246">play_circle</span> Start Time</button>
+        <button class="vbtn teal" onclick="go('/tenders/build-tender/?tender=${encodeURIComponent(name)}')">Build Tender</button>
+        <button class="vbtn amber" data-toast="Update tender">Update Tender</button>
+        <span class="ms" onclick="tenderMenu(event,'${esc(name)}')" style="color:#7C8886;cursor:pointer;font-size:24px" title="Tender options">more_vert</span>
       </div>
     </div>
     <div class="pbody">
       <div class="td-grid">
-        <div class="tacc light" id="accInfo">
-          <div class="tacc-h" onclick="taccToggle('accInfo')"><span class="ms car">expand_more</span> Tender information</div>
-          <div class="tacc-b">
-            <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px;font-size:13.5px">
-              <span><b style="color:#8B9694;font-weight:500">STATUS:</b> <span class="st-pending" style="font-weight:600">Pending</span></span>
-              <span><b style="color:#8B9694;font-weight:500">PRIORITY:</b> <span class="pri-high" style="font-weight:600">High</span></span>
-              <span><b style="color:#8B9694;font-weight:500">Assignee:</b> Select Staff</span>
+        <section class="tsec light" id="accInfo">
+          <div class="tsec-h" onclick="taccToggle('accInfo')"><span class="ms car">expand_more</span> Tender information</div>
+          <div class="tsec-b">
+            <div class="tf-meta">
+              <span>STATUS: <b class="st-pending">${esc(t.st||'Pending')}</b> <span class="ms">expand_more</span></span>
+              <span>PRIORITY: <b class="pri-high">${esc(t.pri||'High')}</b> <span class="ms">expand_more</span></span>
+              <span>Assignee: <b>Select Staff</b> <span class="ms">expand_more</span></span>
             </div>
-            <div class="prow" style="gap:14px">
-              ${[['Tender Name',esc(name)],['Tender Number',''],['Organisation',''],['Contact Name',''],['Contact Number',''],['Contact Email','']]
-                .map(([k,v])=>`<div><label style="font-size:11.5px;color:#8B9694">${k}</label><input class="pin2" value="${v}" placeholder="${k}"></div>`).join('')}
-              <div><label style="font-size:11.5px;color:#8B9694">Start Date</label><input class="pin2" type="date"></div>
-              <div><label style="font-size:11.5px;color:#8B9694">Due Date</label><input class="pin2" type="date"></div>
+            <div class="tf-grid">
+              ${fld('Tender Name', name)}${fld('Tender Number','')}
+              ${fld('Organisation', t.org||'')}${fld('Contact Name', t.contact||'')}
+              ${fld('Contact Number','')}${fld('Contact Email','')}
+              ${fld('Start Date','',1)}${fld('Due Date', t.due||'',1)}
             </div>
           </div>
-        </div>
-        <div class="tacc dark" id="accCheck">
-          <div class="tacc-h" onclick="taccToggle('accCheck')"><span class="ms car">expand_more</span> Checklist
+        </section>
+        <section class="tsec dark" id="accCheck">
+          <div class="tsec-h" onclick="taccToggle('accCheck')"><span class="ms car">expand_more</span> Checklist
             <button class="lbtn pri sm act" data-toast="Add task" onclick="event.stopPropagation()">Add Task</button></div>
-          <div class="tacc-b">
-            <div class="ftabs" style="margin:0 0 12px">${['My Tasks','Assigned Tasks','Completed Tasks'].map((t,i)=>`<div class="ftab ${i?'':'on'}" onclick="tabPick(this)">${t}</div>`).join('')}</div>
-            ${[['Confirm eligibility &amp; conflicts of interest','Done',1],['Compile insurances &amp; licences','Done',1],
-               ['Draft methodology &amp; capability statement','Due 20 Jul',0],['Request subcontractor quotes','Due 22 Jul',0],
-               ['Internal review &amp; sign-off','Due 27 Jul',0]]
-              .map(([l,d,done])=>`<label class="tk-item${done?' done':''}"><input type="checkbox"${done?' checked':''} onchange="this.closest('.tk-item').classList.toggle('done',this.checked)"><span class="tk-label">${l}</span><span class="tk-due">${d}</span></label>`).join('')}
+          <div class="tsec-b">
+            <div class="ck-top">
+              <div class="ftabs">${['My Tasks','Assigned Tasks','Completed Tasks'].map((x,i)=>`<div class="ftab ${i?'':'on'}" onclick="tabPick(this)">${x}</div>`).join('')}</div>
+              <button class="lbtn sm" data-toast="Sort by priority"><span class="ms">swap_vert</span> Priority</button>
+            </div>
+            <div class="ck-table">
+              <div class="ck-head"><span>TASK</span><span>DUE DATE <span class="ms">arrow_downward</span></span><span>ACTIONS</span></div>
+              <div class="ck-empty">No tasks yet</div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      <div class="tacc dark collapsed" id="accDocs">
-        <div class="tacc-h" onclick="taccToggle('accDocs')"><span class="ms car">expand_more</span> Tender documentation
+      <section class="tsec dark collapsed" id="accDocs">
+        <div class="tsec-h" onclick="taccToggle('accDocs')"><span class="ms car">expand_more</span> Tender documentation
           <button class="lbtn pri sm act" data-toast="Add document" onclick="event.stopPropagation()">Add Document</button></div>
-        <div class="tacc-b">
-          ${[['pdf','PDF','Request for Tender.pdf','3.1 MB'],['docx','DOCX','Response Schedule Template.docx','142 KB'],
-             ['pdf','PDF','Conditions of Contract.pdf','880 KB'],['xlsx','XLSX','Pricing Schedule.xlsx','96 KB']]
-            .map(([c,l,n,s])=>`<div class="td-doc"><span class="ftag ${c}">${l}</span><span class="nm">${n}</span><span class="by">${s}</span><span class="ms" data-toast="Open document">open_in_new</span></div>`).join('')}
+        <div class="tsec-b">
+          <div class="frail" style="margin-top:0">
+            <span class="ms car">expand_more</span> Folders
+            <button class="lbtn pri sm" data-toast="Add folder"><span class="ms">add</span> Add Folder</button>
+            <button class="lbtn sm" style="margin-left:auto;opacity:.5" data-toast="Ray reviews documents attached to this tender"><span class="ms">auto_fix_high</span> Open Ray</button>
+          </div>
+          <div class="fchips"><div class="fchip on">Default</div></div>
+          <div class="td-empty">No documents in this folder yet</div>
         </div>
-      </div>
+      </section>
 
-      <div class="tacc dark collapsed" id="accNotes">
-        <div class="tacc-h" onclick="taccToggle('accNotes')"><span class="ms car">expand_more</span> Notes
+      <section class="tsec dark collapsed" id="accNotes">
+        <div class="tsec-h" onclick="taccToggle('accNotes')"><span class="ms car">expand_more</span> Notes
           <button class="lbtn pri sm act" data-toast="Add note" onclick="event.stopPropagation()">Add Notes</button></div>
-        <div class="tacc-b">
-          <div class="td-note"><div class="meta">Andrew Williams - 12 Jul 2026 - 2:14pm</div><div class="body2">Awaiting traffic management quote from Ironbark before finalising the methodology section. Chase by Friday.</div></div>
-          <div class="td-note"><div class="meta">Andrew Williams - 8 Jul 2026 - 9:02am</div><div class="body2">Confirmed our public liability cover meets the $20M requirement in the conditions of contract.</div></div>
-        </div>
-      </div>
-
-      <div class="rq" id="rqSec">
-        <div class="rq-h" onclick="rqToggle()"><span class="ms car">expand_more</span> Quotes <span class="cnt" id="rqCnt"></span>
-          <span class="rq-tabs" onclick="event.stopPropagation()">
-            <span class="rq-tab ${rqMode==='out'?'on':''}" onclick="rqTab('out')">Out for Quote</span>
-            <span class="rq-tab ${rqMode==='acc'?'on':''}" onclick="rqTab('acc')">Accepted Quotes</span></span>
-          <span class="acts" onclick="event.stopPropagation()">
-            <button class="lbtn sm" data-toast="Send a new request for quote"><span class="ms">send</span> Send New Request</button>
-            <button class="lbtn sm pri" id="rqCompareBtn" onclick="openCompare()" style="${rqMode==='out'?'':'display:none'}"><span class="ms">compare_arrows</span><span id="rqCmpLbl">Compare</span></button>
-          </span>
-        </div>
-        <div class="rq-b">
-          <table class="rq-table"><thead><tr><th style="width:34px"></th><th>Subcontractor</th><th>Trade</th><th class="r">Value (inc. GST)</th><th class="c">Incl.</th><th class="c">Excl.</th><th class="c">Assum.</th><th>Status</th><th class="r">Quote</th></tr></thead>
-            <tbody id="rqBody">${rqBodyHtml()}</tbody></table>
-        </div>
-      </div>
+        <div class="tsec-b"><div class="td-empty">No notes yet</div></div>
+      </section>
     </div>`;
 }
+
 function rqRow(qt, i, acc){
   return `<tr>
     <td>${acc ? '' : `<input type="checkbox" class="rq-chk" data-i="${i}" onchange="updateCompare()">`}</td>

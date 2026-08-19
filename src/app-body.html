@@ -524,8 +524,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Document Builder shell ═══════════════════════════════════════════════ */
 .db{position:fixed;inset:0;background:var(--live-page);z-index:140;display:none;flex-direction:column}
 .db.open{display:flex}
-.ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;gap:14px;
-  padding:14px 18px;align-items:stretch;height:auto}
+.ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;
+  grid-template-rows:minmax(0,1fr);gap:14px;padding:14px 18px;align-items:stretch;height:auto;overflow:hidden}
 .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
 .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
@@ -542,6 +542,40 @@ textarea.fin{resize:vertical;line-height:1.5}
 .db .tb-btn.on{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .db .tb-btn .ms{font-size:17px}
 .card{background:#fff;border:1px solid #E3E8E7;border-radius:10px;padding:13px}
+/* Tender detail - section bars, form and checklist measured on staging.
+   Bars are 83px with a 21px/500 title; the first is light, the rest slate. */
+.td-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.tsec{border-radius:12px;overflow:hidden;background:#fff;border:1px solid #E3E8E7;margin-bottom:18px}
+.tsec-h{height:83px;display:flex;align-items:center;gap:12px;padding:0 26px;font-size:21px;font-weight:500;cursor:pointer}
+.tsec-h .car{font-size:24px;transition:transform .18s}
+.tsec-h .act{margin-left:auto}
+.tsec.light .tsec-h{background:#EAEDEC;color:#2E3C3B}
+.tsec.dark  .tsec-h{background:#596262;color:#fff}
+.tsec.collapsed .tsec-h .car{transform:rotate(-90deg)}
+.tsec.collapsed .tsec-b{display:none}
+.tsec.collapsed{border-color:transparent}
+.tsec-b{padding:22px 26px 26px}
+.tf-meta{display:flex;gap:26px;flex-wrap:wrap;font-size:14px;color:#6C7776;margin-bottom:22px}
+.tf-meta b{font-weight:600}
+.tf-meta .ms{font-size:18px;color:#6C7776;vertical-align:-4px}
+.tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tf-fld{position:relative}
+.tf-fld input{width:100%;box-sizing:border-box;height:56px;padding:0 14px;border:1px solid #C3C3C3;border-radius:6px;
+  font-family:inherit;font-size:15px;color:#2E3C3B;background:#fff}
+.tf-fld input::placeholder{color:#6C7776}
+.tf-fld input:focus{outline:none;border-color:var(--live-cta)}
+.tf-fld > label{display:none}
+.tf-fld.filled > label{display:block;position:absolute;top:-8px;left:11px;padding:0 5px;background:#fff;
+  font-size:11.5px;color:#6C7776;z-index:1}
+.tf-fld .cal{position:absolute;right:12px;top:17px;color:#6C7776;font-size:20px;pointer-events:none}
+.ck-top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.ck-top .ftabs{flex:1;margin:0}
+.ck-table{border:1px solid #EDF1F0;border-radius:12px;overflow:hidden}
+.ck-head{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:18px 20px;background:#FDFDFD;
+  font-size:12.5px;font-weight:600;letter-spacing:.4px;color:#6C7776;text-transform:uppercase}
+.ck-head .ms{font-size:15px;color:var(--live-gold);vertical-align:-3px}
+.ck-empty,.td-empty{padding:40px 0;text-align:center;color:#9AA5A3;font-size:13.5px}
+
 /* Block dialogs - .cfm card and .pub-sum summary from tenderfy-admin. */
 .cfm{background:#fff;border-radius:16px;padding:28px;max-width:460px;width:100%;text-align:left;
   box-shadow:0 24px 70px rgba(0,0,0,.3);max-height:92vh;overflow:auto;box-sizing:border-box}
@@ -638,7 +672,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Simple mode ══════════════════════════════════════════════════════════ */
 #sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 #sm.open,#ps.open{display:flex}
-.sm-body{min-height:0;padding:0}
+.sm-body{min-height:0;padding:0 0 24px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
 .sm-col.side{position:sticky;top:0}
@@ -686,8 +720,9 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* block canvas (case study) — measured from live: a full-width white card
    (radius 12, 1px #C3C3C3) holding a 900px centred column with 20px padding, so
    the working width is 860px. "+" bars are 72px tall, radius 8, 20px apart. */
-.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:0;margin:0 auto;width:620px;max-width:100%}
-.sm-col{width:620px;max-width:100%;margin:0 auto;padding:0;box-sizing:border-box}
+.sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:0;margin:0 auto;
+  width:620px;max-width:100%;min-height:877px;box-sizing:border-box}
+.sm-col{width:100%;max-width:620px;margin:0 auto;padding:20px;box-sizing:border-box}
 .smb{display:flex;align-items:flex-start;gap:10px}
 .smb-grip{color:#B8C2C0;font-size:19px;cursor:grab;margin-top:12px;flex:none}
 .smb-body{flex:1;min-width:0;border:1px solid #E3E8E7;border-radius:4px;overflow:hidden;background:#fff}
@@ -792,8 +827,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Block Builder ════════════════════════════════════════════════════════ */
 .be{position:fixed;inset:0;background:var(--live-page);z-index:138;display:none;flex-direction:column}
 .be.open{display:flex}
-.be .ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;gap:14px;
-  padding:14px 18px;align-items:stretch;height:auto}
+.be .ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;
+  grid-template-rows:minmax(0,1fr);gap:14px;padding:14px 18px;align-items:stretch;height:auto;overflow:hidden}
 .be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
 .be .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
 .be .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
@@ -1412,16 +1447,16 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="cfm">
     <h3 id="bnTitle">New block</h3>
     <div class="sub" id="bnSub">Name it so it reads clearly in the Block Builder &mdash; you can tweak this any time.</div>
-    <div class="bprev" id="bnPrev"></div>
-    <div class="fld"><label for="bn-name">Name</label>
-      <input class="fin" id="bn-name" placeholder="e.g. Branded Callout"><span class="fld-err" id="bn-name-err">Give the block a name</span></div>
-    <div class="fld"><label for="bn-cat">Category</label><select class="fin" id="bn-cat"></select></div>
+    <div class="bprev" id="bnPrev" style="display:none"></div>
+    <div class="fld"><label for="bn-name">Block name</label>
+      <input class="fin" id="bn-name" placeholder="e.g. Project highlight box"><span class="fld-err" id="bn-name-err">Give the block a name</span></div>
+    <div class="fld"><label for="bn-cat">Category <span class="fld-opt">&middot; where it sits in your block palette</span></label><select class="fin" id="bn-cat"></select></div>
     <div class="fld" id="bnSlot" style="display:none"><label>Save as</label>
       <div class="seg full">
         <button type="button" data-slot="header" onclick="bnSlot('header')"><span class="ms" style="font-size:16px">flip_to_front</span> Letterhead</button>
         <button type="button" data-slot="footer" onclick="bnSlot('footer')"><span class="ms" style="font-size:16px">flip_to_back</span> Footer</button>
       </div></div>
-    <div class="fld" style="margin-bottom:0"><label for="bn-desc">Helper description <span class="fld-opt">&middot; optional &mdash; shown as the palette tooltip</span></label>
+    <div class="fld" style="margin-bottom:0"><label for="bn-desc">Description <span class="fld-opt">&middot; optional &mdash; shown when you hover it in the palette</span></label>
       <input class="fin" id="bn-desc" placeholder="e.g. A coloured box for key text."></div>
     <div class="cfm-acts">
       <button class="lbtn" onclick="bnClose()">Cancel</button>
@@ -1433,7 +1468,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 <div class="ov" id="bsOv">
   <div class="cfm">
     <h3>Save block?</h3>
-    <div class="sub">This is how it will appear in the block selector, and how it renders with mock content.</div>
+    <div class="sub">Here is how it will look in your block palette, and on a page with mock content.</div>
     <div class="bprev" id="bsPrev"></div>
     <div class="pub-sum" id="bsSum"></div>
     <div class="cfm-acts">

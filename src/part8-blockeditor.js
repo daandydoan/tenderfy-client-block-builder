@@ -719,24 +719,30 @@ window.beOpenExisting = id => {
 
 let BN = null;   // {mode:'new'|'edit', name, cat, desc, slot}
 
+/* The preview only earns its place once there is something to show: the tile
+   exactly as the block selector renders it, beside a render with mock content.
+   The admin's pre-edit dialog carries no preview, and neither does this one. */
 function bnPreviewHtml(host, meta, def){
-  // The selector tile is the same markup the palettes use, so what you see
-  // here is literally what lands in the picker.
+  const el = document.getElementById(host);
+  const has = (def.doc && def.doc.length) || isCodeBlock(def);
+  if(!has){ el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
   const tmp = '__bprev';
-  P2DOC[tmp] = (def.doc || []).map(row => ({cols: row.cols.map(col => col.map(el => el.id))}));
+  P2DOC[tmp] = (def.doc || []).map(row => ({cols: row.cols.map(col => col.map(e => e.id))}));
   const tile = isCodeBlock(def) ? '<div class="blk-code"><span class="ms">code</span></div>'
                                 : blockSchematic({p: tmp, kind:'block'});
   delete P2DOC[tmp];
-  const mock = isCodeBlock(def) ? codeBlockHtml(def, beBrand())
-    : def.doc && def.doc.length ? customBlockHtml(def, beBrand())
-    : '<div class="fhint" style="text-align:center;padding:26px 0">Nothing on the block yet</div>';
-  document.getElementById(host).innerHTML = `
+  const mock = isCodeBlock(def) ? codeBlockHtml(def, beBrand()) : customBlockHtml(def, beBrand());
+  el.innerHTML = `
     <div><div class="bprev-lbl">In the block selector</div>
       <div class="bprev-tile"><div class="pal-prev">${tile}</div><div class="nm">${esc(meta.name || 'Untitled block')}</div></div></div>
     <div><div class="bprev-lbl">With mock content</div>
       <div class="bprev-mock">${mock}</div></div>`;
 }
 function bnFields(){
+  // Never open showing a stale validation error.
+  document.getElementById('bn-name-err').classList.remove('show');
+  document.getElementById('bn-name').classList.remove('err');
   document.getElementById('bn-name').value = BN.name;
   document.getElementById('bn-desc').value = BN.desc || '';
   const cats = BLOCK_CATS.slice();
@@ -757,7 +763,7 @@ function bnSlotRow(){
 window.bnOpen = (slot) => {                   // before editing a brand-new block
   BN = {mode:'new', name:'', cat: slot ? 'Headers & Footers' : 'Text Blocks', desc:'', slot: slot || null};
   document.getElementById('bnTitle').textContent = 'New block';
-  document.getElementById('bnSub').innerHTML = 'Name it so it reads clearly in the Block Builder &mdash; you can tweak this any time.';
+  document.getElementById('bnSub').innerHTML = 'Name it so you can find it later. You can change any of this while you build.';
   document.getElementById('bnGo').innerHTML = '<span class="ms">arrow_forward</span> Start editing';
   bnFields();
   bnPreviewHtml('bnPrev', BN, {doc:[]});
@@ -768,7 +774,7 @@ window.bnOpenEdit = () => {                   // change the details of the block
   const b = BE.block;
   BN = {mode:'edit', name:b.name === 'New Custom Block' ? '' : b.name, cat:b.cat, desc:b.desc || '', slot:b.slot || null};
   document.getElementById('bnTitle').textContent = 'Block details';
-  document.getElementById('bnSub').textContent = 'How this block is named and filed in the Block Builder.';
+  document.getElementById('bnSub').textContent = 'How this block is named and filed in your library.';
   document.getElementById('bnGo').innerHTML = '<span class="ms">check</span> Apply';
   bnFields();
   bnPreviewHtml('bnPrev', BN, beCurrentDef());
