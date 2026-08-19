@@ -169,7 +169,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .tb-btn.tb-lbl{width:auto;padding:0 11px;gap:6px;font-size:12.5px;font-weight:600}
 .autosave{font-size:11px;color:var(--light);display:flex;align-items:center;gap:5px}
 .autosave .ms{font-size:13px}
-.be .vb-page{width:700px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
+.be .vb-page{width:700px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:40px 32px;display:flex;flex-direction:column}
 .be .vb-page.band{min-height:96px;padding:22px 30px}
 .vb-block{display:flex;flex-direction:column;min-width:0}
 .vb-row{position:relative;display:flex;gap:14px;padding:3px;border-radius:8px}
@@ -287,7 +287,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .bg-css{width:100%;box-sizing:border-box;min-height:120px;border:1px solid var(--border);border-radius:8px;padding:9px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5;color:var(--ink);background:#fbfcfc;resize:vertical}
 
 /* Block editor page: content-driven height, from tenderfy-admin/block-edit.css */
-.be .vb-page{min-height:160px;padding:52px;box-sizing:border-box}
+.be .vb-page{min-height:160px;padding:40px 32px;box-sizing:border-box}
 .vb-block.drop-end::after{content:'';display:block;height:3px;background:var(--teal);border-radius:2px;margin:8px 2px 0}
 .fin.err{border-color:#F95246;background:#FFF6F5}
 

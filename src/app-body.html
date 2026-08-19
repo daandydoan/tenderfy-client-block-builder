@@ -597,10 +597,15 @@ textarea.fin{resize:vertical;line-height:1.5}
 .bprev-tile{border:1px solid #E3E8E7;border-radius:9px;background:#fff;padding:12px 8px;text-align:center}
 .bprev-tile .pal-prev{margin-bottom:6px}
 .bprev-tile .nm{font-size:11.5px;font-weight:500;color:#2E3C3B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bprev-mock{border:1px solid #E3E8E7;border-radius:9px;background:#fff;padding:14px;max-height:230px;overflow:auto}
+.bprev-mock{position:relative;border:1px solid #E3E8E7;border-radius:9px;background:#fff;overflow:hidden}
+.bprev-mock .bprev-inner{position:absolute;top:0;left:0;width:700px;padding:14px;box-sizing:border-box;
+  transform-origin:top left;pointer-events:none}
 .bprev-mock .dp{display:block}
-.fig-limit{align-items:center}
-.fig-limit .fhint{white-space:nowrap}
+.fig-limit{align-items:center;gap:6px}
+.fig-limit .fig-wt{flex:1;min-width:0}
+.fig-limit input::placeholder{color:#9AA5A3;font-size:11px}
+.imgdrop{border:1px dashed #C3C3C3;border-radius:8px;padding:10px;background:#FAFBFB}
+.imgdrop img{display:block;width:100%;max-height:120px;object-fit:contain;border-radius:5px;margin-bottom:8px;background:#fff}
 .blk-code{display:flex;align-items:center;justify-content:center;height:100%;min-height:52px;
   border:1px dashed #B8C2C0;border-radius:6px;background:#FAFBFB;color:#6B7674}
 .blk-code .ms{font-size:22px}
@@ -889,7 +894,10 @@ textarea.fin{resize:vertical;line-height:1.5}
 .insp-row.stack{flex-direction:column;align-items:stretch;gap:6px}
 .insp-row.stack>label{width:auto}
 .insp-row.stack .segp{width:100%}
-.fig-align{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;width:74px}
+.fig-align{display:grid;grid-template-columns:repeat(3,22px);grid-auto-rows:22px;gap:3px;
+  width:max-content;height:72px;flex:none}
+#blockAlign{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;align-items:flex-start}
+#blockAlign .ba-col{display:flex;flex-direction:column;gap:6px;flex:none}
 .fig-align button{height:22px;border:1px solid #E3E8E7;background:#fff;border-radius:4px;cursor:pointer;padding:0}
 .fig-align button:hover{border-color:#9FC9BE}
 .fig-align button.on{background:var(--live-cta);border-color:var(--live-cta)}
@@ -1319,40 +1327,49 @@ textarea.fin{resize:vertical;line-height:1.5}
             <div class="insp-h">Image source</div>
             <div class="insp-row"><label>Source</label><div class="seg full" id="s-imgsrc">
               <button data-src="placeholder">Placeholder</button>
-              <button data-src="client">Company asset</button>
+              <button data-src="custom">Custom Asset</button>
             </div></div>
-            <div class="fhint">Company asset pulls your logo from Company Settings.</div>
+            <div id="s-imgcustom" style="display:none">
+              <div class="imgdrop" id="s-imgdrop">
+                <img id="s-imgthumb" alt="" style="display:none">
+                <label class="lbtn sm" style="width:100%;justify-content:center">
+                  <span class="ms">add_photo_alternate</span> <span id="s-imglbl">Choose an image</span>
+                  <input type="file" id="s-imgfile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+                </label>
+                <button class="lbtn sm" id="s-imgclear" style="width:100%;justify-content:center;margin-top:6px;display:none">
+                  <span class="ms">delete</span> Remove image</button>
+              </div>
+              <div class="fhint" style="margin-top:8px">Used wherever this block appears. Placeholder keeps the grey frame.</div>
+            </div>
           </div>
-
-
           <div class="insp-sec" data-sec="layout" data-need="width">
             <div class="insp-h">Layout</div>
             <div class="fig-label" style="margin-bottom:6px">Resizing</div>
             <div class="fig-resize">
               <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="s-wpx" min="0"></span>
-              <select class="insp-sel" id="s-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option><option value="min">Min width</option><option value="max">Max width</option></select>
+              <select class="insp-sel" id="s-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option></select>
             </div>
-            <div class="fig-resize fig-limit" id="s-wlimRow" style="margin-top:6px">
-              <span class="fig-wt" id="s-wlimLbl" title="Limit"><span class="ms">width</span><input type="number" id="s-wlim" min="0"></span>
-              <span class="fhint" id="s-wlimHint">Minimum width</span>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum width"><span class="ms">first_page</span><input type="number" id="s-wmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum width"><span class="ms">last_page</span><input type="number" id="s-wmax" min="0" placeholder="max"></span>
             </div>
-            <div class="fig-resize" style="margin-top:6px">
+            <div class="fig-resize" style="margin-top:10px">
               <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="s-hpx" min="0"></span>
-              <select class="insp-sel" id="s-hmode"><option value="fill">Fill height</option><option value="fixed">Fixed height</option><option value="min">Min height</option><option value="max">Max height</option></select>
+              <select class="insp-sel" id="s-hmode"><option value="fill">Fill height</option><option value="fixed">Fixed height</option></select>
             </div>
-            <div class="fig-resize fig-limit" id="s-hlimRow" style="margin-top:6px">
-              <span class="fig-wt" id="s-hlimLbl" title="Limit"><span class="ms">height</span><input type="number" id="s-hlim" min="0"></span>
-              <span class="fhint" id="s-hlimHint">Minimum height</span>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum height"><span class="ms">vertical_align_top</span><input type="number" id="s-hmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum height"><span class="ms">vertical_align_bottom</span><input type="number" id="s-hmax" min="0" placeholder="max"></span>
             </div>
-            <div id="blockAlign" style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-top:12px;align-items:start">
-              <div><div class="fig-label" style="margin-bottom:5px">Alignment</div>
+            <div id="blockAlign">
+              <div class="ba-col"><div class="fig-label">Alignment</div>
                 <div class="fig-align" id="s-align3">
                   <button type="button" data-h="left" data-v="top" title="Top left"></button><button type="button" data-h="center" data-v="top" title="Top"></button><button type="button" data-h="right" data-v="top" title="Top right"></button>
                   <button type="button" data-h="left" data-v="middle" title="Left"></button><button type="button" data-h="center" data-v="middle" title="Centre"></button><button type="button" data-h="right" data-v="middle" title="Right"></button>
                   <button type="button" data-h="left" data-v="bottom" title="Bottom left"></button><button type="button" data-h="center" data-v="bottom" title="Bottom"></button><button type="button" data-h="right" data-v="bottom" title="Bottom right"></button>
                 </div>
               </div>
-              <div><div class="fig-label" style="margin-bottom:5px">Gap</div>
+              <div class="ba-col"><div class="fig-label">Gap</div>
                 <span class="fig-wt"><span class="ms">width_normal</span><input type="number" id="s-sp" min="0" max="200"></span>
               </div>
             </div>

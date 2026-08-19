@@ -70,10 +70,21 @@ function beNewBlock(){
   const ELEMS = Object.fromEntries(PRIMITIVES.map(p => [p.id, p.name]));
   const clone = x => JSON.parse(JSON.stringify(x));
 
-  const elDef = () => ({wmode:'fill',wpx:240,wlim:0,hmode:'fill',hpx:120,hlim:0,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
-  const mkEl = pid => { const e = {id:pid, st:elDef()}; if(pid === 'field') e.field = 'client.name'; if(pid === 'image') e.src = 'placeholder'; return e; };
-  const normDoc = d => d.map(row => ({cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : x))}));
-  const blockDef = () => ({wmode:'fill', wpx:520, wlim:0, hmode:'fill', hpx:200, hlim:0, alH:'left', alV:'top', padH:0, padV:0, padSides:false, padT:0, padR:0, padB:0, padL:0, marH:0, marV:0, marSides:false, marT:0, marR:0, marB:0, marL:0, sp:8, bg:'', bgBind:'', bgA:100, bgVis:true, rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0, bw:0, bstyle:'solid', bcolor:'#E2E8E6', bcolorBind:'', bcolorA:100, bcolorVis:true, bpos:'inside'});
+  const elDef = () => ({wmode:'fill',wpx:240,wmin:0,wmax:0,hmode:'fill',hpx:120,hmin:0,hmax:0,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
+  const mkEl = pid => { const e = {id:pid, st:elDef()}; if(pid === 'field') e.field = 'client.name'; if(pid === 'image'){ e.src = 'placeholder'; e.img = ''; } return e; };
+  const normDoc = d => d.map(row => ({cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : (x.st = migrateSize(x.st), x)))}));
+  /* Min and Max used to be width/height modes sharing one value; they are their
+     own fields now, so an older block's limit is moved across. */
+  function migrateSize(st){
+    if(!st) return st;
+    ['w','h'].forEach(ax => {
+      const m = st[ax+'mode'];
+      if(m === 'min' || m === 'max'){ st[ax+m] = st[ax+'lim'] || st[ax+'px'] || 0; st[ax+'mode'] = 'fill'; }
+      delete st[ax+'lim'];
+    });
+    return st;
+  }
+  const blockDef = () => ({wmode:'fill', wpx:520, wmin:0, wmax:0, hmode:'fill', hpx:200, hmin:0, hmax:0, alH:'left', alV:'top', padH:0, padV:0, padSides:false, padT:0, padR:0, padB:0, padL:0, marH:0, marV:0, marSides:false, marT:0, marR:0, marB:0, marL:0, sp:8, bg:'', bgBind:'', bgA:100, bgVis:true, rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0, bw:0, bstyle:'solid', bcolor:'#E2E8E6', bcolorBind:'', bcolorA:100, bcolorVis:true, bpos:'inside'});
 
   let doc = [], mode = 'visual', drag = null, sel = null, styleClip = null;
   let blockStyle = blockDef();
@@ -123,8 +134,8 @@ function beNewBlock(){
     if(el.id === 'field'){
       return `<span style="background:var(--teal-tint);color:var(--teal);border:1px solid #bfe0d9;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${esc(fieldLabel(el.field))} }}</span>`;
     }
-    if(el.id === 'image' && el.src === 'client'){
-      return renderPrimitive('image', brand, {src:'client'});
+    if(el.id === 'image' && el.src === 'custom'){
+      return renderPrimitive('image', brand, {src:'custom', img:el.img});
     }
     return renderPrimitive(el.id, brand);
   }
@@ -175,15 +186,16 @@ function beNewBlock(){
   function resolveBColor(st){ const bd=st.bcolorBind; if(!bd) return st.bcolor; return roleValue(brand, bd); }
   function applyBlockStyle(){
     const w = $('blockWrap'); if(!w) return; const bs = blockStyle;
+    // Width / height, and min / max, are independent.
     const wm = bs.wmode;
     w.style.width = wm==='fixed' ? bs.wpx+'px' : '100%';
-    w.style.minWidth = wm==='min' ? (bs.wlim||bs.wpx||0)+'px' : '';
-    w.style.maxWidth = wm==='max' ? (bs.wlim||bs.wpx||0)+'px' : '100%';
-    w.style.marginLeft = (wm==='fixed'||wm==='max')?'auto':''; w.style.marginRight = (wm==='fixed'||wm==='max')?'auto':'';
+    w.style.minWidth = bs.wmin>0 ? bs.wmin+'px' : '';
+    w.style.maxWidth = bs.wmax>0 ? bs.wmax+'px' : '100%';
+    w.style.marginLeft = (wm==='fixed'||bs.wmax>0)?'auto':''; w.style.marginRight = (wm==='fixed'||bs.wmax>0)?'auto':'';
     const hm = bs.hmode||'fill';
     w.style.height = hm==='fixed' ? bs.hpx+'px' : '';
-    w.style.minHeight = hm==='min' ? (bs.hlim||bs.hpx||0)+'px' : '';
-    w.style.maxHeight = hm==='max' ? (bs.hlim||bs.hpx||0)+'px' : '';
+    w.style.minHeight = bs.hmin>0 ? bs.hmin+'px' : '';
+    w.style.maxHeight = bs.hmax>0 ? bs.hmax+'px' : '';
     // Default (left) means fill the width; centre and right shrink to content
     // and align, which is what choosing them is for.
     const HM={left:'stretch',center:'center',right:'flex-end'}, VM={top:'flex-start',middle:'center',bottom:'flex-end'};
@@ -200,15 +212,14 @@ function beNewBlock(){
   }
   function applyElStyle(node, st){
     if(!node) return;
-    const wm = st.wmode || 'fill';
-    node.style.width    = wm === 'fixed' ? (st.wpx||0)+'px' : '';
-    node.style.minWidth = wm === 'min'   ? (st.wlim||st.wpx||0)+'px' : '';
-    node.style.maxWidth = wm === 'max'   ? (st.wlim||st.wpx||0)+'px' : '';
-    const hm = st.hmode || 'fill';
+    const wm = st.wmode || 'fill', hm = st.hmode || 'fill';
+    node.style.width     = wm === 'fixed' ? (st.wpx||0)+'px' : '';
+    node.style.minWidth  = st.wmin>0 ? st.wmin+'px' : '';
+    node.style.maxWidth  = st.wmax>0 ? st.wmax+'px' : '';
     node.style.height    = hm === 'fixed' ? (st.hpx||0)+'px' : '';
-    node.style.minHeight = hm === 'min'   ? (st.hlim||st.hpx||0)+'px' : '';
-    node.style.maxHeight = hm === 'max'   ? (st.hlim||st.hpx||0)+'px' : '';
-    node.style.overflowY = hm === 'max'   ? 'auto' : '';
+    node.style.minHeight = st.hmin>0 ? st.hmin+'px' : '';
+    node.style.maxHeight = st.hmax>0 ? st.hmax+'px' : '';
+    node.style.overflowY = st.hmax>0 ? 'auto' : '';
     node.style.padding = boxCss(st,'pad'); node.style.margin = boxCss(st,'mar');
     node.style.background = paintVisible(st,'bg') ? (paintCss(resolveFill(st), st.bgA)||'') : '';
     node.style.borderRadius = radAny(st)?radCss(st):''; node.style.overflow = radAny(st)?'hidden':'';
@@ -352,27 +363,27 @@ function beNewBlock(){
     $('s-color').value=t.color||'#333333'; $('s-colorH').value=t.color||'';
     $('s-align').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.al===(t.align||'')));
     const wmv = t.wmode || 'fill', hmv = t.hmode || 'fill';
+    const node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
     $('s-wmode').value = wmv;
-    const wpxEl = $('s-wpx'), node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
-    // In Fill the field mirrors the rendered width; typing a number switches to
-    // Fixed rather than doing nothing.
-    wpxEl.value = wmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().width) : (t.wpx||0)) : (t.wpx||0);
-    wpxEl.disabled = false;
     $('s-hmode').value = hmv;
-    const hpxEl = $('s-hpx');
-    hpxEl.value = hmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().height) : (t.hpx||0)) : (t.hpx||0);
-    hpxEl.disabled = false;
-    const lim = (row, hint, input, mode, val, what) => {
-      const on = mode === 'min' || mode === 'max';
-      $(row).style.display = on ? '' : 'none';
-      if(on){ $(hint).textContent = (mode === 'min' ? 'Minimum ' : 'Maximum ') + what; $(input).value = val || 0; }
-    };
-    lim('s-wlimRow','s-wlimHint','s-wlim', wmv, t.wlim, 'width');
-    lim('s-hlimRow','s-hlimHint','s-hlim', hmv, t.hlim, 'height');
+    // In Fill the field mirrors the rendered size; typing a number switches to
+    // Fixed rather than doing nothing.
+    $('s-wpx').value = wmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().width) : (t.wpx||0)) : (t.wpx||0);
+    $('s-hpx').value = hmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().height) : (t.hpx||0)) : (t.hpx||0);
+    $('s-wpx').disabled = false; $('s-hpx').disabled = false;
+    ['wmin','wmax','hmin','hmax'].forEach(k => { const el = $('s-'+k); if(el) el.value = t[k] ? t[k] : ''; });
     document.querySelectorAll('#s-align3 button').forEach(b=>b.classList.toggle('on', b.dataset.h===(blockStyle.alH||'left') && b.dataset.v===(blockStyle.alV||'top')));
     const e=selEl();
     if(e){ if(e.id==='field') $('s-field').value=e.field;
-      document.querySelectorAll('#s-imgsrc button').forEach(b=>b.classList.toggle('on',b.dataset.src===(e.src||'placeholder'))); }
+      const src = e.src === 'client' ? 'custom' : (e.src || 'placeholder');   // 'client' is the old name
+      document.querySelectorAll('#s-imgsrc button').forEach(b=>b.classList.toggle('on', b.dataset.src === src));
+      if(e.id === 'image'){
+        $('s-imgcustom').style.display = src === 'custom' ? '' : 'none';
+        const th = $('s-imgthumb'), clr = $('s-imgclear');
+        if(e.img){ th.src = e.img; th.style.display = ''; clr.style.display = ''; $('s-imglbl').textContent = 'Replace image'; }
+        else { th.removeAttribute('src'); th.style.display = 'none'; clr.style.display = 'none'; $('s-imglbl').textContent = 'Choose an image'; }
+      }
+    }
     $('s-preset').value='';
     $('s-paste').disabled=!styleClip;
     const stt=$('styleTarget');
@@ -406,8 +417,9 @@ function beNewBlock(){
     $('s-wpx').addEventListener('input',e=>{ const t=target(); t.wpx=+e.target.value||0;
       if((t.wmode||'fill')==='fill'){ t.wmode='fixed'; $('s-wmode').value='fixed'; }
       applyActive(); commitStyle(); });
-    $('s-wlim').addEventListener('input',e=>{ target().wlim=+e.target.value||0; applyActive(); commitStyle(); });
-    $('s-hlim').addEventListener('input',e=>{ target().hlim=+e.target.value||0; applyActive(); commitStyle(); });
+    ['wmin','wmax','hmin','hmax'].forEach(k => $('s-'+k).addEventListener('input', e => {
+      target()[k] = Math.max(0, +e.target.value||0); applyActive(); commitStyle();
+    }));
     $('s-hmode').addEventListener('change',e=>{ target().hmode=e.target.value; applyActive(); syncInspector(); commitStyle(); });
     $('s-hpx').addEventListener('input',e=>{ const t=target(); t.hpx=+e.target.value||0;
       if((t.hmode||'fill')==='fill'){ t.hmode='fixed'; $('s-hmode').value='fixed'; }
@@ -415,6 +427,17 @@ function beNewBlock(){
     document.querySelectorAll('#s-align3 button').forEach(b=>b.addEventListener('click',()=>{ blockStyle.alH=b.dataset.h; blockStyle.alV=b.dataset.v; document.querySelectorAll('#s-align3 button').forEach(x=>x.classList.toggle('on',x===b)); applyActive(); commitStyle(); }));
     $('s-field').addEventListener('change',e=>{ if(selEl()){ selEl().field=e.target.value; render(); commit(); } });
     document.querySelectorAll('#s-imgsrc button').forEach(b=>b.addEventListener('click',()=>{ if(selEl()){ selEl().src=b.dataset.src; render(); commit(); } }));
+    // A custom asset is read straight into the block, so it travels with it.
+    $('s-imgfile').addEventListener('change', ev => {
+      const f = ev.target.files && ev.target.files[0], el = selEl();
+      if(!f || !el) return;
+      if(f.size > 1.5 * 1024 * 1024){ showToast('Pick an image under 1.5MB so the block stays portable'); ev.target.value=''; return; }
+      const r = new FileReader();
+      r.onload = () => { el.img = r.result; el.src = 'custom'; render(); syncInspector(); commit(); showToast('Image added'); };
+      r.readAsDataURL(f);
+      ev.target.value = '';
+    });
+    $('s-imgclear').addEventListener('click', () => { const el = selEl(); if(!el) return; el.img = ''; render(); syncInspector(); commit(); });
     $('s-preset').addEventListener('change',e=>{ const p=BE_PRESETS.find(x=>x.key===e.target.value); if(p&&p.key){ Object.assign(target(), p.st); if('bg' in p.st) target().bgBind=''; if('bcolor' in p.st) target().bcolorBind=''; applyActive(); syncInspector(); commit(); showToast('Applied preset: '+p.label); } });
     $('s-copy').addEventListener('click',()=>{ styleClip=clone(target()); $('s-paste').disabled=false; showToast('Style copied'); });
     $('s-paste').addEventListener('click',()=>{ if(!styleClip) return; Object.assign(target(), clone(styleClip)); applyActive(); syncInspector(); commit(); showToast('Style pasted'); });
@@ -709,14 +732,16 @@ function beNewBlock(){
         + (st.size ? `font-size:${st.size}px;` : '') + (st.lh ? `line-height:${st.lh}px;` : '')
         + (st.color ? `color:${st.color};` : '') + (st.align ? `text-align:${st.align};` : '');
       const wm = st.wmode || 'fill', hm = st.hmode || 'fill';
-      const size = (wm === 'fixed' ? `width:${st.wpx||0}px;` : wm === 'min' ? `min-width:${st.wlim||st.wpx||0}px;` : wm === 'max' ? `max-width:${st.wlim||st.wpx||0}px;` : '')
-        + (hm === 'fixed' ? `height:${st.hpx||0}px;` : hm === 'min' ? `min-height:${st.hlim||st.hpx||0}px;` : hm === 'max' ? `max-height:${st.hlim||st.hpx||0}px;overflow:auto;` : '');
+      const size = (wm === 'fixed' ? `width:${st.wpx||0}px;` : '')
+        + (st.wmin>0 ? `min-width:${st.wmin}px;` : '') + (st.wmax>0 ? `max-width:${st.wmax}px;` : '')
+        + (hm === 'fixed' ? `height:${st.hpx||0}px;` : '')
+        + (st.hmin>0 ? `min-height:${st.hmin}px;` : '') + (st.hmax>0 ? `max-height:${st.hmax}px;overflow:auto;` : '');
       const box = `padding:${boxCss(st,'pad')};margin:${boxCss(st,'mar')};border-radius:${radCss(st)};` + size
         + (paintVisible(st,'bg') ? `background:${paintCss(fill(st), st.bgA)};` : '') + strokeCss(st)
         + (radAny(st) ? 'overflow:hidden;' : '');
       const body = el.id === 'field'
         ? `<span style="background:var(--teal-tint);color:var(--teal);border:1px solid #bfe0d9;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${esc(fieldLabel(el.field))} }}</span>`
-        : renderPrimitive(el.id, br, (content||{})[n] || (el.id === 'image' && el.src === 'client' ? {src:'client'} : undefined));
+        : renderPrimitive(el.id, br, (content||{})[n] || (el.id === 'image' && (el.src === 'custom' || el.src === 'client') ? {src:'custom', img:el.img} : undefined));
       return `<span class="dp" data-pi="${n}" style="${box}${typo}">${body}</span>`;
     };
     const rows = (def.doc || []).map(row => row.cols.length > 1
@@ -775,7 +800,15 @@ function bnPreviewHtml(host, meta, def){
     <div><div class="bprev-lbl">In the block selector</div>
       <div class="bprev-tile"><div class="pal-prev">${tile}</div><div class="nm">${esc(meta.name || 'Untitled block')}</div></div></div>
     <div><div class="bprev-lbl">With mock content</div>
-      <div class="bprev-mock">${mock}</div></div>`;
+      <div class="bprev-mock"><div class="bprev-inner">${mock}</div></div></div>`;
+  // The block renders at its real width, then scales to fit the pane, so the
+  // preview shows proportions rather than a cropped corner.
+  const pane = el.querySelector('.bprev-mock'), inner = el.querySelector('.bprev-inner');
+  requestAnimationFrame(() => {
+    const k = Math.min(1, (pane.clientWidth || 240) / 700);
+    inner.style.transform = `scale(${k})`;
+    pane.style.height = Math.min(230, Math.max(70, inner.offsetHeight * k)) + 'px';
+  });
 }
 function bnFields(){
   // Never open showing a stale validation error.

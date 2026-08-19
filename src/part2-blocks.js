@@ -35,10 +35,12 @@ function renderPrimitive(id, b, c){
     case 'quote':
       return `<blockquote style="${T};margin:0;border-left:3px solid ${b.secondary};padding:2px 0 2px 14px;color:${b.primary};font-style:italic;font-size:13.5px">"<span ${F('body')}>${r(c.body,'Delivered ahead of schedule with zero safety incidents.')}</span>"</blockquote>`;
     case 'image':
-      // "Company asset" stands in for the logo pulled from Company Settings.
-      return c.src === 'client'
-        ? `<div style="height:118px;background:${b.primary}12;border:1px solid ${b.primary}44;border-radius:8px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;color:${b.primary}"><span class="ms" style="font-size:30px">domain</span><span style="font-size:11px;font-weight:600">${esc(b.company||'Company logo')}</span></div>`
-        : `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
+      // A custom asset renders the picture itself; otherwise the grey frame.
+      if((c.src === 'custom' || c.src === 'client') && c.img)
+        return `<img src="${c.img}" alt="" style="display:block;width:100%;max-height:260px;object-fit:contain;border-radius:8px">`;
+      if(c.src === 'custom' || c.src === 'client')
+        return `<div style="height:118px;background:${b.primary}12;border:1px dashed ${b.primary}55;border-radius:8px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;color:${b.primary}"><span class="ms" style="font-size:30px">add_photo_alternate</span><span style="font-size:11px;font-weight:600">Custom asset - none chosen</span></div>`;
+      return `<div style="height:118px;background:${b.secondary}1f;border:1px solid ${b.secondary}55;border-radius:8px;display:flex;align-items:center;justify-content:center;color:${b.secondary}"><span class="ms" style="font-size:34px">image</span></div>`;
     case 'table':{
       const headers = c.headers || ['Item','Qty','Rate'];
       const rows = c.rows || [['Traffic management','1','$8,400'],['Earthworks','320 m3','$46/m3'],['Drainage','1','$21,750']];
