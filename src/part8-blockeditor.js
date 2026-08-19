@@ -70,10 +70,10 @@ function beNewBlock(){
   const ELEMS = Object.fromEntries(PRIMITIVES.map(p => [p.id, p.name]));
   const clone = x => JSON.parse(JSON.stringify(x));
 
-  const elDef = () => ({wmode:'fill',wpx:240,hmode:'fill',hpx:120,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
+  const elDef = () => ({wmode:'fill',wpx:240,wlim:0,hmode:'fill',hpx:120,hlim:0,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
   const mkEl = pid => { const e = {id:pid, st:elDef()}; if(pid === 'field') e.field = 'client.name'; if(pid === 'image') e.src = 'placeholder'; return e; };
   const normDoc = d => d.map(row => ({cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : x))}));
-  const blockDef = () => ({wmode:'fill', wpx:520, hmode:'fill', hpx:200, alH:'left', alV:'top', padH:0, padV:0, padSides:false, padT:0, padR:0, padB:0, padL:0, marH:0, marV:0, marSides:false, marT:0, marR:0, marB:0, marL:0, sp:8, bg:'', bgBind:'', bgA:100, bgVis:true, rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0, bw:0, bstyle:'solid', bcolor:'#E2E8E6', bcolorBind:'', bcolorA:100, bcolorVis:true, bpos:'inside'});
+  const blockDef = () => ({wmode:'fill', wpx:520, wlim:0, hmode:'fill', hpx:200, hlim:0, alH:'left', alV:'top', padH:0, padV:0, padSides:false, padT:0, padR:0, padB:0, padL:0, marH:0, marV:0, marSides:false, marT:0, marR:0, marB:0, marL:0, sp:8, bg:'', bgBind:'', bgA:100, bgVis:true, rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0, bw:0, bstyle:'solid', bcolor:'#E2E8E6', bcolorBind:'', bcolorA:100, bcolorVis:true, bpos:'inside'});
 
   let doc = [], mode = 'visual', drag = null, sel = null, styleClip = null;
   let blockStyle = blockDef();
@@ -177,12 +177,13 @@ function beNewBlock(){
     const w = $('blockWrap'); if(!w) return; const bs = blockStyle;
     const wm = bs.wmode;
     w.style.width = wm==='fixed' ? bs.wpx+'px' : '100%';
-    w.style.minWidth = wm==='min' ? bs.wpx+'px' : '';
-    w.style.maxWidth = wm==='max' ? bs.wpx+'px' : '100%';
+    w.style.minWidth = wm==='min' ? (bs.wlim||bs.wpx||0)+'px' : '';
+    w.style.maxWidth = wm==='max' ? (bs.wlim||bs.wpx||0)+'px' : '100%';
     w.style.marginLeft = (wm==='fixed'||wm==='max')?'auto':''; w.style.marginRight = (wm==='fixed'||wm==='max')?'auto':'';
     const hm = bs.hmode||'fill';
     w.style.height = hm==='fixed' ? bs.hpx+'px' : '';
-    w.style.maxHeight = hm==='max' ? bs.hpx+'px' : '';
+    w.style.minHeight = hm==='min' ? (bs.hlim||bs.hpx||0)+'px' : '';
+    w.style.maxHeight = hm==='max' ? (bs.hlim||bs.hpx||0)+'px' : '';
     // Default (left) means fill the width; centre and right shrink to content
     // and align, which is what choosing them is for.
     const HM={left:'stretch',center:'center',right:'flex-end'}, VM={top:'flex-start',middle:'center',bottom:'flex-end'};
@@ -201,11 +202,12 @@ function beNewBlock(){
     if(!node) return;
     const wm = st.wmode || 'fill';
     node.style.width    = wm === 'fixed' ? (st.wpx||0)+'px' : '';
-    node.style.minWidth = wm === 'min'   ? (st.wpx||0)+'px' : '';
-    node.style.maxWidth = wm === 'max'   ? (st.wpx||0)+'px' : '';
+    node.style.minWidth = wm === 'min'   ? (st.wlim||st.wpx||0)+'px' : '';
+    node.style.maxWidth = wm === 'max'   ? (st.wlim||st.wpx||0)+'px' : '';
     const hm = st.hmode || 'fill';
     node.style.height    = hm === 'fixed' ? (st.hpx||0)+'px' : '';
-    node.style.maxHeight = hm === 'max'   ? (st.hpx||0)+'px' : '';
+    node.style.minHeight = hm === 'min'   ? (st.hlim||st.hpx||0)+'px' : '';
+    node.style.maxHeight = hm === 'max'   ? (st.hlim||st.hpx||0)+'px' : '';
     node.style.overflowY = hm === 'max'   ? 'auto' : '';
     node.style.padding = boxCss(st,'pad'); node.style.margin = boxCss(st,'mar');
     node.style.background = paintVisible(st,'bg') ? (paintCss(resolveFill(st), st.bgA)||'') : '';
@@ -349,15 +351,24 @@ function beNewBlock(){
     syncColor('bg'); syncColor('bcolor');
     $('s-color').value=t.color||'#333333'; $('s-colorH').value=t.color||'';
     $('s-align').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.al===(t.align||'')));
-    $('s-wmode').value = t.wmode || 'fill';
-    const wpxEl=$('s-wpx');
-    if((t.wmode||'fill')==='fill'){
-      const node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
-      wpxEl.value = node ? Math.round(node.getBoundingClientRect().width) : (t.wpx||0);
-      wpxEl.disabled = true;
-    } else { wpxEl.value = t.wpx||0; wpxEl.disabled = false; }
-    $('s-hmode').value = t.hmode || 'fill';
-    $('s-hpx').value = t.hpx||0; $('s-hpx').disabled = ((t.hmode||'fill')==='fill');
+    const wmv = t.wmode || 'fill', hmv = t.hmode || 'fill';
+    $('s-wmode').value = wmv;
+    const wpxEl = $('s-wpx'), node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
+    // In Fill the field mirrors the rendered width; typing a number switches to
+    // Fixed rather than doing nothing.
+    wpxEl.value = wmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().width) : (t.wpx||0)) : (t.wpx||0);
+    wpxEl.disabled = false;
+    $('s-hmode').value = hmv;
+    const hpxEl = $('s-hpx');
+    hpxEl.value = hmv === 'fill' ? (node ? Math.round(node.getBoundingClientRect().height) : (t.hpx||0)) : (t.hpx||0);
+    hpxEl.disabled = false;
+    const lim = (row, hint, input, mode, val, what) => {
+      const on = mode === 'min' || mode === 'max';
+      $(row).style.display = on ? '' : 'none';
+      if(on){ $(hint).textContent = (mode === 'min' ? 'Minimum ' : 'Maximum ') + what; $(input).value = val || 0; }
+    };
+    lim('s-wlimRow','s-wlimHint','s-wlim', wmv, t.wlim, 'width');
+    lim('s-hlimRow','s-hlimHint','s-hlim', hmv, t.hlim, 'height');
     document.querySelectorAll('#s-align3 button').forEach(b=>b.classList.toggle('on', b.dataset.h===(blockStyle.alH||'left') && b.dataset.v===(blockStyle.alV||'top')));
     const e=selEl();
     if(e){ if(e.id==='field') $('s-field').value=e.field;
@@ -392,9 +403,15 @@ function beNewBlock(){
         if(node) t.wpx=Math.round(node.getBoundingClientRect().width);
       }
       applyActive(); syncInspector(); commitStyle(); });
-    $('s-wpx').addEventListener('input',e=>{ target().wpx=+e.target.value||0; applyActive(); commitStyle(); });
-    $('s-hmode').addEventListener('change',e=>{ target().hmode=e.target.value; $('s-hpx').disabled=(target().hmode==='fill'); applyActive(); commitStyle(); });
-    $('s-hpx').addEventListener('input',e=>{ target().hpx=+e.target.value||0; applyActive(); commitStyle(); });
+    $('s-wpx').addEventListener('input',e=>{ const t=target(); t.wpx=+e.target.value||0;
+      if((t.wmode||'fill')==='fill'){ t.wmode='fixed'; $('s-wmode').value='fixed'; }
+      applyActive(); commitStyle(); });
+    $('s-wlim').addEventListener('input',e=>{ target().wlim=+e.target.value||0; applyActive(); commitStyle(); });
+    $('s-hlim').addEventListener('input',e=>{ target().hlim=+e.target.value||0; applyActive(); commitStyle(); });
+    $('s-hmode').addEventListener('change',e=>{ target().hmode=e.target.value; applyActive(); syncInspector(); commitStyle(); });
+    $('s-hpx').addEventListener('input',e=>{ const t=target(); t.hpx=+e.target.value||0;
+      if((t.hmode||'fill')==='fill'){ t.hmode='fixed'; $('s-hmode').value='fixed'; }
+      applyActive(); commitStyle(); });
     document.querySelectorAll('#s-align3 button').forEach(b=>b.addEventListener('click',()=>{ blockStyle.alH=b.dataset.h; blockStyle.alV=b.dataset.v; document.querySelectorAll('#s-align3 button').forEach(x=>x.classList.toggle('on',x===b)); applyActive(); commitStyle(); }));
     $('s-field').addEventListener('change',e=>{ if(selEl()){ selEl().field=e.target.value; render(); commit(); } });
     document.querySelectorAll('#s-imgsrc button').forEach(b=>b.addEventListener('click',()=>{ if(selEl()){ selEl().src=b.dataset.src; render(); commit(); } }));
@@ -692,8 +709,8 @@ function beNewBlock(){
         + (st.size ? `font-size:${st.size}px;` : '') + (st.lh ? `line-height:${st.lh}px;` : '')
         + (st.color ? `color:${st.color};` : '') + (st.align ? `text-align:${st.align};` : '');
       const wm = st.wmode || 'fill', hm = st.hmode || 'fill';
-      const size = (wm === 'fixed' ? `width:${st.wpx||0}px;` : wm === 'min' ? `min-width:${st.wpx||0}px;` : wm === 'max' ? `max-width:${st.wpx||0}px;` : '')
-        + (hm === 'fixed' ? `height:${st.hpx||0}px;` : hm === 'max' ? `max-height:${st.hpx||0}px;overflow:auto;` : '');
+      const size = (wm === 'fixed' ? `width:${st.wpx||0}px;` : wm === 'min' ? `min-width:${st.wlim||st.wpx||0}px;` : wm === 'max' ? `max-width:${st.wlim||st.wpx||0}px;` : '')
+        + (hm === 'fixed' ? `height:${st.hpx||0}px;` : hm === 'min' ? `min-height:${st.hlim||st.hpx||0}px;` : hm === 'max' ? `max-height:${st.hlim||st.hpx||0}px;overflow:auto;` : '');
       const box = `padding:${boxCss(st,'pad')};margin:${boxCss(st,'mar')};border-radius:${radCss(st)};` + size
         + (paintVisible(st,'bg') ? `background:${paintCss(fill(st), st.bgA)};` : '') + strokeCss(st)
         + (radAny(st) ? 'overflow:hidden;' : '');
