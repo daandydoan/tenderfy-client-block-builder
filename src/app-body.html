@@ -1140,9 +1140,17 @@ textarea.fin{resize:vertical;line-height:1.5}
               <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="bs-wpx" min="0"></span>
               <select class="fig-strokesel" id="bs-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option></select>
             </div>
-            <div class="fig-resize" style="margin-top:6px">
-              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval"></span>
-              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed</option><option value="min">Min</option><option value="max">Max</option></select>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum width"><span class="ms">first_page</span><input type="number" id="bs-wmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum width"><span class="ms">last_page</span><input type="number" id="bs-wmax" min="0" placeholder="max"></span>
+            </div>
+            <div class="fig-resize" style="margin-top:10px">
+              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval" min="0"></span>
+              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed height</option></select>
+            </div>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum height"><span class="ms">vertical_align_top</span><input type="number" id="bs-hmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum height"><span class="ms">vertical_align_bottom</span><input type="number" id="bs-hmax" min="0" placeholder="max"></span>
             </div>
 
             <div class="ds-lbl">Dimension</div>

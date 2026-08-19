@@ -3712,9 +3712,17 @@ textarea.fin{resize:vertical;line-height:1.5}
               <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="bs-wpx" min="0"></span>
               <select class="fig-strokesel" id="bs-wmode"><option value="fill">Fill container</option><option value="fixed">Fixed width</option></select>
             </div>
-            <div class="fig-resize" style="margin-top:6px">
-              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval"></span>
-              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed</option><option value="min">Min</option><option value="max">Max</option></select>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum width"><span class="ms">first_page</span><input type="number" id="bs-wmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum width"><span class="ms">last_page</span><input type="number" id="bs-wmax" min="0" placeholder="max"></span>
+            </div>
+            <div class="fig-resize" style="margin-top:10px">
+              <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="bs-hval" min="0"></span>
+              <select class="fig-strokesel" id="bs-hmode"><option value="auto">Auto</option><option value="hug">Hug</option><option value="fixed">Fixed height</option></select>
+            </div>
+            <div class="fig-resize fig-limit" style="margin-top:6px">
+              <span class="fig-wt" title="Minimum height"><span class="ms">vertical_align_top</span><input type="number" id="bs-hmin" min="0" placeholder="min"></span>
+              <span class="fig-wt" title="Maximum height"><span class="ms">vertical_align_bottom</span><input type="number" id="bs-hmax" min="0" placeholder="max"></span>
             </div>
 
             <div class="ds-lbl">Dimension</div>
@@ -5837,7 +5845,7 @@ const DOC_ITEM_STYLE_DEFAULT = {
   rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0,
   bgOn:false, bg:'#ffffff', bgA:100, bgVis:true,
   bcOn:false, bc:'#dbe3e0', bcA:100, bcVis:true, bw:1, bpos:'inside',
-  wMode:'fill', wPx:480, hMode:'auto', hVal:120,
+  wMode:'fill', wPx:480, wMin:0, wMax:0, hMode:'auto', hVal:120, hMin:0, hMax:0,
 };
 function boxCss(s, key){
   if(!s) return '0px';
@@ -5860,11 +5868,14 @@ function paintCss(hex, a){
 }
 function docHeightCss(s){
   const m = (s&&s.hMode)||'auto', v = Math.max(0,(s&&s.hVal)||0);
-  if(m === 'hug')   return 'height:fit-content;';
-  if(m === 'fixed') return `height:${v}px;overflow:hidden;`;
-  if(m === 'min')   return `min-height:${v}px;`;
-  if(m === 'max')   return `max-height:${v}px;overflow:auto;`;
-  return '';
+  let c = m === 'hug' ? 'height:fit-content;'
+        : m === 'fixed' ? `height:${v}px;overflow:hidden;`
+        : m === 'min' ? `min-height:${v}px;`                 // legacy modes
+        : m === 'max' ? `max-height:${v}px;overflow:auto;` : '';
+  // Min and Max are their own fields now, independent of the mode.
+  if(s && s.hMin > 0) c += `min-height:${s.hMin}px;`;
+  if(s && s.hMax > 0) c += `max-height:${s.hMax}px;overflow:auto;`;
+  return c;
 }
 function docItemHtml(it, brand, cls, extra){
   let inner = '';
@@ -5880,6 +5891,8 @@ function docItemHtml(it, brand, cls, extra){
   let c = `box-sizing:border-box;padding:${boxCss(s,'pad')};margin:${marUsed?boxCss(s,'mar'):'0 0 16px'};`
         + `border-radius:${radCss(s)};` + docHeightCss(s);
   if(s.wMode === 'fixed' && s.wPx > 0) c += `width:${s.wPx}px;max-width:100%;margin-left:auto;margin-right:auto;`;
+  if(s.wMin > 0) c += `min-width:${s.wMin}px;`;
+  if(s.wMax > 0) c += `max-width:${s.wMax}px;margin-left:auto;margin-right:auto;`;
   if(radAny(s)) c += 'overflow:hidden;';
   if(s.bgOn && s.bgVis !== false) c += `background:${paintCss(s.bg, s.bgA)};`;
   if(s.bcOn && s.bcVis !== false){
@@ -5964,11 +5977,17 @@ const BG_SHAPES = [['full','Full page'],['band-top','Top band'],['band-bottom','
   ['col-left','Left column'],['col-right','Right column'],['region','Custom region']];
 let bgUid = 0;
 function newDocBg(){ return {mode:'regions', regions:[], css:''}; }
+/* A region paints a solid fill, a gradient or an image. */
+const BG_KINDS = [['fill','Fill'],['gradient','Gradient'],['image','Image']];
+const BG_FITS  = [['cover','Cover'],['contain','Contain'],['fill','Stretch'],['repeat','Tile']];
+const BG_POS   = [['center','Centre'],['top','Top'],['bottom','Bottom'],['left','Left'],['right','Right']];
 function mkRegion(brand){
-  return {id:++bgUid, shape:'band-top', h:120, w:200, x:40, y:40,
-    color:(brand?brand.primary:'#27535C'), gradOn:false, color2:(brand?brand.secondary:'#38988A'),
+  return {id:++bgUid, kind:'fill', shape:'band-top', h:120, w:200, x:40, y:40,
+    color:(brand?brand.primary:'#27535C'), color2:(brand?brand.secondary:'#38988A'), angle:135,
+    img:'', fit:'cover', pos:'center',
     op:1, firstOnly:false};
 }
+function bgKindOf(r){ return r.kind || (r.gradOn ? 'gradient' : 'fill'); }   // pre-kind regions
 function bgGeom(r){ switch(r.shape){
     case 'full': return 'inset:0';
     case 'band-top': return `left:0;right:0;top:0;height:${r.h}px`;
@@ -5982,7 +6001,31 @@ function bgGeom(r){ switch(r.shape){
     case 'region': return `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px`;
     default: return 'inset:0';
 } }
-function bgFill(r){ return r.gradOn ? `linear-gradient(135deg, ${r.color}, ${r.color2})` : r.color; }
+/* A data URI carries slashes and semicolons, which break the `background`
+   shorthand, so image regions are written as longhand declarations. */
+function bgPaintCss(r){
+  if(bgKindOf(r) === 'image'){
+    if(!r.img) return `background:${bgFill(r)};`;
+    const fit = r.fit || 'cover';
+    // Single quotes: a double-quoted url() would close the style attribute.
+    return `background-image:url('${r.img}');background-position:${r.pos||'center'};`
+      + (fit === 'repeat' ? 'background-repeat:repeat;'
+         : `background-size:${fit === 'fill' ? '100% 100%' : fit};background-repeat:no-repeat;`);
+  }
+  return `background:${bgFill(r)};`;
+}
+function bgFill(r){
+  const k = bgKindOf(r);
+  if(k === 'gradient') return `linear-gradient(${r.angle == null ? 135 : r.angle}deg, ${r.color}, ${r.color2})`;
+  if(k === 'image'){
+    if(!r.img) return 'repeating-linear-gradient(45deg,#EDF1F0 0 10px,#F7F9F8 10px 20px)';   // no image chosen yet
+    const fit = r.fit || 'cover';
+    return fit === 'repeat'
+      ? `url('${r.img}') ${r.pos||'center'} repeat`
+      : `url('${r.img}') ${r.pos||'center'}/${fit === 'fill' ? '100% 100%' : fit} no-repeat`;
+  }
+  return r.color;
+}
 function renderDocBg(bg, pi){
   if(!bg) return '';
   if(bg.mode === 'code'){
@@ -5990,7 +6033,7 @@ function renderDocBg(bg, pi){
     return css ? `<div style="position:absolute;inset:0;z-index:0;${css}"></div>` : '';
   }
   return (bg.regions||[]).filter(r => !r.firstOnly || pi === 0).map(r =>
-    `<div style="position:absolute;z-index:0;${bgGeom(r)};background:${bgFill(r)};opacity:${r.op}"></div>`).join('');
+    `<div style="position:absolute;z-index:0;${bgGeom(r)};${bgPaintCss(r)}opacity:${r.op}"></div>`).join('');
 }
 const KIND_LABEL = {page:'Page', section:'Section', resume:'Resume', 'case-study':'Case Study',
   block:'Block', cover:'Cover Page', toc:'Contents'};
@@ -6297,15 +6340,37 @@ let DB = null;
     return '';
   }
   function regionRow(r){
-    const colorInput = (f,v) => `<div class="samp-row" style="margin-bottom:8px"><input type="color" data-f="${f}" value="${v}" style="width:30px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;flex:none"><input class="ds-hex" data-f="${f}H" value="${v.toUpperCase()}" style="flex:1"></div>`;
+    const colorInput = (f,v) => `<div class="samp-row" style="margin-bottom:8px"><input type="color" data-f="${f}" value="${v}" style="width:30px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;flex:none"><input class="ds-hex" data-f="${f}H" value="${String(v).toUpperCase()}" style="flex:1"></div>`;
+    const sel = (f, list, cur) => `<select class="ds-sel" data-f="${f}">${list.map(([v,n])=>`<option value="${v}"${cur===v?' selected':''}>${n}</option>`).join('')}</select>`;
     const geo = bgGeoFields(r);
+    const kind = bgKindOf(r);
+    let body = '';
+    if(kind === 'fill') body = colorInput('color', r.color);
+    else if(kind === 'gradient'){
+      body = colorInput('color', r.color) + colorInput('color2', r.color2) +
+        `<div class="ds-row" style="margin-bottom:8px"><label>Angle</label><div class="ds-ctl">
+          <input type="range" data-f="angle" min="0" max="360" value="${r.angle==null?135:r.angle}"><span class="ds-u">${r.angle==null?135:r.angle}&deg;</span></div></div>`;
+    } else {
+      body = `<div class="bg-img">
+          ${r.img?`<img src="${r.img}" alt="">`:''}
+          <label class="lbtn sm" style="width:100%;justify-content:center">
+            <span class="ms">add_photo_alternate</span> ${r.img?'Replace image':'Choose an image'}
+            <input type="file" data-f="imgfile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+          ${r.img?`<button class="lbtn sm" data-f="imgclear" style="width:100%;justify-content:center;margin-top:6px"><span class="ms">delete</span> Remove</button>`:''}
+        </div>
+        <div class="bg-geo" style="margin-top:8px">
+          <div class="g"><label>Fit</label>${sel('fit', BG_FITS, r.fit||'cover')}</div>
+          <div class="g"><label>Position</label>${sel('pos', BG_POS, r.pos||'center')}</div>
+        </div>`;
+    }
     return `<div class="bg-reg" data-id="${r.id}">
       <div class="bg-reg-h"><select class="ds-sel" data-f="shape">${BG_SHAPES.map(x=>`<option value="${x[0]}"${x[0]===r.shape?' selected':''}>${x[1]}</option>`).join('')}</select><button class="bg-del" title="Remove"><span class="ms">delete</span></button></div>
+      <div class="bg-modeseg" data-kindseg style="margin-bottom:10px">
+        ${BG_KINDS.map(([v,n])=>`<button data-kind="${v}" class="${kind===v?'on':''}">${n}</button>`).join('')}
+      </div>
       ${geo?`<div class="bg-geo">${geo}</div>`:''}
-      ${colorInput('color', r.color)}
-      <label class="bi-tog" style="margin-bottom:8px"><input type="checkbox" data-f="gradOn"${r.gradOn?' checked':''}>Gradient</label>
-      ${r.gradOn?colorInput('color2', r.color2):''}
-      <div class="ds-row" style="margin-bottom:8px"><label>Opacity</label><div class="ds-ctl"><input type="range" data-f="op" min="0" max="100" value="${Math.round(r.op*100)}"><span class="ds-u">${Math.round(r.op*100)}%</span></div></div>
+      ${body}
+      <div class="ds-row" style="margin:8px 0"><label>Opacity</label><div class="ds-ctl"><input type="range" data-f="op" min="0" max="100" value="${Math.round(r.op*100)}"><span class="ds-u">${Math.round(r.op*100)}%</span></div></div>
       <label class="bi-tog"><input type="checkbox" data-f="firstOnly"${r.firstOnly?' checked':''}>First page only</label>
     </div>`;
   }
@@ -6320,8 +6385,9 @@ let DB = null;
         const f = inp.dataset.f, ev = inp.type === 'checkbox' ? 'change' : 'input';
         inp.addEventListener(ev, () => {
           if(f==='shape'){ r.shape=inp.value; renderBgRegions(); }
-          else if(f==='gradOn'){ r.gradOn=inp.checked; renderBgRegions(); }
           else if(f==='firstOnly'){ r.firstOnly=inp.checked; }
+          else if(f==='fit'||f==='pos'){ r[f]=inp.value; }
+          else if(f==='angle'){ r.angle=+inp.value; inp.nextElementSibling.innerHTML=inp.value+'&deg;'; }
           else if(f==='color'||f==='color2'){ r[f]=inp.value; const h=el.querySelector(`[data-f=${f}H]`); if(h)h.value=inp.value.toUpperCase(); }
           else if(f==='colorH'||f==='color2H'){ const v=inp.value.trim(); if(!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) return; r[f.slice(0,-1)]=v; const c=el.querySelector(`[data-f=${f.slice(0,-1)}]`); if(c)c.value=v; }
           else if(f==='op'){ r.op=(+inp.value)/100; inp.nextElementSibling.textContent=inp.value+'%'; }
@@ -6329,6 +6395,19 @@ let DB = null;
         });
       });
       el.querySelectorAll('[data-geo]').forEach(inp => inp.addEventListener('input', () => { r[inp.dataset.geo]=Math.max(0,Math.round(+inp.value||0)); markDirty(DB.doc); render(); }));
+      el.querySelectorAll('[data-kindseg] button').forEach(b => b.addEventListener('click', () => {
+        r.kind = b.dataset.kind; delete r.gradOn; renderBgRegions(); markDirty(DB.doc); render();
+      }));
+      const file = el.querySelector('[data-f="imgfile"]');
+      if(file) file.addEventListener('change', ev => {
+        const f = ev.target.files && ev.target.files[0]; if(!f) return;
+        if(f.size > 2 * 1024 * 1024){ showToast('Pick an image under 2MB'); ev.target.value=''; return; }
+        const rd = new FileReader();
+        rd.onload = () => { r.img = rd.result; renderBgRegions(); markDirty(DB.doc); render(); showToast('Background image added'); };
+        rd.readAsDataURL(f); ev.target.value = '';
+      });
+      const clr = el.querySelector('[data-f="imgclear"]');
+      if(clr) clr.addEventListener('click', () => { r.img=''; renderBgRegions(); markDirty(DB.doc); render(); });
     });
   }
   $('bgAdd').addEventListener('click', () => { DB.doc.bg.regions.push(mkRegion(brandOf())); renderBgRegions(); markDirty(DB.doc); render(); });
@@ -6370,8 +6449,16 @@ let DB = null;
     $('bi-desc').textContent = instDesc(it);
     const s = it.style;
     fillBox(it,'pad'); fillBox(it,'mar'); fillRad(it);
-    const wm = s.wMode||'fill'; $('bs-wmode').value = wm; $('bs-wpx').value = s.wPx||480; $('bs-wpx').disabled = (wm !== 'fixed');
-    const hm = s.hMode||'auto'; $('bs-hmode').value = hm; $('bs-hval').value = s.hVal||120; $('bs-hval').disabled = (hm==='auto'||hm==='hug');
+    const wm = s.wMode||'fill'; $('bs-wmode').value = wm;
+    const hm = s.hMode||'auto'; $('bs-hmode').value = (hm === 'min' || hm === 'max') ? 'auto' : hm;
+    // Values stay editable; typing one switches that axis to Fixed.
+    const node = canvas.querySelector(`[data-k="${it.k}"]`);
+    $('bs-wpx').value = wm === 'fixed' ? (s.wPx||0) : (node ? Math.round(node.getBoundingClientRect().width) : (s.wPx||480));
+    $('bs-hval').value = hm === 'fixed' ? (s.hVal||0) : (node ? Math.round(node.getBoundingClientRect().height) : (s.hVal||120));
+    $('bs-wpx').disabled = false; $('bs-hval').disabled = false;
+    [['bs-wmin','wMin'],['bs-wmax','wMax'],['bs-hmin','hMin'],['bs-hmax','hMax']].forEach(([id,k]) => {
+      const el = $(id); if(el) el.value = s[k] ? s[k] : '';
+    });
     fillPaint('bg'); fillPaint('bc');
     /* Content is keyed by primitive index in this build, so the admin's flat
        Title / Body fields are pointed at the first matching primitive. */
@@ -6462,13 +6549,24 @@ let DB = null;
   wireBox('pad'); wireBox('mar'); wireRad();
   (function(){
     const M = $('bs-wmode'), V = $('bs-wpx');
-    M.addEventListener('change', () => { if(!curItem) return; curItem.style.wMode = M.value; V.disabled = (M.value !== 'fixed'); markDirty(DB.doc); render(); });
-    V.addEventListener('input', () => { if(!curItem) return; curItem.style.wPx = Math.max(0,Math.round(+V.value||0)); render(); });
+    M.addEventListener('change', () => { if(!curItem) return; curItem.style.wMode = M.value; markDirty(DB.doc); render(); renderInspector(); });
+    V.addEventListener('input', () => { if(!curItem) return;
+      curItem.style.wPx = Math.max(0,Math.round(+V.value||0));
+      if((curItem.style.wMode||'fill') !== 'fixed'){ curItem.style.wMode = 'fixed'; M.value = 'fixed'; }
+      markDirty(DB.doc); render(); });
   })();
   (function(){
     const M = $('bs-hmode'), V = $('bs-hval');
-    const upd = () => { if(!curItem) return; curItem.style.hMode = M.value; V.disabled = (M.value==='auto'||M.value==='hug'); curItem.style.hVal = Math.max(0,Math.round(+V.value||0)); markDirty(DB.doc); render(); };
-    M.addEventListener('change', upd); V.addEventListener('input', upd);
+    M.addEventListener('change', () => { if(!curItem) return; curItem.style.hMode = M.value; markDirty(DB.doc); render(); renderInspector(); });
+    V.addEventListener('input', () => { if(!curItem) return;
+      curItem.style.hVal = Math.max(0,Math.round(+V.value||0));
+      const hm = curItem.style.hMode||'auto';
+      if(hm !== 'fixed'){ curItem.style.hMode = 'fixed'; M.value = 'fixed'; }
+      markDirty(DB.doc); render(); });
+    [['bs-wmin','wMin'],['bs-wmax','wMax'],['bs-hmin','hMin'],['bs-hmax','hMax']].forEach(([id,k]) => {
+      const el = $(id); if(!el) return;
+      el.addEventListener('input', () => { if(!curItem) return; curItem.style[k] = Math.max(0,Math.round(+el.value||0)); markDirty(DB.doc); render(); });
+    });
   })();
   const clampA = v => Math.max(0,Math.min(100,Math.round(+v||0)));
   function fillPaint(key){
