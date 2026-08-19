@@ -15,7 +15,7 @@ function pgTenders(){
       <div class="sp"><button class="lbtn pri" onclick="ntOpen()">Create New Tender</button></div>
     </div>
     <div class="pbody">
-      ${folderRail(['Default Tenders','Aviral','Evolve housing'], tnFolder, 'tnSetFolder')}
+      ${folderRail(['Default Tenders','Lakeside Council','Harbourview Housing'], tnFolder, 'tnSetFolder')}
       <div class="frail" id="railFiles"><span class="ms car" onclick="railToggle('railFiles')">expand_more</span> Tenders <span class="ms" data-toast="Sort tenders" style="color:#7C8886;font-size:19px">sort</span></div>
       <div id="tnList">${tnView === 'grid' ? tnGrid() : tnListView()}</div>
     </div>`;
@@ -71,7 +71,7 @@ window.railToggle = id => document.getElementById(id).classList.toggle('clps');
 
 let rqMode = 'out';
 function pgTenderDetail(){
-  const name = q('tender') || (TENDERS[0] && TENDERS[0].name) || 'biebly cover page';
+  const name = q('tender') || (TENDERS[0] && TENDERS[0].name) || 'Draft cover page';
   const t = TENDERS.find(x => x.name === name) || {};
   const fld = (label, val, cal) => `<div class="tf-fld${val?' filled':''}">
       <label>${label}</label><input value="${esc(val||'')}" placeholder="${label}">
@@ -209,19 +209,19 @@ const BT_SECS = [
 ];
 let btOrder = BT_SECS.map(s => s.k);
 let btAdded = {
-  cover: [{n:'Bielby Cover - Logo Right', prev:{kind:'cover', id:'cv1'}},
-          {n:'Bielby Cover - Logo Bottom Right', prev:{kind:'cover', id:'cv2'}},
-          {n:'Bielby Cover', prev:{kind:'cover', id:'cv3'}}],
+  cover: [{n:'Company Cover - Logo Right', prev:{kind:'cover', id:'cv1'}},
+          {n:'Company Cover - Logo Bottom Right', prev:{kind:'cover', id:'cv2'}},
+          {n:'Company Cover', prev:{kind:'cover', id:'cv3'}}],
 };
 let btSel = null;                  // {k, i}
 
 function pgBuildTender(){
-  const name = q('tender') || 'biebly cover page';
+  const name = q('tender') || 'Draft cover page';
   return `<div class="phead">
       <button class="lbtn" onclick="go('/tenders/tender-details/?tender=${encodeURIComponent(name)}')"><span class="ms">keyboard_arrow_left</span> Back</button>
       <div class="h">Tender Attachments &nbsp;- ${esc(name)}</div>
       <div class="sp">
-        <span class="ltop-ava" style="width:38px;height:38px;border-radius:50%;background:#5C6BC0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700" title="Andrew Williams">AW</span>
+        <span class="ltop-ava" style="width:38px;height:38px;border-radius:50%;background:#5C6BC0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700" title="Jordan Avery">AW</span>
         <button class="lbtn" data-toast="Choose a saved tender template"><span class="ms">library_books</span> Select Template <span class="ms">keyboard_arrow_down</span></button>
         <button class="lbtn" data-toast="Saved as a reusable tender template"><span class="ms">flag</span> Save as Template</button>
         <button class="lbtn pri icon" data-toast="Download the submission package" title="Download"><span class="ms">download</span></button>
@@ -329,7 +329,7 @@ function btDocHtml(f){
 function coverHtml(c){
   return `<div class="cvr" style="font-family:'${c.font==='Tungsten-Narrow'?'Manrope':c.font}',sans-serif;background:${c.bg}">
     <div class="art" style="background:linear-gradient(150deg,${c.bg} 0%, #6E7C77 42%, ${c.bg} 100%)"></div>
-    <div class="brand">${c.logo==='right'?'&#x25B6;&#x25B6; Bielby':'&#x25B6;&#x25B6; Bielby'}</div>
+    <div class="brand">${c.logo==='right'?'&#x25B6;&#x25B6; Northwind':'&#x25B6;&#x25B6; Northwind'}</div>
     <div class="kick" style="background:${c.tx};color:${c.bg}">SUBMISSION</div>
     <div class="ttl" style="color:${c.tx};font-weight:${c.font==='Tungsten-Narrow'?'800':'700'};letter-spacing:${c.font==='Tungsten-Narrow'?'-1px':'-.5px'}">Enter title</div>
     <div class="foot" style="background:${c.bg}">
@@ -633,8 +633,8 @@ document.getElementById('attOv').addEventListener('click', e => { if(e.target.id
 let fmFolder = {}, fmView = {};
 function pgLibrary(slug){
   const m = FM_META[slug];
-  const folders = slug === 'resumes' ? ['Default Resumes','Evolve housing','Aviral']
-                : slug === 'case-studies' ? ['Default Case Studies','evolve housing','Aviral','All format documents']
+  const folders = slug === 'resumes' ? ['Default Resumes','Harbourview Housing','Lakeside Council']
+                : slug === 'case-studies' ? ['Default Case Studies','Harbourview Housing','Lakeside Council','All format documents']
                 : ['Default ' + m.name];
   const sel = fmFolder[slug] || folders[0];
   const view = fmView[slug] || 'grid';

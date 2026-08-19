@@ -109,7 +109,7 @@ function psStage(){
   const host = document.getElementById('psCanvas');
   host.innerHTML = `<div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--live-cta)">description</span>
       <span>${esc(PS.doc.name)}</span></div>
-    <div class="note" style="width:620px;margin:0 auto 16px"><span class="ms">info</span> ${note}</div>
+    <div class="note" style="width:700px;margin:0 auto 16px"><span class="ms">info</span> ${note}</div>
     <div class="vb-stage" id="psPages"></div>`;
   renderDocPages(document.getElementById('psPages'), PS.doc, {cls:'vb-page'});
 }

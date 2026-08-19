@@ -76,7 +76,7 @@ window.vdClose = () => document.getElementById('vdOv').classList.remove('open');
    Live opens a modal with a slate header, a search box, the tender folder rail
    and a card per tender showing Name / Organisation / Priority / Status / Due
    Date over a full-width "Add to Tender" button.                             */
-const A2T_FOLDERS = ['Default Tenders','Aviral'];
+const A2T_FOLDERS = ['Default Tenders','Lakeside Council'];
 let a2tFolder = A2T_FOLDERS[0], a2tQuery = '', a2tDoc = '';
 
 window.a2tOpen = name => {

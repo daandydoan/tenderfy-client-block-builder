@@ -79,16 +79,16 @@ function renderNav(path){
 /* ── Data ────────────────────────────────────────────────────────────────── */
 
 const TENDERS = [
-  {name:'biebly cover page', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Client Template Detailed first draft', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Template medium overwrite', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Client Submission Template Medium', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Client Submission Templates AJ', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Newer 1', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'New Schedule', org:'', contact:'', who:'', pri:'High', st:'Pending', due:''},
-  {name:'Velocity Link Hwy Extension', org:'Dept of Transport & Main Roads', contact:'Andrew Williams', who:'Tom', pri:'High', st:'In progress', due:'20/05/2026'},
-  {name:'Northside School Upgrade', org:'Hansen Projects', contact:'Priya Nair', who:'', pri:'Medium', st:'Pending', due:'22/05/2026'},
-  {name:'Civic Centre Redevelopment', org:'Buildcorp QLD', contact:'Sam Lee', who:'Tom', pri:'High', st:'In review', due:'18/05/2026'},
+  {name:'Harbourview Stage 2 Civil Works',   org:'Harbourview Housing',     contact:'Elena Vasquez', who:'Jordan Avery', pri:'High',   st:'In progress', due:'12/09/2026'},
+  {name:'Lakeside Foreshore Renewal',        org:'Lakeside Council',        contact:'Tom Brennan',   who:'Morgan Ellis', pri:'High',   st:'Pending',     due:'26/09/2026'},
+  {name:'Northern Arterial Upgrade',         org:'State Roads Authority',   contact:'Priya Raman',   who:'Jordan Avery', pri:'High',   st:'In progress', due:'03/10/2026'},
+  {name:'Halewood Depot Expansion',          org:'Halewood Group',          contact:'Chris Nolan',   who:'Riley Chen',   pri:'Medium', st:'Pending',     due:'17/10/2026'},
+  {name:'Riverbend Drainage Package',        org:'Lakeside Council',        contact:'Tom Brennan',   who:'Morgan Ellis', pri:'Medium', st:'Pending',     due:'24/10/2026'},
+  {name:'Civic Centre Redevelopment',        org:'Lakeside Council',        contact:'Dana Whitfield',who:'Jordan Avery', pri:'High',   st:'Submitted',   due:'08/08/2026'},
+  {name:'Southgate School Refurbishment',    org:'Halewood Group',          contact:'Chris Nolan',   who:'Casey Brooks', pri:'Low',    st:'Pending',     due:'14/11/2026'},
+  {name:'Westfield Interchange Works',       org:'State Roads Authority',   contact:'Priya Raman',   who:'Riley Chen',   pri:'Medium', st:'In progress', due:'21/11/2026'},
+  {name:'Parkside Amenities Block',          org:'Lakeside Council',        contact:'Dana Whitfield',who:'Casey Brooks', pri:'Low',    st:'Pending',     due:'05/12/2026'},
+  {name:'Harbourview Stage 3 Early Works',   org:'Harbourview Housing',     contact:'Elena Vasquez', who:'Morgan Ellis', pri:'Medium', st:'Pending',     due:'19/12/2026'},
 ];
 const PRI = {High:'pri-high', Medium:'pri-med', Low:'pri-low'};
 const ST  = {'Pending':'st-pending','In progress':'st-progress','In review':'st-review'};
@@ -98,7 +98,7 @@ const QUOTES = [
    incl:['GST (10%)','After-hours loading 1.5x','Plant within labour rates'],
    excl:['ROL coordination fees - variation +15%','Permits & approvals'],
    assum:['Rev 3 drawings (1 Mar 2026)','Clear site access','Power & water on site']},
-  {sub:'Ironbark Traffic', av:'IT', color:'#795548', trade:'Traffic Management', total:10850, status:'Quote updated', badge:'b-updated',
+  {sub:'Redgum Traffic Traffic', av:'IT', color:'#795548', trade:'Traffic Management', total:10850, status:'Quote updated', badge:'b-updated',
    incl:['GST (10%)','Weekend rates','Signage & devices','Permits & approvals'], excl:['After-hours work'],
    assum:['Single mobilisation','Prices valid 30 days']},
   {sub:'Metro Civil', av:'MS', color:'#5C6BC0', trade:'Civil Works', total:12400, status:'Quote submitted', badge:'b-submitted',

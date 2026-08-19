@@ -6,7 +6,7 @@ const RESUME_DATA = {
   contact:['jordan.avery@example.com','+61 400 000 000','Sydney, NSW'],
   summary:'Delivery-focused project manager with 12+ years leading civil and commercial construction projects from tender through to handover.',
   experience:[
-    {t:'Senior Project Manager · Meridian Constructions', d:'2019–Present', b:'Led $40M+ infrastructure packages; managed multidisciplinary teams of 30+.'},
+    {t:'Senior Project Manager · Northwind Constructions', d:'2019–Present', b:'Led $40M+ infrastructure packages; managed multidisciplinary teams of 30+.'},
     {t:'Project Manager · Harbour Civil', d:'2014–2019', b:'Delivered road and drainage upgrades on time and 6% under budget.'},
   ],
   skills:['Programme & cost control','Stakeholder management','WHS & compliance','Tender & bid strategy','Contract administration'],
@@ -129,8 +129,8 @@ const CS_LAYOUTS = [
   {id:'report', name:'Report',      desc:'Sober single column, no cover art.'},
 ];
 const CS_DATA = {
-  title:'Velocity Link Highway Extension',
-  client:'Dept of Transport & Main Roads',
+  title:'Northern Arterial Extension',
+  client:'State Roads Authority',
   sector:'Civil Infrastructure', location:'Ipswich, QLD',
   value:'$12.4M', duration:'18 months', completed:'March 2026',
   challenge:'A 4.2 km arterial extension had to be delivered through a live traffic corridor with no full closures permitted, while protecting an adjacent koala habitat listed under state environmental offsets.',

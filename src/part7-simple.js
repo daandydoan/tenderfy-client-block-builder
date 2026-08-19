@@ -27,14 +27,14 @@ const SIMPLE_TABS = ['All Blocks','Title Blocks','Text Blocks','Images','Image &
 
 // Resume templates offered by the live chooser.
 const RESUME_TEMPLATES = [
-  {id:'bielby', name:'Bielby',                 primary:'#1F2A2E', accent:'#B4D33B'},
+  {id:'bielby', name:'Northwind',                 primary:'#1F2A2E', accent:'#B4D33B'},
   {id:'landlink',name:'Landlink',              primary:'#2F5D50', accent:'#8CC63F'},
   {id:'eiwa',   name:'Eiwa',                   primary:'#3B4A5A', accent:'#E8A33D'},
-  {id:'pirotta',name:'Pirotta',                primary:'#2E7A5F', accent:'#C0392B'},
+  {id:'pirotta',name:'Slate',                primary:'#2E7A5F', accent:'#C0392B'},
   {id:'t3',     name:'Template - 3',           primary:'#27535C', accent:'#38988A'},
-  {id:'evolve', name:'Evolve Housing',         primary:'#123C6B', accent:'#F2A03D'},
+  {id:'harbourview', name:'Harbourview Housing', primary:'#123C6B', accent:'#F2A03D'},
   {id:'t8',     name:'Template-8_Non-Profits', primary:'#5C4B8A', accent:'#F4C445'},
-  {id:'fletch', name:'Fletch',                 primary:'#33413F', accent:'#6ADDB5'},
+  {id:'fletch', name:'Aurora',                 primary:'#33413F', accent:'#6ADDB5'},
   {id:'jwbs',   name:'Jwbs',                   primary:'#1B3A5C', accent:'#4FA3D1'},
   {id:'cpm',    name:'CPM',                    primary:'#4A2E2E', accent:'#D98A3A'},
 ];

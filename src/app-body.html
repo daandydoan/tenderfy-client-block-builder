@@ -390,7 +390,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--live-page);color
   background-image:radial-gradient(#d4dcd9 1px,transparent 1px);background-size:16px 16px}
 .rb-canvas.form{background:#fff;background-image:none;padding:20px 24px}
 .rb-canvas::-webkit-scrollbar{width:9px}.rb-canvas::-webkit-scrollbar-thumb{background:#c3ccc9;border-radius:9px}
-.a4{position:relative;width:620px;min-height:877px;margin:0 auto;background:#fff;border-radius:4px;
+.a4{position:relative;width:700px;min-height:990px;margin:0 auto;background:#fff;border-radius:4px;
   box-shadow:0 10px 34px rgba(20,45,38,.16);overflow:hidden;text-align:left}
 .rb-arrange{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .rb-region{border:1px solid #E3E8E7;border-radius:12px;background:#fff;overflow:hidden}
@@ -512,22 +512,22 @@ textarea.fin{resize:vertical;line-height:1.5}
 .lbtn.icon-sm{padding:8px;width:34px;height:34px;border-radius:7px}
 .lbtn.icon-sm .ms{font-size:17px}
 
-/* The middle canvas is always A4: 620px wide, 877px tall (210x297 at the same
+/* The middle canvas is always A4: 700px wide, 990px tall (210x297 at the same
    scale), with a guide line at each page boundary as the document grows. */
-.db .vb-page{width:620px;max-width:100%;min-height:877px;margin:0 auto;padding:0;background:#fff;
+.db .vb-page{width:700px;max-width:100%;min-height:990px;margin:0 auto;padding:0;background:#fff;
   border-radius:3px;box-shadow:0 12px 40px rgba(20,45,38,.18);display:flex;flex-direction:column;
   position:relative;text-align:left;box-sizing:border-box}
 .db .vb-page:after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:3px;
-  background:repeating-linear-gradient(to bottom,transparent 0 876px,#E3E8E7 876px 877px)}
+  background:repeating-linear-gradient(to bottom,transparent 0 989px,#E3E8E7 989px 990px)}
 .db .vb-stage{padding-bottom:26px}
 
 /* ═══ Document Builder shell ═══════════════════════════════════════════════ */
 .db{position:fixed;inset:0;background:var(--live-page);z-index:140;display:none;flex-direction:column}
 .db.open{display:flex}
-.ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;
+.ed3{flex:1;min-height:0;display:grid;grid-template-columns:272px minmax(0,1fr) 300px;
   grid-template-rows:minmax(0,1fr);gap:14px;padding:14px 18px;align-items:stretch;height:auto;overflow:hidden}
-.ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
-.ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
+.ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 300px}
+.ed3:not(.st-on){grid-template-columns:272px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
 .db .ed3:not(.el-on) #dleftCol,.db .ed3:not(.st-on) #drightCol{display:none}
 .ed3-col{height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
@@ -721,8 +721,8 @@ textarea.fin{resize:vertical;line-height:1.5}
    (radius 12, 1px #C3C3C3) holding a 900px centred column with 20px padding, so
    the working width is 860px. "+" bars are 72px tall, radius 8, 20px apart. */
 .sm-canvas{background:#fff;border:1px solid #C3C3C3;border-radius:4px;padding:0;margin:0 auto;
-  width:620px;max-width:100%;min-height:877px;box-sizing:border-box}
-.sm-col{width:100%;max-width:620px;margin:0 auto;padding:20px;box-sizing:border-box}
+  width:700px;max-width:100%;min-height:990px;box-sizing:border-box}
+.sm-col{width:100%;max-width:700px;margin:0 auto;padding:20px;box-sizing:border-box}
 .smb{display:flex;align-items:flex-start;gap:10px}
 .smb-grip{color:#B8C2C0;font-size:19px;cursor:grab;margin-top:12px;flex:none}
 .smb-body{flex:1;min-width:0;border:1px solid #E3E8E7;border-radius:4px;overflow:hidden;background:#fff}
@@ -827,10 +827,10 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Block Builder ════════════════════════════════════════════════════════ */
 .be{position:fixed;inset:0;background:var(--live-page);z-index:138;display:none;flex-direction:column}
 .be.open{display:flex}
-.be .ed3{flex:1;min-height:0;display:grid;grid-template-columns:288px minmax(0,1fr) 320px;
+.be .ed3{flex:1;min-height:0;display:grid;grid-template-columns:272px minmax(0,1fr) 300px;
   grid-template-rows:minmax(0,1fr);gap:14px;padding:14px 18px;align-items:stretch;height:auto;overflow:hidden}
-.be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 320px}
-.be .ed3:not(.st-on){grid-template-columns:288px minmax(0,1fr)}
+.be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 300px}
+.be .ed3:not(.st-on){grid-template-columns:272px minmax(0,1fr)}
 .be .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
 .be .ed3:not(.el-on) #leftCol,.be .ed3:not(.st-on) #rightCol{display:none}
 .be .vb-toolbar{padding:9px 14px;margin:0;border-bottom:1px solid #E3E8E7;background:#fff;flex-shrink:0;gap:10px}
@@ -844,7 +844,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 .hdr-brand .ms{font-size:16px;color:var(--live-cta)}
 .fin-sm{width:auto;padding:6px 9px;font-size:12.5px;border:1px solid #E3E8E7;border-radius:7px;font-family:inherit}
 .db-layer{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;min-height:0}
-.be-page{position:relative;width:620px;max-width:100%;min-height:160px;margin:0 auto;background:#fff;
+.be-page{position:relative;width:700px;max-width:100%;min-height:160px;margin:0 auto;background:#fff;
   border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column;
   border:1.5px solid transparent;text-align:left;box-sizing:border-box}
 .be-page.sel{border-color:var(--live-cta)}
@@ -900,7 +900,7 @@ textarea.fin{resize:vertical;line-height:1.5}
   font-size:12px;line-height:1.6;color:var(--ink)}
 .code-prev{flex:1;overflow:auto;background:#E7ECEA;padding:14px}
 .code-prev-page{background:#fff;border-radius:5px;padding:24px;min-height:100%;box-shadow:0 4px 16px rgba(20,45,38,.1)}
-.vb-tail{width:620px;max-width:100%;margin:0 auto;border:1.5px dashed #b3beba;border-radius:9px;padding:12px;
+.vb-tail{width:700px;max-width:100%;margin:0 auto;border:1.5px dashed #b3beba;border-radius:9px;padding:12px;
   text-align:center;color:#6B7674;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
 .vb-tail.over{border-color:var(--live-cta);color:var(--live-cta);background:rgba(56,152,138,.10)}
 .vb-tail .ms{font-size:17px}
@@ -1334,7 +1334,7 @@ textarea.fin{resize:vertical;line-height:1.5}
               <span class="fig-wt" title="Height"><span class="ms">swap_vert</span><input type="number" id="s-hpx" min="0"></span>
               <select class="insp-sel" id="s-hmode"><option value="fill">Fill height</option><option value="fixed">Fixed height</option><option value="max">Max height</option></select>
             </div>
-            <div style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-top:12px;align-items:start">
+            <div id="blockAlign" style="display:grid;grid-template-columns:auto 1fr;gap:14px;margin-top:12px;align-items:start">
               <div><div class="fig-label" style="margin-bottom:5px">Alignment</div>
                 <div class="fig-align" id="s-align3">
                   <button type="button" data-h="left" data-v="top" title="Top left"></button><button type="button" data-h="center" data-v="top" title="Top"></button><button type="button" data-h="right" data-v="top" title="Top right"></button>

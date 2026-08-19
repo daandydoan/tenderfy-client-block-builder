@@ -13,10 +13,10 @@
 .d-search input{border:none;outline:none;font-family:inherit;font-size:12.5px;width:100%;background:transparent}
 .vb-canvas{flex:1;min-height:0;background:#E7ECEA;background-image:radial-gradient(#d4dcd9 1px,transparent 1px);background-size:16px 16px;border:1px solid var(--border);border-radius:14px;padding:24px;overflow:auto}
 .vb-canvas.drag-over{outline:2px dashed var(--teal);outline-offset:-6px}
-.vb-bar{display:flex;align-items:center;gap:9px;width:620px;margin:0 auto 16px;color:var(--gray);font-size:12.5px;font-weight:500}
+.vb-bar{display:flex;align-items:center;gap:9px;width:700px;margin:0 auto 16px;color:var(--gray);font-size:12.5px;font-weight:500}
 .vb-stage{display:flex;flex-direction:column;align-items:center;gap:22px;min-height:100%}
-.vb-page{position:relative;width:620px;min-height:877px;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);display:flex;flex-direction:column;overflow:hidden}
-.vb-tail{width:620px;margin:12px auto 0;border:1.5px dashed #b3beba;border-radius:9px;padding:12px;text-align:center;color:var(--gray);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:7px}
+.vb-page{position:relative;width:700px;min-height:990px;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);display:flex;flex-direction:column;overflow:hidden}
+.vb-tail{width:700px;margin:12px auto 0;border:1.5px dashed #b3beba;border-radius:9px;padding:12px;text-align:center;color:var(--gray);font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:7px}
 .vb-tail.over{border-color:var(--teal);color:var(--teal);background:var(--teal-tint)}
 .vb-tail .ms{font-size:17px}
 .vb-pal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -169,7 +169,7 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .tb-btn.tb-lbl{width:auto;padding:0 11px;gap:6px;font-size:12.5px;font-weight:600}
 .autosave{font-size:11px;color:var(--light);display:flex;align-items:center;gap:5px}
 .autosave .ms{font-size:13px}
-.be .vb-page{width:620px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
+.be .vb-page{width:700px;min-height:160px;margin:0 auto;background:#fff;border-radius:4px;box-shadow:0 10px 34px rgba(20,45,38,.14);padding:52px;display:flex;flex-direction:column}
 .be .vb-page.band{min-height:96px;padding:22px 30px}
 .vb-block{display:flex;flex-direction:column;min-width:0}
 .vb-row{position:relative;display:flex;gap:14px;padding:3px;border-radius:8px}
@@ -346,6 +346,16 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 
 /* A4 sheets: 620 x 877 is 210 x 297mm at this scale. Fixed height, because the
    paginator has already split the content to fit. */
-.a4-fixed{position:relative;width:620px;max-width:100%;height:877px;flex:none;overflow:hidden;
+.a4-fixed{position:relative;width:700px;max-width:100%;height:990px;flex:none;overflow:hidden;
   display:flex;flex-direction:column;box-sizing:border-box;text-align:left}
 .vstage{flex-direction:column;align-items:center;gap:22px}
+
+/* Row tools and element tools shared the same band and ran into each other.
+   They now sit on opposite sides - row actions left, the element's name and
+   actions clustered right - and hovering an element yields the row's strip. */
+.vb-rowtools{left:8px;right:auto;transform:none}
+.vb-row:has(.vb-el:hover) > .vb-rowtools{opacity:0;pointer-events:none}
+.vb-name{left:auto;right:92px;max-width:calc(100% - 190px);overflow:hidden;text-overflow:ellipsis;
+  display:block;line-height:15px}
+.vb-el:hover > .vb-name,.vb-el.selected > .vb-name{opacity:1}
+.vb-el.selected > .vb-tools,.vb-el:hover > .vb-tools{opacity:1}

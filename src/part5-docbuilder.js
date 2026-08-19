@@ -80,7 +80,7 @@ function renderComposedDoc(items, brand, opts){
    One paginator for the builder's Preview and the read-only view pages, so a
    document breaks into the same A4 sheets wherever it is shown. Ported from
    document-edit.html's renderPreview, lifted out so both callers share it.   */
-const A4_W = 620, A4_H = 877;             // A4 at 620px wide (297/210 = 1.414)
+const A4_W = 700, A4_H = 990;             // A4 at 700px wide (297/210 = 1.414)
 function docFurniture(doc){
   const hb = doc.header && BLOCK_BY_ID[doc.header], fb = doc.footer && BLOCK_BY_ID[doc.footer];
   return {
@@ -261,7 +261,7 @@ let DB = null;
 (function(){
   const $ = id => document.getElementById(id);
   const canvas = $('canvas'), wrap = $('dcvWrap'), palette = $('dpalette');
-  const A4H = 877;                         // A4 page height at 620px wide
+  const A4H = A4_H;                        // A4 page height at A4_W wide
   let uid = 0, mode = 'layout', selK = null, curItem = null, pq = '';
 
   const items = () => DB.doc.items;
@@ -336,7 +336,7 @@ let DB = null;
   function measure(blocks, head, foot){
     const ds = docStyle();
     const meas = document.createElement('div');
-    meas.style.cssText = `position:absolute;left:-9999px;top:0;width:620px;box-sizing:border-box;padding:${ds.pad}px;visibility:hidden`;
+    meas.style.cssText = `position:absolute;left:-9999px;top:0;width:${A4_W}px;box-sizing:border-box;padding:${ds.pad}px;visibility:hidden`;
     meas.innerHTML = head + blocks.join('') + foot; wrap.appendChild(meas);
     const kids = [...meas.children];
     const headH = head ? kids[0].getBoundingClientRect().height + 22 : 0;

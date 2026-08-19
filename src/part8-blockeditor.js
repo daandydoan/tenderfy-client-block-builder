@@ -70,7 +70,7 @@ function beNewBlock(){
   const ELEMS = Object.fromEntries(PRIMITIVES.map(p => [p.id, p.name]));
   const clone = x => JSON.parse(JSON.stringify(x));
 
-  const elDef = () => ({padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
+  const elDef = () => ({wmode:'fill',wpx:240,hmode:'fill',hpx:120,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
   const mkEl = pid => { const e = {id:pid, st:elDef()}; if(pid === 'field') e.field = 'client.name'; if(pid === 'image') e.src = 'placeholder'; return e; };
   const normDoc = d => d.map(row => ({cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : x))}));
   const blockDef = () => ({wmode:'fill', wpx:520, hmode:'fill', hpx:200, alH:'left', alV:'top', padH:0, padV:0, padSides:false, padT:0, padR:0, padB:0, padL:0, marH:0, marV:0, marSides:false, marT:0, marR:0, marB:0, marL:0, sp:8, bg:'', bgBind:'', bgA:100, bgVis:true, rad:0, radSides:false, radTL:0, radTR:0, radBR:0, radBL:0, bw:0, bstyle:'solid', bcolor:'#E2E8E6', bcolorBind:'', bcolorA:100, bcolorVis:true, bpos:'inside'});
@@ -183,7 +183,9 @@ function beNewBlock(){
     const hm = bs.hmode||'fill';
     w.style.height = hm==='fixed' ? bs.hpx+'px' : '';
     w.style.maxHeight = hm==='max' ? bs.hpx+'px' : '';
-    const HM={left:'flex-start',center:'center',right:'flex-end'}, VM={top:'flex-start',middle:'center',bottom:'flex-end'};
+    // Default (left) means fill the width; centre and right shrink to content
+    // and align, which is what choosing them is for.
+    const HM={left:'stretch',center:'center',right:'flex-end'}, VM={top:'flex-start',middle:'center',bottom:'flex-end'};
     w.style.alignItems = HM[bs.alH||'left']; w.style.justifyContent = VM[bs.alV||'top'];
     w.style.padding = boxCss(bs,'pad'); w.style.gap = bs.sp+'px';
     if(wm==='fill'){ const f=$('s-wpx'); if(f && document.activeElement!==f) f.value=Math.round(w.getBoundingClientRect().width); }
@@ -197,6 +199,14 @@ function beNewBlock(){
   }
   function applyElStyle(node, st){
     if(!node) return;
+    const wm = st.wmode || 'fill';
+    node.style.width    = wm === 'fixed' ? (st.wpx||0)+'px' : '';
+    node.style.minWidth = wm === 'min'   ? (st.wpx||0)+'px' : '';
+    node.style.maxWidth = wm === 'max'   ? (st.wpx||0)+'px' : '';
+    const hm = st.hmode || 'fill';
+    node.style.height    = hm === 'fixed' ? (st.hpx||0)+'px' : '';
+    node.style.maxHeight = hm === 'max'   ? (st.hpx||0)+'px' : '';
+    node.style.overflowY = hm === 'max'   ? 'auto' : '';
     node.style.padding = boxCss(st,'pad'); node.style.margin = boxCss(st,'mar');
     node.style.background = paintVisible(st,'bg') ? (paintCss(resolveFill(st), st.bgA)||'') : '';
     node.style.borderRadius = radAny(st)?radCss(st):''; node.style.overflow = radAny(st)?'hidden':'';
@@ -215,11 +225,11 @@ function beNewBlock(){
   function fieldsFor(){
     if(!sel) return new Set(['width','pad','sp','bg','rad','bwstyle','bcolor']);
     switch(kindOf(selEl().id)){
-      case 'image':   return new Set(['pad','bg','rad','bwstyle','bcolor']);
-      case 'table':   return new Set(['sizelh','color','pad','bg','rad','bwstyle','bcolor']);
-      case 'divider': return new Set(['pad','bg']);
-      case 'spacer':  return new Set(['pad']);
-      default:        return new Set(['font','weight','sizelh','color','align','pad','bg','rad','bwstyle','bcolor']);
+      case 'image':   return new Set(['width','pad','bg','rad','bwstyle','bcolor']);
+      case 'table':   return new Set(['width','sizelh','color','pad','bg','rad','bwstyle','bcolor']);
+      case 'divider': return new Set(['width','pad','bg']);
+      case 'spacer':  return new Set(['width','pad']);
+      default:        return new Set(['width','font','weight','sizelh','color','align','pad','bg','rad','bwstyle','bcolor']);
     }
   }
   function renderInspector(){
@@ -232,6 +242,7 @@ function beNewBlock(){
       sec.style.display = (anyRow||needMet)?'':'none';
     });
     const id = sel ? selEl().id : null;
+    const ag = document.getElementById('blockAlign'); if(ag) ag.style.display = sel ? 'none' : '';
     $('sec-field').style.display = id==='field'?'':'none';
     $('sec-imgsrc').style.display = id==='image'?'':'none';
     $('s-preset').style.display = sel?'':'none';
@@ -338,12 +349,15 @@ function beNewBlock(){
     syncColor('bg'); syncColor('bcolor');
     $('s-color').value=t.color||'#333333'; $('s-colorH').value=t.color||'';
     $('s-align').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.al===(t.align||'')));
-    $('s-wmode').value=blockStyle.wmode;
+    $('s-wmode').value = t.wmode || 'fill';
     const wpxEl=$('s-wpx');
-    if(blockStyle.wmode==='fill'){ const bw=$('blockWrap'); wpxEl.value=bw?Math.round(bw.getBoundingClientRect().width):blockStyle.wpx; wpxEl.disabled=true; }
-    else { wpxEl.value=blockStyle.wpx; wpxEl.disabled=false; }
-    $('s-hmode').value=blockStyle.hmode||'fill';
-    $('s-hpx').value=blockStyle.hpx||0; $('s-hpx').disabled=((blockStyle.hmode||'fill')==='fill');
+    if((t.wmode||'fill')==='fill'){
+      const node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
+      wpxEl.value = node ? Math.round(node.getBoundingClientRect().width) : (t.wpx||0);
+      wpxEl.disabled = true;
+    } else { wpxEl.value = t.wpx||0; wpxEl.disabled = false; }
+    $('s-hmode').value = t.hmode || 'fill';
+    $('s-hpx').value = t.hpx||0; $('s-hpx').disabled = ((t.hmode||'fill')==='fill');
     document.querySelectorAll('#s-align3 button').forEach(b=>b.classList.toggle('on', b.dataset.h===(blockStyle.alH||'left') && b.dataset.v===(blockStyle.alV||'top')));
     const e=selEl();
     if(e){ if(e.id==='field') $('s-field').value=e.field;
@@ -371,12 +385,16 @@ function beNewBlock(){
     $('s-bcolorBind').addEventListener('change',e=>{ target().bcolorBind=e.target.value; applyActive(); syncInspector(); commitStyle(); });
     wirePaintB('bg'); wirePaintB('bcolor');
     $('s-align').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ target().align=b.dataset.al; $('s-align').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); applyActive(); commitStyle(); }));
-    $('s-wmode').addEventListener('change',e=>{ const prev=blockStyle.wmode; blockStyle.wmode=e.target.value;
-      if(prev==='fill' && e.target.value!=='fill'){ const bw=$('blockWrap'); if(bw) blockStyle.wpx=Math.round(bw.getBoundingClientRect().width); }
+    $('s-wmode').addEventListener('change',e=>{ const t=target(), prev=t.wmode; t.wmode=e.target.value;
+      // Leaving Fill adopts the width it is rendering at, not a stale default.
+      if(prev==='fill' && e.target.value!=='fill'){
+        const node = sel ? elNode(sel.r,sel.c,sel.k) : $('blockWrap');
+        if(node) t.wpx=Math.round(node.getBoundingClientRect().width);
+      }
       applyActive(); syncInspector(); commitStyle(); });
-    $('s-wpx').addEventListener('input',e=>{ blockStyle.wpx=+e.target.value||0; applyActive(); commitStyle(); });
-    $('s-hmode').addEventListener('change',e=>{ blockStyle.hmode=e.target.value; $('s-hpx').disabled=(blockStyle.hmode==='fill'); applyActive(); commitStyle(); });
-    $('s-hpx').addEventListener('input',e=>{ blockStyle.hpx=+e.target.value||0; applyActive(); commitStyle(); });
+    $('s-wpx').addEventListener('input',e=>{ target().wpx=+e.target.value||0; applyActive(); commitStyle(); });
+    $('s-hmode').addEventListener('change',e=>{ target().hmode=e.target.value; $('s-hpx').disabled=(target().hmode==='fill'); applyActive(); commitStyle(); });
+    $('s-hpx').addEventListener('input',e=>{ target().hpx=+e.target.value||0; applyActive(); commitStyle(); });
     document.querySelectorAll('#s-align3 button').forEach(b=>b.addEventListener('click',()=>{ blockStyle.alH=b.dataset.h; blockStyle.alV=b.dataset.v; document.querySelectorAll('#s-align3 button').forEach(x=>x.classList.toggle('on',x===b)); applyActive(); commitStyle(); }));
     $('s-field').addEventListener('change',e=>{ if(selEl()){ selEl().field=e.target.value; render(); commit(); } });
     document.querySelectorAll('#s-imgsrc button').forEach(b=>b.addEventListener('click',()=>{ if(selEl()){ selEl().src=b.dataset.src; render(); commit(); } }));
@@ -660,7 +678,7 @@ function beNewBlock(){
       const col = paintCss(bcol(st), st.bcolorA);
       return st.bpos === 'inside' ? `box-shadow:inset 0 0 0 ${st.bw}px ${col};` : `border:${st.bw}px ${st.bstyle} ${col};`;
     };
-    const HM = {left:'flex-start',center:'center',right:'flex-end'}, VM = {top:'flex-start',middle:'center',bottom:'flex-end'};
+    const HM = {left:'stretch',center:'center',right:'flex-end'}, VM = {top:'flex-start',middle:'center',bottom:'flex-end'};
     let css = `display:flex;flex-direction:column;gap:${bs.sp||0}px;align-items:${HM[bs.alH||'left']};justify-content:${VM[bs.alV||'top']};`
       + `padding:${boxCss(bs,'pad')};border-radius:${radCss(bs)};`
       + (bs.wmode === 'fixed' && bs.wpx ? `width:${bs.wpx}px;margin:0 auto;` : 'width:100%;')
@@ -673,7 +691,10 @@ function beNewBlock(){
       const typo = (st.font ? `font-family:'${st.font}',sans-serif;` : '') + (st.weight ? `font-weight:${st.weight};` : '')
         + (st.size ? `font-size:${st.size}px;` : '') + (st.lh ? `line-height:${st.lh}px;` : '')
         + (st.color ? `color:${st.color};` : '') + (st.align ? `text-align:${st.align};` : '');
-      const box = `padding:${boxCss(st,'pad')};margin:${boxCss(st,'mar')};border-radius:${radCss(st)};`
+      const wm = st.wmode || 'fill', hm = st.hmode || 'fill';
+      const size = (wm === 'fixed' ? `width:${st.wpx||0}px;` : wm === 'min' ? `min-width:${st.wpx||0}px;` : wm === 'max' ? `max-width:${st.wpx||0}px;` : '')
+        + (hm === 'fixed' ? `height:${st.hpx||0}px;` : hm === 'max' ? `max-height:${st.hpx||0}px;overflow:auto;` : '');
+      const box = `padding:${boxCss(st,'pad')};margin:${boxCss(st,'mar')};border-radius:${radCss(st)};` + size
         + (paintVisible(st,'bg') ? `background:${paintCss(fill(st), st.bgA)};` : '') + strokeCss(st)
         + (radAny(st) ? 'overflow:hidden;' : '');
       const body = el.id === 'field'

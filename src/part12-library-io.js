@@ -103,10 +103,13 @@ window.ntCreate = () => {
    Records are replaced in place, because the arrays are shared by reference
    across every page and palette. */
 const LIB_KEY = 'tf_library';
+/* Bump when the seeded library changes, so saved demo data from an older build
+   is discarded rather than masking the new seed. */
+const LIB_VERSION = 2;
 function persistLibrary(){
   try{
     localStorage.setItem(LIB_KEY, JSON.stringify({
-      resumes:RESUMES, caseStudies:CASE_STUDIES, covers:COVERS, tocs:TOCS, tenders:TENDERS,
+      v:LIB_VERSION, resumes:RESUMES, caseStudies:CASE_STUDIES, covers:COVERS, tocs:TOCS, tenders:TENDERS,
     }));
   }catch(e){}
 }
@@ -114,6 +117,7 @@ function restoreLibrary(){
   let s = null;
   try{ s = JSON.parse(localStorage.getItem(LIB_KEY)); }catch(e){ return; }
   if(!s) return;
+  if(s.v !== LIB_VERSION){ try{ localStorage.removeItem(LIB_KEY); }catch(e){} return; }
   const swap = (arr, saved) => { if(Array.isArray(saved) && saved.length){ arr.length = 0; saved.forEach(x => arr.push(x)); } };
   swap(RESUMES, s.resumes); swap(CASE_STUDIES, s.caseStudies);
   swap(COVERS, s.covers);   swap(TOCS, s.tocs); swap(TENDERS, s.tenders);

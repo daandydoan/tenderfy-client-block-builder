@@ -51,7 +51,7 @@ function renderPrimitive(id, b, c){
       return `<div style="${T}">${pairs.map((kv,n)=>`<div style="display:flex;gap:12px;padding:5px 0;border-bottom:1px solid #EEF1F0;font-size:12.5px"><span ${F('pairs')} data-r="${n}" data-c="0" style="color:#7A8583;width:120px;flex-shrink:0">${e(kv[0])}</span><span ${F('pairs')} data-r="${n}" data-c="1" style="color:${soft};font-weight:600">${e(kv[1])}</span></div>`).join('')}</div>`;
     }
     case 'signature':
-      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong ${F('name')} style="color:${b.primary}">${r(c.name,'Kenzie May')}</strong> - <span ${F('role')}>${r(c.role,'Project Director')}</span></div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: <span ${F('date')}>${r(c.date,'30 Jul 2026')}</span></div></div>`;
+      return `<div style="${T}"><div style="border-bottom:1px solid #9AA5A3;width:64%;height:24px;margin-bottom:7px"></div><div style="font-size:12.5px;color:${soft}"><strong ${F('name')} style="color:${b.primary}">${r(c.name,'Riley Chen')}</strong> - <span ${F('role')}>${r(c.role,'Project Director')}</span></div><div style="font-size:11.5px;color:#8A938F;margin-top:1px">Date: <span ${F('date')}>${r(c.date,'30 Jul 2026')}</span></div></div>`;
     case 'divider':
       return `<hr style="border:none;border-top:1px solid ${b.secondary}66;margin:0">`;
     case 'spacer':
@@ -149,7 +149,7 @@ function renderStationery(p, b){
   // composition, like any other custom block.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[p]) return customBlockHtml(CUSTOM_BLOCK_DEF[p], b);
   const H = `font-family:'${b.font}',sans-serif`, T = `font-family:'${b.bodyFont}',sans-serif`;
-  const co = b.company || 'Meridian Civil';
+  const co = b.company || 'Northwind Civil';
   switch(p){
     case 'lh-brand':
       return `<div style="${H};display:flex;align-items:center;gap:11px;border-bottom:3px solid ${b.secondary};padding-bottom:11px"><div style="width:30px;height:30px;border-radius:7px;background:${b.primary};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">${esc(co[0])}</div><div style="font-size:16px;font-weight:700;color:${b.primary}">${esc(co)}</div></div>`;
