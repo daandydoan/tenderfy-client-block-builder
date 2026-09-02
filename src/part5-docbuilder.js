@@ -49,7 +49,7 @@ function docItemHtml(it, brand, cls, extra){
     inner = `<span class="dp" data-pi="0">${renderPrimitive(it.id, brand, content[0] || {})}</span>`;
   } else {
     const b = BLOCK_BY_ID[it.id];
-    inner = b ? composeBlock(b, brand, content) : '';
+    inner = b ? composeBlock(b, brand, content, it.blockStyle) : '';
   }
   const s = Object.assign({}, DOC_ITEM_STYLE_DEFAULT, it.style || {});
   const marUsed = s.marSides || s.marH || s.marV || s.marT || s.marR || s.marB || s.marL;
@@ -637,6 +637,55 @@ let DB = null;
     if(titleAt < 0 && bodyAt < 0) html = `<div class="fhint" style="margin:2px 0 4px">No editable text in this block &mdash; style it below, then check Preview.</div>`;
     $('bi-content').innerHTML = html;
     dbWireRte(it);
+    fillBlockStyle(it);
+  }
+
+  /* ── Restyling a placed block ────────────────────────────────────────────
+     A custom block renders from the library definition until it is restyled
+     here; the first edit takes a copy onto the item, so the block in the
+     library - and every other placement of it - is untouched. */
+  function blockDefOf(it){ return it.t === 'block' ? CUSTOM_BLOCK_DEF[(instObj(it).p)] : null; }
+  function ownBlockStyle(it){
+    if(!it.blockStyle){
+      const def = blockDefOf(it);
+      it.blockStyle = JSON.parse(JSON.stringify((def && def.blockStyle) || {}));
+    }
+    return it.blockStyle;
+  }
+  const BS_ALIGN = [['left','Left'],['center','Centre'],['right','Right']];
+  function fillBlockStyle(it){
+    const host = $('bi-blockstyle'), def = blockDefOf(it);
+    if(!def){ host.innerHTML = ''; host.style.display = 'none'; return; }
+    host.style.display = '';
+    const b = it.blockStyle || def.blockStyle || {};
+    const num = (k, v, max) => `<input type="number" class="ds-num" data-bs="${k}" value="${v||0}" min="0" max="${max||200}">`;
+    host.innerHTML = `
+      <div class="ds-lbl" style="display:flex;align-items:center;gap:8px">Block style
+        ${it.blockStyle ? '<span class="bs-badge">edited</span>' : ''}
+        ${it.blockStyle ? '<button class="lbtn sm" style="margin-left:auto;padding:4px 10px" data-bs-reset>Reset</button>' : ''}</div>
+      <div class="fhint" style="margin:-2px 0 8px">Changes here apply to this placement only.</div>
+      <div class="ds-row"><label>Padding</label><div class="ds-ctl">
+        ${num('padH', b.padH)}<span class="ds-u">H</span>${num('padV', b.padV)}<span class="ds-u">V</span></div></div>
+      <div class="ds-row"><label>Gap</label><div class="ds-ctl">${num('sp', b.sp)}<span class="ds-u">px</span></div></div>
+      <div class="ds-row"><label>Align</label><div class="ds-ctl">
+        <select class="ds-sel" data-bs="alH">${BS_ALIGN.map(([v,n])=>`<option value="${v}"${(b.alH||'left')===v?' selected':''}>${n}</option>`).join('')}</select></div></div>
+      <div class="ds-row"><label>Fill</label><div class="ds-ctl">
+        <input type="color" data-bs="bg" value="${b.bg||'#ffffff'}">
+        <label class="bi-tog" style="margin:0"><input type="checkbox" data-bs="bgOn"${b.bg?' checked':''}>on</label></div></div>
+      <div class="ds-row"><label>Radius</label><div class="ds-ctl">${num('rad', b.rad, 400)}<span class="ds-u">px</span></div></div>`;
+    host.querySelectorAll('[data-bs]').forEach(el => {
+      const k = el.dataset.bs, ev = (el.type === 'checkbox' || el.tagName === 'SELECT' || el.type === 'color') ? 'change' : 'input';
+      el.addEventListener(ev, () => {
+        const st = ownBlockStyle(it);
+        if(k === 'bgOn') st.bg = el.checked ? (st.bg || '#ffffff') : '';
+        else if(el.type === 'number') st[k] = Math.max(0, Math.round(+el.value||0));
+        else st[k] = el.value;
+        if(k === 'bg') st.bgVis = true;
+        markDirty(DB.doc); render(); fillBlockStyle(it);
+      });
+    });
+    const rst = host.querySelector('[data-bs-reset]');
+    if(rst) rst.addEventListener('click', () => { delete it.blockStyle; markDirty(DB.doc); render(); fillBlockStyle(it); showToast('Back to the block\'s own style'); });
   }
   function blockElements(b){
     const out = [];
