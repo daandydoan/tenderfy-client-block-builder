@@ -170,15 +170,14 @@ function renderStationery(p, b){
 }
 
 // rows -> columns -> primitives, in a brand. `content` overrides per primitive index.
-/* `over` is a per-placement style override. A document item that has been
-   restyled passes its own copy, so the library block is left alone. */
+/* `over` is a per-placement copy of the block's definition. An item that has
+   been restyled passes its own copy, so the library block is left alone. */
 function composeBlock(block, brand, content, over){
   if(/^l[hf]-/.test(block.p)) return renderStationery(block.p, brand);
   // Blocks built in the Block Builder carry their own row/column layout and
   // per-element styles; the editor exposes the renderer so both agree.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[block.p]){
-    const def = CUSTOM_BLOCK_DEF[block.p];
-    return customBlockHtml(over ? Object.assign({}, def, {blockStyle: over}) : def, brand, content);
+    return customBlockHtml(over || CUSTOM_BLOCK_DEF[block.p], brand, content);
   }
   const doc = P2DOC[block.p] || [{cols:[[block.p]]}];
   let n = -1;

@@ -4719,15 +4719,14 @@ function renderStationery(p, b){
 }
 
 // rows -> columns -> primitives, in a brand. `content` overrides per primitive index.
-/* `over` is a per-placement style override. A document item that has been
-   restyled passes its own copy, so the library block is left alone. */
+/* `over` is a per-placement copy of the block's definition. An item that has
+   been restyled passes its own copy, so the library block is left alone. */
 function composeBlock(block, brand, content, over){
   if(/^l[hf]-/.test(block.p)) return renderStationery(block.p, brand);
   // Blocks built in the Block Builder carry their own row/column layout and
   // per-element styles; the editor exposes the renderer so both agree.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[block.p]){
-    const def = CUSTOM_BLOCK_DEF[block.p];
-    return customBlockHtml(over ? Object.assign({}, def, {blockStyle: over}) : def, brand, content);
+    return customBlockHtml(over || CUSTOM_BLOCK_DEF[block.p], brand, content);
   }
   const doc = P2DOC[block.p] || [{cols:[[block.p]]}];
   let n = -1;
@@ -5881,6 +5880,16 @@ function docHeightCss(s){
   if(s && s.hMax > 0) c += `max-height:${s.hMax}px;overflow:auto;`;
   return c;
 }
+/* The definition a placed block renders from: its own copy once restyled,
+   otherwise the library's. */
+function itemBlockDef(it){
+  if(it.blockDef) return it.blockDef;
+  if(it.blockStyle){                                   // wrapper-only override
+    const b = BLOCK_BY_ID[it.id], def = b && CUSTOM_BLOCK_DEF[b.p];
+    if(def) return Object.assign({}, def, {blockStyle: it.blockStyle});
+  }
+  return null;
+}
 function docItemHtml(it, brand, cls, extra){
   let inner = '';
   const content = it.content || {};
@@ -5888,7 +5897,7 @@ function docItemHtml(it, brand, cls, extra){
     inner = `<span class="dp" data-pi="0">${renderPrimitive(it.id, brand, content[0] || {})}</span>`;
   } else {
     const b = BLOCK_BY_ID[it.id];
-    inner = b ? composeBlock(b, brand, content, it.blockStyle) : '';
+    inner = b ? composeBlock(b, brand, content, itemBlockDef(it)) : '';
   }
   const s = Object.assign({}, DOC_ITEM_STYLE_DEFAULT, it.style || {});
   const marUsed = s.marSides || s.marH || s.marV || s.marT || s.marR || s.marB || s.marL;
@@ -6481,50 +6490,130 @@ let DB = null;
 
   /* \u2500\u2500 Restyling a placed block \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
      A custom block renders from the library definition until it is restyled
-     here; the first edit takes a copy onto the item, so the block in the
-     library - and every other placement of it - is untouched. */
+     here. The first edit takes a copy of the whole definition onto the document
+     item, so the block in the library - and every other placement of it - keeps
+     what it had. Both the block wrapper and each element inside it can be
+     edited on that copy. */
   function blockDefOf(it){ return it.t === 'block' ? CUSTOM_BLOCK_DEF[(instObj(it).p)] : null; }
-  function ownBlockStyle(it){
-    if(!it.blockStyle){
+  function ownBlockDef(it){
+    if(!it.blockDef){
       const def = blockDefOf(it);
-      it.blockStyle = JSON.parse(JSON.stringify((def && def.blockStyle) || {}));
+      it.blockDef = JSON.parse(JSON.stringify(def || {doc:[], blockStyle:{}}));
+      // Fold in a wrapper-only override saved before elements were editable.
+      if(it.blockStyle){ it.blockDef.blockStyle = it.blockStyle; delete it.blockStyle; }
     }
-    return it.blockStyle;
+    return it.blockDef;
   }
+  /* The definition this placement renders from, override or library. */
+  function liveDefOf(it){ return itemBlockDef(it) || blockDefOf(it); }
+  /* Flat list of the elements inside a block, with their row/col address. */
+  function defElements(def){
+    const out = [];
+    (def && def.doc || []).forEach((row, r) => row.cols.forEach((col, c) => col.forEach((el, k) => out.push({el, r, c, k}))));
+    return out;
+  }
+  let bsPick = 'block';   // 'block' or an element index, per selection
+
   const BS_ALIGN = [['left','Left'],['center','Centre'],['right','Right']];
   function fillBlockStyle(it){
-    const host = $('bi-blockstyle'), def = blockDefOf(it);
-    if(!def){ host.innerHTML = ''; host.style.display = 'none'; return; }
+    const host = $('bi-blockstyle'), def = liveDefOf(it);
+    if(!def || !blockDefOf(it)){ host.innerHTML = ''; host.style.display = 'none'; return; }
     host.style.display = '';
-    const b = it.blockStyle || def.blockStyle || {};
-    const num = (k, v, max) => `<input type="number" class="ds-num" data-bs="${k}" value="${v||0}" min="0" max="${max||200}">`;
+    const els = defElements(def);
+    if(bsPick !== 'block' && !els[bsPick]) bsPick = 'block';
+    const edited = !!it.blockDef;
+    const chips = `<div class="bs-chips">
+        <button class="bs-chip ${bsPick==='block'?'on':''}" data-pick="block"><span class="ms">dashboard</span> Whole block</button>
+        ${els.map((x,i) => `<button class="bs-chip ${bsPick===i?'on':''}" data-pick="${i}"><span class="ms">${PRIM_ICON[x.el.id]||'widgets'}</span> ${esc(BE_NAME[x.el.id]||x.el.id)}</button>`).join('')}
+      </div>`;
     host.innerHTML = `
       <div class="ds-lbl" style="display:flex;align-items:center;gap:8px">Block style
-        ${it.blockStyle ? '<span class="bs-badge">edited</span>' : ''}
-        ${it.blockStyle ? '<button class="lbtn sm" style="margin-left:auto;padding:4px 10px" data-bs-reset>Reset</button>' : ''}</div>
+        ${edited ? '<span class="bs-badge">edited</span>' : ''}
+        ${edited ? '<button class="lbtn sm" style="margin-left:auto;padding:4px 10px" data-bs-reset>Reset</button>' : ''}</div>
       <div class="fhint" style="margin:-2px 0 8px">Changes here apply to this placement only.</div>
-      <div class="ds-row"><label>Padding</label><div class="ds-ctl">
-        ${num('padH', b.padH)}<span class="ds-u">H</span>${num('padV', b.padV)}<span class="ds-u">V</span></div></div>
-      <div class="ds-row"><label>Gap</label><div class="ds-ctl">${num('sp', b.sp)}<span class="ds-u">px</span></div></div>
+      ${chips}
+      <div id="bs-fields">${bsPick === 'block' ? blockFields(def.blockStyle||{}) : elementFields(els[bsPick].el)}</div>`;
+    host.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
+      bsPick = b.dataset.pick === 'block' ? 'block' : +b.dataset.pick;
+      fillBlockStyle(it);
+    }));
+    wireBlockStyleFields(it, els);
+    const rst = host.querySelector('[data-bs-reset]');
+    if(rst) rst.addEventListener('click', () => {
+      delete it.blockDef; delete it.blockStyle; bsPick = 'block';
+      markDirty(DB.doc); render(); fillBlockStyle(it);
+      showToast("Back to the block's own style");
+    });
+  }
+  const bsNum = (k, v, max) => `<input type="number" class="ds-num" data-bs="${k}" value="${v||0}" min="0" max="${max||200}">`;
+  function blockFields(b){
+    return `<div class="ds-row"><label>Padding</label><div class="ds-ctl">
+        ${bsNum('padH', b.padH)}<span class="ds-u">H</span>${bsNum('padV', b.padV)}<span class="ds-u">V</span></div></div>
+      <div class="ds-row"><label>Gap</label><div class="ds-ctl">${bsNum('sp', b.sp)}<span class="ds-u">px</span></div></div>
       <div class="ds-row"><label>Align</label><div class="ds-ctl">
         <select class="ds-sel" data-bs="alH">${BS_ALIGN.map(([v,n])=>`<option value="${v}"${(b.alH||'left')===v?' selected':''}>${n}</option>`).join('')}</select></div></div>
       <div class="ds-row"><label>Fill</label><div class="ds-ctl">
         <input type="color" data-bs="bg" value="${b.bg||'#ffffff'}">
         <label class="bi-tog" style="margin:0"><input type="checkbox" data-bs="bgOn"${b.bg?' checked':''}>on</label></div></div>
-      <div class="ds-row"><label>Radius</label><div class="ds-ctl">${num('rad', b.rad, 400)}<span class="ds-u">px</span></div></div>`;
+      <div class="ds-row"><label>Radius</label><div class="ds-ctl">${bsNum('rad', b.rad, 400)}<span class="ds-u">px</span></div></div>`;
+  }
+  function elementFields(el){
+    const st = el.st || {};
+    const isImg = el.id === 'image';
+    const src = el.src === 'client' ? 'custom' : (el.src || 'placeholder');
+    return `<div class="ds-row"><label>Padding</label><div class="ds-ctl">
+        ${bsNum('padH', st.padH)}<span class="ds-u">H</span>${bsNum('padV', st.padV)}<span class="ds-u">V</span></div></div>
+      <div class="ds-row"><label>Fill</label><div class="ds-ctl">
+        <input type="color" data-bs="bg" value="${st.bg||'#ffffff'}">
+        <label class="bi-tog" style="margin:0"><input type="checkbox" data-bs="bgOn"${st.bg?' checked':''}>on</label></div></div>
+      <div class="ds-row"><label>Radius</label><div class="ds-ctl">${bsNum('rad', st.rad, 400)}<span class="ds-u">px</span></div></div>
+      ${isImg ? `
+      <div class="ds-lbl" style="margin-top:10px">Image</div>
+      <div class="bg-modeseg" data-imgseg style="margin-bottom:8px">
+        <button data-src="placeholder" class="${src==='placeholder'?'on':''}">Placeholder</button>
+        <button data-src="custom" class="${src==='custom'?'on':''}">Custom Asset</button>
+      </div>
+      ${src === 'custom' ? `<div class="bg-img">
+        ${el.img?`<img src="${el.img}" alt="">`:''}
+        <label class="lbtn sm" style="width:100%;justify-content:center">
+          <span class="ms">add_photo_alternate</span> ${el.img?'Replace image':'Choose an image'}
+          <input type="file" data-bs-img accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+        ${el.img?`<button class="lbtn sm" data-bs-imgclear style="width:100%;justify-content:center;margin-top:6px"><span class="ms">delete</span> Remove</button>`:''}
+      </div>` : ''}` : `
+      <div class="ds-row"><label>Align</label><div class="ds-ctl">
+        <select class="ds-sel" data-bs="align"><option value="">Auto</option>
+          ${[['left','Left'],['center','Centre'],['right','Right']].map(([v,n])=>`<option value="${v}"${st.align===v?' selected':''}>${n}</option>`).join('')}</select></div></div>`}`;
+  }
+  function wireBlockStyleFields(it, els){
+    const host = $('bi-blockstyle');
+    const targetOf = () => bsPick === 'block'
+      ? (ownBlockDef(it).blockStyle = ownBlockDef(it).blockStyle || {})
+      : (defElements(ownBlockDef(it))[bsPick].el.st = defElements(ownBlockDef(it))[bsPick].el.st || {});
+    const touch = () => { markDirty(DB.doc); render(); fillBlockStyle(it); };
     host.querySelectorAll('[data-bs]').forEach(el => {
       const k = el.dataset.bs, ev = (el.type === 'checkbox' || el.tagName === 'SELECT' || el.type === 'color') ? 'change' : 'input';
       el.addEventListener(ev, () => {
-        const st = ownBlockStyle(it);
+        const st = targetOf();
         if(k === 'bgOn') st.bg = el.checked ? (st.bg || '#ffffff') : '';
         else if(el.type === 'number') st[k] = Math.max(0, Math.round(+el.value||0));
         else st[k] = el.value;
-        if(k === 'bg') st.bgVis = true;
-        markDirty(DB.doc); render(); fillBlockStyle(it);
+        if(k === 'bg'){ st.bgVis = true; st.bgOn = true; }
+        touch();
       });
     });
-    const rst = host.querySelector('[data-bs-reset]');
-    if(rst) rst.addEventListener('click', () => { delete it.blockStyle; markDirty(DB.doc); render(); fillBlockStyle(it); showToast('Back to the block\'s own style'); });
+    host.querySelectorAll('[data-imgseg] button').forEach(b => b.addEventListener('click', () => {
+      defElements(ownBlockDef(it))[bsPick].el.src = b.dataset.src; touch();
+    }));
+    const file = host.querySelector('[data-bs-img]');
+    if(file) file.addEventListener('change', ev => {
+      const f = ev.target.files && ev.target.files[0]; if(!f) return;
+      if(f.size > 1.5 * 1024 * 1024){ showToast('Pick an image under 1.5MB'); ev.target.value=''; return; }
+      const rd = new FileReader();
+      rd.onload = () => { const e2 = defElements(ownBlockDef(it))[bsPick].el; e2.img = rd.result; e2.src = 'custom'; touch(); showToast('Image added to this placement'); };
+      rd.readAsDataURL(f); ev.target.value = '';
+    });
+    const clr = host.querySelector('[data-bs-imgclear]');
+    if(clr) clr.addEventListener('click', () => { defElements(ownBlockDef(it))[bsPick].el.img = ''; touch(); });
   }
   function blockElements(b){
     const out = [];
