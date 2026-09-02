@@ -3384,8 +3384,11 @@ textarea.fin{resize:vertical;line-height:1.5}
 .cs-or{font-size:12.5px;color:#8B9694;text-align:center}
 @media(max-width:1180px){ .sm-grid{grid-template-columns:1fr} .sm-col.side{position:static} }
 
-/* Inline editing on the canvas + the inspector's rich-text fields */
-.dp{display:contents}
+/* Inline editing on the canvas + the inspector's rich-text fields.
+   .dp used to be display:contents so the wrapper never affected layout, but it
+   now carries per-element style and is the click target for picking an element
+   inside a placed block, so it needs a real box. */
+.dp{display:block}
 .inline-ed{outline:none;border-radius:3px;transition:box-shadow .12s,background .12s}
 .inline-ed:hover{box-shadow:0 0 0 1px #BFE3D8}
 .inline-ed:focus{box-shadow:0 0 0 2px var(--live-cta);background:rgba(56,152,138,.05)}
@@ -4723,6 +4726,9 @@ function renderStationery(p, b){
    been restyled passes its own copy, so the library block is left alone. */
 function composeBlock(block, brand, content, over){
   if(/^l[hf]-/.test(block.p)) return renderStationery(block.p, brand);
+  // A placement that has been restyled renders from its own copy, whether the
+  // block came from the library or is one of the built-ins.
+  if(over) return customBlockHtml(over, brand, content);
   // Blocks built in the Block Builder carry their own row/column layout and
   // per-element styles; the editor exposes the renderer so both agree.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[block.p]){
@@ -6512,7 +6518,17 @@ let DB = null;
      item, so the block in the library - and every other placement of it - keeps
      what it had. Both the block wrapper and each element inside it can be
      edited on that copy. */
-  function blockDefOf(it){ return it.t === 'block' ? CUSTOM_BLOCK_DEF[(instObj(it).p)] : null; }
+  /* Every block can be restyled where it sits, not just the ones built here:
+     a built-in gets a definition synthesised from its P2DOC layout. */
+  function blockDefOf(it){
+    if(it.t !== 'block') return null;
+    const p = instObj(it).p;
+    if(!p || /^l[hf]-/.test(p)) return null;                 // letterheads are page furniture
+    if(CUSTOM_BLOCK_DEF[p]) return CUSTOM_BLOCK_DEF[p];
+    const rows = P2DOC[p] || [{cols:[[p]]}];
+    return {doc: rows.map(row => ({cols: row.cols.map(col => col.map(id =>
+      (typeof id === 'string' ? {id, st:{}} : JSON.parse(JSON.stringify(id)))))})), blockStyle:{}, synthesised:true};
+  }
   function ownBlockDef(it){
     if(!it.blockDef){
       const def = blockDefOf(it);

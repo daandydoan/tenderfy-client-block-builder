@@ -174,6 +174,9 @@ function renderStationery(p, b){
    been restyled passes its own copy, so the library block is left alone. */
 function composeBlock(block, brand, content, over){
   if(/^l[hf]-/.test(block.p)) return renderStationery(block.p, brand);
+  // A placement that has been restyled renders from its own copy, whether the
+  // block came from the library or is one of the built-ins.
+  if(over) return customBlockHtml(over, brand, content);
   // Blocks built in the Block Builder carry their own row/column layout and
   // per-element styles; the editor exposes the renderer so both agree.
   if(typeof CUSTOM_BLOCK_DEF !== 'undefined' && CUSTOM_BLOCK_DEF[block.p]){

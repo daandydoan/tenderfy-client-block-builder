@@ -674,7 +674,17 @@ let DB = null;
      item, so the block in the library - and every other placement of it - keeps
      what it had. Both the block wrapper and each element inside it can be
      edited on that copy. */
-  function blockDefOf(it){ return it.t === 'block' ? CUSTOM_BLOCK_DEF[(instObj(it).p)] : null; }
+  /* Every block can be restyled where it sits, not just the ones built here:
+     a built-in gets a definition synthesised from its P2DOC layout. */
+  function blockDefOf(it){
+    if(it.t !== 'block') return null;
+    const p = instObj(it).p;
+    if(!p || /^l[hf]-/.test(p)) return null;                 // letterheads are page furniture
+    if(CUSTOM_BLOCK_DEF[p]) return CUSTOM_BLOCK_DEF[p];
+    const rows = P2DOC[p] || [{cols:[[p]]}];
+    return {doc: rows.map(row => ({cols: row.cols.map(col => col.map(id =>
+      (typeof id === 'string' ? {id, st:{}} : JSON.parse(JSON.stringify(id)))))})), blockStyle:{}, synthesised:true};
+  }
   function ownBlockDef(it){
     if(!it.blockDef){
       const def = blockDefOf(it);
