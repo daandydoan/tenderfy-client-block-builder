@@ -436,8 +436,17 @@ let DB = null;
   }
   function wire(){
     canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
-      el.addEventListener('click', e => { if(e.target.closest('[data-f]')) return; e.stopPropagation(); selK = +el.dataset.k; render(); renderInspector(); });
+      el.addEventListener('click', e => {
+        if(e.target.closest('[data-f]')) return;                 // editing text, not selecting
+        e.stopPropagation();
+        const k = +el.dataset.k;
+        const dp = e.target.closest('.dp[data-pi]');
+        // A second click inside the selected block picks the element under it.
+        bsPick = (dp && selK === k) ? +dp.dataset.pi : 'block';
+        selK = k; render(); renderInspector();
+      });
     });
+    markPickedElement();
     canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
     canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));
     canvas.querySelectorAll('.doc-blk').forEach(el => {
@@ -452,6 +461,14 @@ let DB = null;
         markDirty(DB.doc); render();
       });
     });
+  }
+  /* Outline whichever element the inspector is pointed at. */
+  function markPickedElement(){
+    canvas.querySelectorAll('.dp.el-sel').forEach(x => x.classList.remove('el-sel'));
+    if(bsPick === 'block' || selK == null) return;
+    const blk = canvas.querySelector(`.pv-blk[data-k="${selK}"]`);
+    const dp = blk && blk.querySelector(`.dp[data-pi="${bsPick}"]`);
+    if(dp) dp.classList.add('el-sel');
   }
   function addItem(tok){
     const it = instFromToken(tok); items().push(it);
@@ -619,6 +636,7 @@ let DB = null;
     if(show) fillInspector(it); else curItem = null;
   }
   function fillInspector(it){
+    if(curItem && curItem !== it) bsPick = 'block';   // a different block starts on the block
     curItem = it;
     $('bi-name').textContent = instLabel(it);
     $('bi-desc').textContent = instDesc(it);
@@ -697,7 +715,7 @@ let DB = null;
       <div id="bs-fields">${bsPick === 'block' ? blockFields(def.blockStyle||{}) : elementFields(els[bsPick].el)}</div>`;
     host.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
       bsPick = b.dataset.pick === 'block' ? 'block' : +b.dataset.pick;
-      fillBlockStyle(it);
+      fillBlockStyle(it); markPickedElement();
     }));
     wireBlockStyleFields(it, els);
     const rst = host.querySelector('[data-bs-reset]');
