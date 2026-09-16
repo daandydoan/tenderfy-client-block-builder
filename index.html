@@ -3683,6 +3683,16 @@ textarea.fin{resize:vertical;line-height:1.5}
             <div id="bi-content"></div>
             <div id="bi-blockstyle" style="display:none"></div>
 
+            <div class="ds-lbl">Styling</div>
+            <div class="fhint" id="bi-sourceHint"></div>
+            <button class="lbtn sm" id="bi-editBlock" style="width:100%;justify-content:center;margin-top:8px"><span class="ms" style="font-size:16px">edit</span> Edit the block</button>
+            <div class="ds-lbl">Arrange</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="lbtn sm" id="bi-up" title="Move up"><span class="ms" style="font-size:15px">expand_less</span> Up</button>
+              <button class="lbtn sm" id="bi-down" title="Move down"><span class="ms" style="font-size:15px">expand_more</span> Down</button>
+              <button class="lbtn sm" id="bi-dup" title="Duplicate"><span class="ms" style="font-size:15px">content_copy</span> Duplicate</button>
+              <button class="lbtn sm danger" id="bi-rm" title="Remove from this document"><span class="ms" style="font-size:15px">delete</span> Remove</button>
+            </div>
             <div class="ds-lbl">Layout</div>
             <div class="fig-resize">
               <span class="fig-wt" title="Width"><span class="ms">swap_horiz</span><input type="number" id="bs-wpx" min="0"></span>
@@ -6567,6 +6577,9 @@ let DB = null;
     if(curItem && curItem !== it) bsPick = 'block';   // a different block starts on the block
     curItem = it;
     $('bi-name').textContent = instLabel(it);
+    // Pulled from the admin (16-17 Sep 2026): where styling comes from, a way to the source block, and Arrange.
+    $('bi-editBlock').style.display = it.t === 'element' ? 'none' : '';
+    $('bi-sourceHint').textContent = it.t === 'element' ? 'Type and colour come from your brand - the renderer applies them. Add this element inside a block to style it.' : 'Layout and appearance below apply to this document only. Type and colour come from your brand. Edit the block to change every document that uses it.';
     $('bi-desc').textContent = instDesc(it);
     const s = it.style;
     fillBox(it,'pad'); fillBox(it,'mar'); fillRad(it);
@@ -6861,6 +6874,14 @@ let DB = null;
   }
   wirePaint('bg'); wirePaint('bc');
   $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); showLeftTab('blocks'); });
+  // Arrange the selected block within this document (same ops as the canvas tools / drag)
+  const selIdx = () => items().findIndex(x => x.k === selK);
+  $('bi-up').addEventListener('click', () => { const i = selIdx(); if(i > 0){ const [m] = items().splice(i,1); items().splice(i-1,0,m); markDirty(DB.doc); render(); } });
+  $('bi-down').addEventListener('click', () => { const i = selIdx(); if(i >= 0 && i < items().length-1){ const [m] = items().splice(i,1); items().splice(i+1,0,m); markDirty(DB.doc); render(); } });
+  $('bi-dup').addEventListener('click', () => { const i = selIdx(); if(i < 0) return; const c = JSON.parse(JSON.stringify(items()[i])); c.k = ++uid; items().splice(i+1,0,c); selK = c.k; markDirty(DB.doc); render(); renderInspector(); showToast('Duplicated: ' + instLabel(c)); });
+  $('bi-rm').addEventListener('click', () => { const i = selIdx(); if(i < 0) return; items().splice(i,1); selK = null; markDirty(DB.doc); render(); renderInspector(); showLeftTab('blocks'); });
+  // Edit the source block: leave through the unsaved-changes guard, then open it in the Block Builder
+  $('bi-editBlock').addEventListener('click', () => { const it = curItem; if(!it || it.t === 'element') return; exitEditor(DB.doc, null, () => { dbClose(); beOpenExisting(it.id); }, window.dbSave); });
   canvas.addEventListener('click', e => { if(!e.target.closest('.doc-blk') && !e.target.closest('.pv-blk[data-k]')){ selK = null; renderInspector(); render(); } });
 
   // ---- Responsive panels ----
