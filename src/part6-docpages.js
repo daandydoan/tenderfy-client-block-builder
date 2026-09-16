@@ -245,6 +245,7 @@ window.bbKebab = (ev, id) => {
     {label:'Edit block', run:() => beOpenExisting(id)},
     {label:'Duplicate',  run:() => duplicateBlock(id)},
   ];
+  if(b.custom) items.push({label:b.locked ? 'Unlock' : 'Lock (head office)', run:() => { toggleLock(b, b.name); persistCustomBlocks(); renderRoute(); }});
   if(b.custom) items.push({label:'Delete block', run:() => {
     BLOCKS.splice(BLOCKS.indexOf(b), 1); delete BLOCK_BY_ID[id]; delete CUSTOM_BLOCK_DEF[id]; delete P2DOC[id];
     persistCustomBlocks();

@@ -50,7 +50,8 @@ function pgCaseStudyView(){
     del:`viewDelete('case-study','${c.id}')`,
   }) + `<div class="vbody vsplit">
     <div class="vcard"><div class="vstage" id="vStage"></div></div>
-    ${viewPanel ? `<aside class="vpanel"><h3>Case Study Details</h3>${fld('Name', c.title)}</aside>` : ''}
+    ${viewPanel ? `<aside class="vpanel"><h3>Case Study Details</h3>${fld('Name', c.title)}${fld('Head office', d.locked ? 'Locked by ' + d.locked.by + ' - ' + d.locked.date : 'Open')}
+      <h3 style="margin-top:18px">History</h3>${(d.audit||[]).slice().reverse().map(a => fld(a.what, a.by + ' - ' + a.date)).join('') || '<div class="fhint">Every save is logged here with who did it.</div>'}</aside>` : ''}
   </div>`;
 }
 

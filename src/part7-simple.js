@@ -120,6 +120,13 @@ window.exitSave = () => {
 };
 // Any edit marks the document dirty.
 function markDirty(doc){ if(doc) doc.dirty = true; }
+/* Who changed what. The signed-in owner is the header's persona; the estimator
+   logs from the Fill view. Head-office lock is modelled on the same record. */
+const OWNER = 'tenderfy dev';
+function auditLog(rec, what, by){ (rec.audit = rec.audit || []).push({date:new Date().toISOString().slice(0,16).replace('T',' '), by:by || OWNER, what}); }
+window.auditLog = auditLog;
+function toggleLock(rec, name){ if(rec.locked){ delete rec.locked; auditLog(rec, 'Unlocked'); showToast('Unlocked ' + name); } else { rec.locked = {by:'Head office', date:new Date().toISOString().slice(0,10)}; auditLog(rec, 'Locked by head office'); showToast('Locked ' + name + ' - head office only'); } }
+window.toggleLock = toggleLock;
 function advSubFor(d){
   return d.kind === 'resume'
     ? 'Advanced - the same resume as blocks. Structure and style each one; switching back to Simple rebuilds from the form.'

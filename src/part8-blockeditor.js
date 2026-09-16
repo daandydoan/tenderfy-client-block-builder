@@ -659,9 +659,10 @@ function beNewBlock(){
     const entry = {id, name:b.name, label:b.name, cat:b.cat, desc:b.desc || '', p:id, kind:'block', custom:true};
     if(b.slot) entry.slot = b.slot;
     const at = BLOCKS.findIndex(x => x.id === id);
-    if(at >= 0) BLOCKS[at] = entry; else BLOCKS.push(entry);
+    if(at >= 0){ entry.audit = BLOCKS[at].audit; entry.locked = BLOCKS[at].locked; BLOCKS[at] = entry; } else BLOCKS.push(entry);
     BLOCK_BY_ID[id] = entry;
     saveVersion('Saved ' + b.name);
+    auditLog(entry, (at >= 0 ? 'Saved' : 'Created') + ' block');
     persistCustomBlocks();
     b.dirty = false;
     beClose();
@@ -893,7 +894,7 @@ const CBX_KEY = 'tf_custom_blocks';
 function persistCustomBlocks(){
   try{
     const out = BLOCKS.filter(b => b.custom).map(b => ({
-      meta: {id:b.id, name:b.name, label:b.label, cat:b.cat, desc:b.desc||'', p:b.p, kind:'block', custom:true, slot:b.slot||null},
+      meta: {id:b.id, name:b.name, label:b.label, cat:b.cat, desc:b.desc||'', p:b.p, kind:'block', custom:true, slot:b.slot||null, locked:b.locked||null, audit:b.audit||null},
       def: CUSTOM_BLOCK_DEF[b.id], p2: P2DOC[b.id],
     }));
     localStorage.setItem(CBX_KEY, JSON.stringify(out));

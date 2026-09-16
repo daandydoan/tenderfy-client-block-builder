@@ -231,14 +231,15 @@ function edHeadHtml(cfg){
     <button class="lbtn gold ed-back" onclick="${cfg.exit}"><span class="ms">keyboard_arrow_left</span> Back</button>
     <div class="ed-titlewrap">
       <div class="ed-title"><input value="${esc(d.name)}" oninput="${cfg.rename}"></div>
-      <div class="ed-sub">${cfg.sub || ''}</div>
+      <div class="ed-sub">${d.locked ? `<span style="color:#B45309"><span class="ms" style="font-size:14px;vertical-align:-2px">lock</span> Locked by ${esc(d.locked.by)} on ${esc(d.locked.date)} - read only.</span> ` : ''}${cfg.sub || ''}</div>
     </div>
     <div class="sp">
       ${cfg.extras || ''}
       <button class="lbtn icon-sm" ${cfg.dup ? `onclick="${cfg.dup}"` : `data-toast="Duplicated as a new ${esc((KIND_LABEL[d.kind]||'document').toLowerCase())}"`} title="Duplicate"><span class="ms">content_copy</span></button>
       ${smToggle(cfg.mode)}
       <button class="lbtn" onclick="${cfg.exit}">Cancel</button>
-      <button class="lbtn pri" onclick="${cfg.save}"><span class="ms">save</span> ${esc(cfg.saveLabel || label)}</button>
+      ${d.locked ? `<button class="lbtn" disabled title="Locked by ${esc(d.locked.by)} on ${esc(d.locked.date)} - unlock it from the listing to edit"><span class="ms">lock</span> Locked by head office</button>`
+                 : `<button class="lbtn pri" onclick="${cfg.save}"><span class="ms">save</span> ${esc(cfg.saveLabel || label)}</button>`}
     </div>`;
 }
 

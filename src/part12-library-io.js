@@ -43,6 +43,7 @@ function upsertDoc(kind, doc){
   }
   rec.doc = doc;
   rec.updated = TODAY();
+  auditLog(doc, (isNew ? 'Created' : 'Saved') + ' - ' + (doc.items||[]).length + ' blocks');
   doc.isNew = false;
   persistLibrary();
   return rec;
