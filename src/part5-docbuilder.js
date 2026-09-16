@@ -245,10 +245,10 @@ function edHeadHtml(cfg){
 
 function dbWireInline(root){
   root.querySelectorAll('[data-f]').forEach(el => {
-    const holder = el.closest('.db-item, .db-pv');
+    const holder = el.closest('.db-item, .db-pv, .doc-blk, .pv-blk[data-k]');
     const wrap = el.closest('.dp');
     if(!holder || !wrap) return;
-    const it = DB.doc.items[+holder.dataset.i];
+    const it = holder.dataset.k != null && holder.dataset.i == null ? DB.doc.items.find(x => x.k === +holder.dataset.k) : DB.doc.items[+holder.dataset.i];
     if(!it) return;
     const pi = +wrap.dataset.pi, f = el.dataset.f;
     el.setAttribute('contenteditable', 'true');
@@ -271,7 +271,7 @@ function dbWireInline(root){
       } else {
         c[f] = el.innerHTML;
       }
-      dbInspector();          // keep the sidebar in step
+      if(window.dbSyncInspector) window.dbSyncInspector();   // keep the sidebar in step
     });
   });
 }
@@ -416,25 +416,26 @@ let DB = null;
     } else {
       const {count, pageOf} = measurePages(); pageCount = count;
       const card = (it,i) => `
-        <div class="doc-blk doc-compact ${it.k===selK?'sel':''}" draggable="true" data-i="${i}" data-k="${it.k}" title="${esc(instDesc(it))}">
-          <span class="ms cmp-grip" data-grip>drag_indicator</span>
-          <span class="cmp-ic"><span class="ms">${instIcon(it)}</span></span>
-          <span class="cmp-name">${esc(instLabel(it))}</span>
-          <span class="cmp-tag ${it.t==='element'?'el':''}">${it.t==='element'?'Element':'Block'}</span>
-          <span class="ms cmp-rm" data-rm="${i}" title="Remove">close</span>
+        <div class="doc-blk ${it.k===selK?'sel':''}" draggable="true" data-i="${i}" data-k="${it.k}" title="${esc(instDesc(it))}">
+          <span class="vb-name"><span class="ms">${instIcon(it)}</span>${esc(instLabel(it))}</span>
+          <span class="doc-tools"><span class="tb grab" data-grip title="Drag to move"><span class="ms">drag_indicator</span></span><span class="tb del" data-rm="${i}" title="Remove"><span class="ms">delete</span></span></span>
+          ${renderBlockInstance(it)}
         </div>`;
+      const ins = i => `<div class="vb-ins doc-ins ${insertAt===i?'open':''}" data-at="${i}" title="Insert a block here"><span class="ms">add</span></div>`;
       const rows = items().map((it,i) => {
         const brk = (i>0 && pageOf[i] !== pageOf[i-1]) ? `<div class="pg-brk"><span><span class="ms" style="font-size:14px;vertical-align:-2px">insert_page_break</span> Page ${pageOf[i]+1}</span></div>` : '';
-        return brk + card(it,i);
-      }).join('');
+        return brk + ins(i) + card(it,i);
+      }).join('') + ins(items().length);
       canvas.innerHTML = `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg,0)}</div><div class="doc-body">${furnSlot('header')}${rows}${furnSlot('footer',true)}</div></div>`;
     }
     const lc = $('lyr-count'); if(lc) lc.textContent = items().length;
     $('doc-count').textContent = items().length ? `- ${items().length} block${items().length>1?'s':''} - ${pageCount} A4 page${pageCount>1?'s':''}` : '';
     applyDocStyle();
     wire();
-    if(mode === 'preview') dbWireInline(canvas);      // content is editable straight on the page
+    dbWireInline(canvas);                              // words are editable straight on the page in both modes
   }
+  // An insert line marks where the next block from the palette lands.
+  let insertAt = null;
   function wire(){
     canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
       el.addEventListener('click', e => {
@@ -444,14 +445,15 @@ let DB = null;
         const dp = e.target.closest('.dp[data-pi]');
         // A second click inside the selected block picks the element under it.
         bsPick = (dp && selK === k) ? +dp.dataset.pi : 'block';
-        selK = k; render(); renderInspector();
+        selK = k; render(); renderInspector(); showLeftTab('style');
       });
     });
+    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); insertAt = (insertAt === +l.dataset.at) ? null : +l.dataset.at; render(); if(insertAt != null){ showLeftTab('blocks'); showToast('Pick a block - it goes in at the marked line'); } }));
     markPickedElement();
     canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
     canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));
     canvas.querySelectorAll('.doc-blk').forEach(el => {
-      el.addEventListener('click', e => { if(e.target.closest('.doc-tools')) return; selK = +el.dataset.k; render(); renderInspector(); });
+      el.addEventListener('click', e => { if(e.target.closest('.doc-tools') || e.target.closest('.pv-blk[data-k]')) return; selK = +el.dataset.k; render(); renderInspector(); showLeftTab('style'); });
       el.addEventListener('dragstart', e => { e.dataTransfer.setData('move', el.dataset.i); el.classList.add('dragging'); });
       el.addEventListener('dragend', () => el.classList.remove('dragging'));
       el.addEventListener('dragover', e => e.preventDefault());
@@ -472,7 +474,8 @@ let DB = null;
     if(dp) dp.classList.add('el-sel');
   }
   function addItem(tok){
-    const it = instFromToken(tok); items().push(it);
+    const it = instFromToken(tok);
+    if(insertAt != null){ items().splice(insertAt, 0, it); insertAt = null; } else items().push(it);
     selK = (mode === 'layout') ? it.k : null;
     markDirty(DB.doc); render(); renderInspector();
     showToast((it.t==='element' ? 'Added element: ' : 'Added block: ') + instLabel(it));
@@ -506,8 +509,7 @@ let DB = null;
   // ---- Left-panel tabs (Blocks / Layers) ----
   function showLeftTab(which){
     document.querySelectorAll('#db .lt-tab').forEach(x => x.classList.toggle('on', x.dataset.lt === which));
-    $('paneBlocks').style.display = which === 'blocks' ? '' : 'none';
-    $('paneLayers').style.display = which === 'layers' ? '' : 'none';
+    ({blocks:'paneBlocks', style:'paneStyle', ai:'paneAi', layers:'paneLayers'}) && Object.entries({blocks:'paneBlocks', style:'paneStyle', ai:'paneAi', layers:'paneLayers'}).forEach(([k,id]) => { $(id).style.display = k === which ? '' : 'none'; });
   }
   document.querySelectorAll('#db .lt-tab').forEach(t => t.addEventListener('click', () => showLeftTab(t.dataset.lt)));
   document.querySelectorAll('#db .acc-h').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('closed')));
@@ -630,10 +632,12 @@ let DB = null;
   document.querySelectorAll('#modeSeg button').forEach(x => x.addEventListener('click', () => setMode(x.dataset.mode)));
 
   // ---- Block inspector (per-block content + style) ----
+  window.dbSyncInspector = () => renderInspector();
   function renderInspector(){
     const it = items().find(x => x.k === selK), show = !!it;
     $('blockInspector').style.display = show ? '' : 'none';
     $('docSettings').style.display = show ? 'none' : '';
+    $('styleTarget').innerHTML = show ? `<span class="ms" style="color:var(--teal);font-size:16px;vertical-align:-3px">check_circle</span> Editing: ${esc(instLabel(it))}` : 'Style - whole document';
     if(show) fillInspector(it); else curItem = null;
   }
   function fillInspector(it){
@@ -933,12 +937,11 @@ let DB = null;
     }
   }
   wirePaint('bg'); wirePaint('bc');
-  $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); });
+  $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); showLeftTab('blocks'); });
   canvas.addEventListener('click', e => { if(!e.target.closest('.doc-blk') && !e.target.closest('.pv-blk[data-k]')){ selK = null; renderInspector(); render(); } });
 
   // ---- Responsive panels ----
   const ed3 = document.querySelector('#db .ed3');
-  $('dStyleBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('st-on')); });
   $('dElBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('el-on')); });
 
   // ---- Open / save ----

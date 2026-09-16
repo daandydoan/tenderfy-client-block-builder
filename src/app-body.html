@@ -529,7 +529,23 @@ textarea.fin{resize:vertical;line-height:1.5}
 .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 300px}
 .ed3:not(.st-on){grid-template-columns:272px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.db .ed3:not(.el-on) #dleftCol,.db .ed3:not(.st-on) #drightCol{display:none}
+.db .ed3{grid-template-columns:380px minmax(0,1fr)} .db .ed3:not(.el-on){grid-template-columns:minmax(0,1fr)} .db .ed3:not(.el-on) #dleftCol{display:none}
+.ws-tabs{display:flex;background:#eef2f1;border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;margin-bottom:12px;flex-shrink:0}
+.ws-tabs button{flex:1;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--gray);padding:7px 10px;border-radius:7px;cursor:pointer}
+.ws-tabs button.on{background:#fff;color:var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.09)}
+/* Build mode: the real rendered block in a frame with its name chip, tools and insert lines (admin document-edit) */
+.db .doc-blk{cursor:pointer;padding:16px 12px 8px;border-radius:10px;border:1.5px solid transparent;margin-bottom:0}
+.db .doc-blk:hover{border-color:var(--teal)}
+.db .doc-blk .vb-name{position:absolute;top:-11px;left:8px;right:auto;max-width:60%;background:var(--teal);color:#fff;font-size:10px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px;opacity:0;transition:.1s;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db .doc-blk .vb-name .ms{font-size:12px}
+.db .doc-blk:hover .vb-name,.db .doc-blk.sel .vb-name{opacity:1}
+.db .doc-blk .pv-blk{margin-bottom:0!important} .db .doc-blk .pv-blk[data-k]:hover{outline:none}
+.db .doc-blk.sel{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-tint);outline:none}
+.db .doc-tools{position:absolute;top:-12px;right:10px;display:flex;gap:3px;opacity:0;transition:.1s;z-index:2}
+.db .doc-tools .tb{width:24px;height:24px;border-radius:6px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.3)}
+.db .doc-tools .tb.grab{cursor:grab} .db .doc-tools .tb.del{background:#d5493f} .db .doc-tools .tb .ms{font-size:15px}
+.db .doc-ins{height:12px;margin:-4px 0} .db .doc-ins::before{top:5px} .db .doc-ins .ms{top:-5px}
+.db .doc-ins.open::before,.db .doc-ins.open .ms{opacity:1}
 .ed3-col{height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
 /* The two panel toggles. block-edit.html styles .tb-btn as a 30px icon-only
    square and document-edit.html as a labelled pill; both got imported, and the
@@ -1052,82 +1068,16 @@ textarea.fin{resize:vertical;line-height:1.5}
 <div class="ed3 st-on el-on">
       <!-- LEFT: Blocks palette + Layers -->
       <div class="ed3-col" id="dleftCol">
-        <div class="lt-tabs">
-          <button class="lt-tab on" data-lt="blocks">Blocks</button>
-          <button class="lt-tab" data-lt="layers">Layers</button>
-        </div>
+        <div class="ws-tabs"><button class="lt-tab on" data-lt="blocks">Blocks</button><button class="lt-tab" data-lt="style">Style</button><button class="lt-tab" data-lt="ai">AI Draft</button><button class="lt-tab" data-lt="layers">Layers</button></div>
         <div id="paneBlocks">
           <div class="card">
             <h3 class="ed-h" style="display:flex;align-items:center;gap:8px">Blocks <span class="muted" style="font-weight:400;font-size:12px" id="pal-count"></span><a onclick="dbExit();go('/file-manager/block-library')" style="cursor:pointer" title="Create a new block" style="margin-left:auto;font-size:12px;color:var(--teal);text-decoration:none;font-weight:600"><span class="ms" style="font-size:14px;vertical-align:-2px">add</span> New block</a></h3>
-            <div id="rayBlockSuggestions"></div>
             <div class="d-search"><span class="ms">search</span><input id="pq" placeholder="Search blocks…"></div>
             <div class="vb-pal" id="dpalette"></div>
           </div>
         </div>
-        <div id="paneLayers" style="display:none">
-          <div class="side-title">Layers</div>
-          <!-- Background layer -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
-              <div class="bg-modeseg" id="bgModeSeg">
-                <button data-bgm="regions" class="on">Regions</button>
-                <button data-bgm="code">Custom CSS</button>
-              </div>
-              <div id="bgRegionsPane">
-                <div id="bgRegions"></div>
-                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
-              </div>
-              <div id="bgCodePane" style="display:none">
-                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
-                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
-              </div>
-              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties ▸ Style).</div>
-            </div>
-          </div>
-
-          <!-- Main layer (the document body) -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
-              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
-            </div>
-          </div>
-
-          <!-- Top layer (letterhead + footer) -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer — repeats on every page</div>
-              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
-              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
-              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MIDDLE: document canvas -->
-      <div class="ed3-mid">
-        <div class="vb-toolbar">
-          <button class="tb-btn" id="dElBtn" title="Toggle Blocks panel"><span class="ms">grid_view</span> Blocks</button>
-          <button class="tb-btn on" id="dStyleBtn" title="Toggle Properties panel" style="margin-left:auto"><span class="ms">tune</span> Properties</button>
-        </div>
-        <div class="vb-canvas" id="dcvWrap">
-          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
-            <div class="mode-seg" id="modeSeg">
-              <button data-mode="layout" class="on"><span class="ms">dashboard</span> Layout</button>
-              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
-            </div>
-          </div>
-          <div class="vb-stage" id="canvas"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT: document properties -->
-      <div class="ed3-col" id="drightCol">
+        <div id="paneStyle" style="display:none">
+          <div class="side-title" id="styleTarget">Style</div>
         <!-- Block inspector: shown when a block is selected in Layout mode -->
         <div id="blockInspector" style="display:none">
           <div class="card">
@@ -1205,6 +1155,72 @@ textarea.fin{resize:vertical;line-height:1.5}
             <div class="fhint" style="margin-top:6px">Document-level styling. The assigned client's brand is layered on top.</div>
           </div>
         </div>
+        </div>
+        </div>
+        <div id="paneAi" style="display:none">
+          <div class="card"><h3 class="ed-h"><span class="ms" style="color:var(--teal);font-size:18px;vertical-align:-3px">auto_awesome</span> Draft with Ray</h3>
+            <div class="fhint" style="margin:0 0 10px">Ray suggests blocks for this document from its name and what it already holds.</div>
+            <div id="rayBlockSuggestions"></div>
+          </div>
+        </div>
+        <div id="paneLayers" style="display:none">
+          <div class="side-title">Layers</div>
+          <!-- Background layer -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
+              <div class="bg-modeseg" id="bgModeSeg">
+                <button data-bgm="regions" class="on">Regions</button>
+                <button data-bgm="code">Custom CSS</button>
+              </div>
+              <div id="bgRegionsPane">
+                <div id="bgRegions"></div>
+                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
+              </div>
+              <div id="bgCodePane" style="display:none">
+                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
+                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
+              </div>
+              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties ▸ Style).</div>
+            </div>
+          </div>
+
+          <!-- Main layer (the document body) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
+              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
+            </div>
+          </div>
+
+          <!-- Top layer (letterhead + footer) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer — repeats on every page</div>
+              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
+              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
+              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: document canvas -->
+      <div class="ed3-mid">
+        <div class="vb-toolbar">
+          <button class="tb-btn on" id="dElBtn" title="Show / hide the side panel"><span class="ms">layers</span> Panel</button>
+        </div>
+        <div class="vb-canvas" id="dcvWrap">
+          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
+            <div class="mode-seg" id="modeSeg">
+              <button data-mode="layout" class="on"><span class="ms">grid_view</span> Build</button>
+              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
+            </div>
+          </div>
+          <div class="vb-stage" id="canvas"></div>
         </div>
       </div>
     </div>

@@ -3106,7 +3106,23 @@ textarea.fin{resize:vertical;line-height:1.5}
 .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 300px}
 .ed3:not(.st-on){grid-template-columns:272px minmax(0,1fr)}
 .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.db .ed3:not(.el-on) #dleftCol,.db .ed3:not(.st-on) #drightCol{display:none}
+.db .ed3{grid-template-columns:380px minmax(0,1fr)} .db .ed3:not(.el-on){grid-template-columns:minmax(0,1fr)} .db .ed3:not(.el-on) #dleftCol{display:none}
+.ws-tabs{display:flex;background:#eef2f1;border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;margin-bottom:12px;flex-shrink:0}
+.ws-tabs button{flex:1;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--gray);padding:7px 10px;border-radius:7px;cursor:pointer}
+.ws-tabs button.on{background:#fff;color:var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.09)}
+/* Build mode: the real rendered block in a frame with its name chip, tools and insert lines (admin document-edit) */
+.db .doc-blk{cursor:pointer;padding:16px 12px 8px;border-radius:10px;border:1.5px solid transparent;margin-bottom:0}
+.db .doc-blk:hover{border-color:var(--teal)}
+.db .doc-blk .vb-name{position:absolute;top:-11px;left:8px;right:auto;max-width:60%;background:var(--teal);color:#fff;font-size:10px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:4px;opacity:0;transition:.1s;z-index:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db .doc-blk .vb-name .ms{font-size:12px}
+.db .doc-blk:hover .vb-name,.db .doc-blk.sel .vb-name{opacity:1}
+.db .doc-blk .pv-blk{margin-bottom:0!important} .db .doc-blk .pv-blk[data-k]:hover{outline:none}
+.db .doc-blk.sel{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-tint);outline:none}
+.db .doc-tools{position:absolute;top:-12px;right:10px;display:flex;gap:3px;opacity:0;transition:.1s;z-index:2}
+.db .doc-tools .tb{width:24px;height:24px;border-radius:6px;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.3)}
+.db .doc-tools .tb.grab{cursor:grab} .db .doc-tools .tb.del{background:#d5493f} .db .doc-tools .tb .ms{font-size:15px}
+.db .doc-ins{height:12px;margin:-4px 0} .db .doc-ins::before{top:5px} .db .doc-ins .ms{top:-5px}
+.db .doc-ins.open::before,.db .doc-ins.open .ms{opacity:1}
 .ed3-col{height:100%;overflow-y:auto;overflow-x:hidden;min-width:0}
 /* The two panel toggles. block-edit.html styles .tb-btn as a 30px icon-only
    square and document-edit.html as a labelled pill; both got imported, and the
@@ -3629,82 +3645,16 @@ textarea.fin{resize:vertical;line-height:1.5}
 <div class="ed3 st-on el-on">
       <!-- LEFT: Blocks palette + Layers -->
       <div class="ed3-col" id="dleftCol">
-        <div class="lt-tabs">
-          <button class="lt-tab on" data-lt="blocks">Blocks</button>
-          <button class="lt-tab" data-lt="layers">Layers</button>
-        </div>
+        <div class="ws-tabs"><button class="lt-tab on" data-lt="blocks">Blocks</button><button class="lt-tab" data-lt="style">Style</button><button class="lt-tab" data-lt="ai">AI Draft</button><button class="lt-tab" data-lt="layers">Layers</button></div>
         <div id="paneBlocks">
           <div class="card">
             <h3 class="ed-h" style="display:flex;align-items:center;gap:8px">Blocks <span class="muted" style="font-weight:400;font-size:12px" id="pal-count"></span><a onclick="dbExit();go('/file-manager/block-library')" style="cursor:pointer" title="Create a new block" style="margin-left:auto;font-size:12px;color:var(--teal);text-decoration:none;font-weight:600"><span class="ms" style="font-size:14px;vertical-align:-2px">add</span> New block</a></h3>
-            <div id="rayBlockSuggestions"></div>
             <div class="d-search"><span class="ms">search</span><input id="pq" placeholder="Search blocks&#x2026;"></div>
             <div class="vb-pal" id="dpalette"></div>
           </div>
         </div>
-        <div id="paneLayers" style="display:none">
-          <div class="side-title">Layers</div>
-          <!-- Background layer -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
-              <div class="bg-modeseg" id="bgModeSeg">
-                <button data-bgm="regions" class="on">Regions</button>
-                <button data-bgm="code">Custom CSS</button>
-              </div>
-              <div id="bgRegionsPane">
-                <div id="bgRegions"></div>
-                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
-              </div>
-              <div id="bgCodePane" style="display:none">
-                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
-                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
-              </div>
-              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties &#x25B8; Style).</div>
-            </div>
-          </div>
-
-          <!-- Main layer (the document body) -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
-              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
-            </div>
-          </div>
-
-          <!-- Top layer (letterhead + footer) -->
-          <div class="acc" data-acc>
-            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
-            <div class="acc-body">
-              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer &#x2014; repeats on every page</div>
-              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
-              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
-              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MIDDLE: document canvas -->
-      <div class="ed3-mid">
-        <div class="vb-toolbar">
-          <button class="tb-btn" id="dElBtn" title="Toggle Blocks panel"><span class="ms">grid_view</span> Blocks</button>
-          <button class="tb-btn on" id="dStyleBtn" title="Toggle Properties panel" style="margin-left:auto"><span class="ms">tune</span> Properties</button>
-        </div>
-        <div class="vb-canvas" id="dcvWrap">
-          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
-            <div class="mode-seg" id="modeSeg">
-              <button data-mode="layout" class="on"><span class="ms">dashboard</span> Layout</button>
-              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
-            </div>
-          </div>
-          <div class="vb-stage" id="canvas"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT: document properties -->
-      <div class="ed3-col" id="drightCol">
+        <div id="paneStyle" style="display:none">
+          <div class="side-title" id="styleTarget">Style</div>
         <!-- Block inspector: shown when a block is selected in Layout mode -->
         <div id="blockInspector" style="display:none">
           <div class="card">
@@ -3782,6 +3732,72 @@ textarea.fin{resize:vertical;line-height:1.5}
             <div class="fhint" style="margin-top:6px">Document-level styling. The assigned client's brand is layered on top.</div>
           </div>
         </div>
+        </div>
+        </div>
+        <div id="paneAi" style="display:none">
+          <div class="card"><h3 class="ed-h"><span class="ms" style="color:var(--teal);font-size:18px;vertical-align:-3px">auto_awesome</span> Draft with Ray</h3>
+            <div class="fhint" style="margin:0 0 10px">Ray suggests blocks for this document from its name and what it already holds.</div>
+            <div id="rayBlockSuggestions"></div>
+          </div>
+        </div>
+        <div id="paneLayers" style="display:none">
+          <div class="side-title">Layers</div>
+          <!-- Background layer -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">wallpaper</span></span> Background</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Fills behind content, per page</div>
+              <div class="bg-modeseg" id="bgModeSeg">
+                <button data-bgm="regions" class="on">Regions</button>
+                <button data-bgm="code">Custom CSS</button>
+              </div>
+              <div id="bgRegionsPane">
+                <div id="bgRegions"></div>
+                <button class="bg-add" id="bgAdd"><span class="ms">add</span> Add fill region</button>
+              </div>
+              <div id="bgCodePane" style="display:none">
+                <textarea id="bgCss" class="bg-css" spellcheck="false" placeholder="/* Drawn behind content */&#10;background: linear-gradient(135deg,#123B66,#38988A);"></textarea>
+                <div class="fhint" style="margin-top:6px">CSS / SVG only, no scripts. Applied behind content on every page.</div>
+              </div>
+              <div class="fhint" style="margin-top:8px">Overlays the base page fill (Properties &#x25B8; Style).</div>
+            </div>
+          </div>
+
+          <!-- Main layer (the document body) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">layers</span></span> Main</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="hstack" style="gap:10px;align-items:baseline"><span class="lyr-count-big" id="lyr-count">0</span><span class="muted">blocks on the page</span></div>
+              <div class="fhint" style="margin-top:9px">Add, reorder and style these on the canvas. Select any block to edit its content and style.</div>
+            </div>
+          </div>
+
+          <!-- Top layer (letterhead + footer) -->
+          <div class="acc" data-acc>
+            <button class="acc-h"><span class="acc-title"><span class="lyr-ic"><span class="ms">flip_to_front</span></span> Top</span><span class="ms acc-caret">expand_more</span></button>
+            <div class="acc-body">
+              <div class="lyr-s" style="margin:-2px 0 10px">Letterhead &amp; footer &#x2014; repeats on every page</div>
+              <div class="lyr-fld"><label>Letterhead</label><select class="lyr-sel" id="lh-sel"></select><div class="lyr-mini" id="lh-mini"></div></div>
+              <div class="lyr-fld" style="margin-bottom:2px"><label>Footer</label><select class="lyr-sel" id="lf-sel"></select><div class="lyr-mini" id="lf-mini"></div></div>
+              <div class="fhint" style="margin-top:9px">Chosen from the <strong>Headers &amp; Footers</strong> blocks. Shown as fixed slots on the page.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIDDLE: document canvas -->
+      <div class="ed3-mid">
+        <div class="vb-toolbar">
+          <button class="tb-btn on" id="dElBtn" title="Show / hide the side panel"><span class="ms">layers</span> Panel</button>
+        </div>
+        <div class="vb-canvas" id="dcvWrap">
+          <div class="vb-bar"><span class="ms" style="font-size:16px;color:var(--teal)">description</span> <span id="doc-bar">Untitled Document</span> <span class="muted" id="doc-count" style="font-weight:400"></span>
+            <div class="mode-seg" id="modeSeg">
+              <button data-mode="layout" class="on"><span class="ms">grid_view</span> Build</button>
+              <button data-mode="preview"><span class="ms">visibility</span> Preview</button>
+            </div>
+          </div>
+          <div class="vb-stage" id="canvas"></div>
         </div>
       </div>
     </div>
@@ -6111,10 +6127,10 @@ function edHeadHtml(cfg){
 
 function dbWireInline(root){
   root.querySelectorAll('[data-f]').forEach(el => {
-    const holder = el.closest('.db-item, .db-pv');
+    const holder = el.closest('.db-item, .db-pv, .doc-blk, .pv-blk[data-k]');
     const wrap = el.closest('.dp');
     if(!holder || !wrap) return;
-    const it = DB.doc.items[+holder.dataset.i];
+    const it = holder.dataset.k != null && holder.dataset.i == null ? DB.doc.items.find(x => x.k === +holder.dataset.k) : DB.doc.items[+holder.dataset.i];
     if(!it) return;
     const pi = +wrap.dataset.pi, f = el.dataset.f;
     el.setAttribute('contenteditable', 'true');
@@ -6137,7 +6153,7 @@ function dbWireInline(root){
       } else {
         c[f] = el.innerHTML;
       }
-      dbInspector();          // keep the sidebar in step
+      if(window.dbSyncInspector) window.dbSyncInspector();   // keep the sidebar in step
     });
   });
 }
@@ -6282,25 +6298,26 @@ let DB = null;
     } else {
       const {count, pageOf} = measurePages(); pageCount = count;
       const card = (it,i) => `
-        <div class="doc-blk doc-compact ${it.k===selK?'sel':''}" draggable="true" data-i="${i}" data-k="${it.k}" title="${esc(instDesc(it))}">
-          <span class="ms cmp-grip" data-grip>drag_indicator</span>
-          <span class="cmp-ic"><span class="ms">${instIcon(it)}</span></span>
-          <span class="cmp-name">${esc(instLabel(it))}</span>
-          <span class="cmp-tag ${it.t==='element'?'el':''}">${it.t==='element'?'Element':'Block'}</span>
-          <span class="ms cmp-rm" data-rm="${i}" title="Remove">close</span>
+        <div class="doc-blk ${it.k===selK?'sel':''}" draggable="true" data-i="${i}" data-k="${it.k}" title="${esc(instDesc(it))}">
+          <span class="vb-name"><span class="ms">${instIcon(it)}</span>${esc(instLabel(it))}</span>
+          <span class="doc-tools"><span class="tb grab" data-grip title="Drag to move"><span class="ms">drag_indicator</span></span><span class="tb del" data-rm="${i}" title="Remove"><span class="ms">delete</span></span></span>
+          ${renderBlockInstance(it)}
         </div>`;
+      const ins = i => `<div class="vb-ins doc-ins ${insertAt===i?'open':''}" data-at="${i}" title="Insert a block here"><span class="ms">add</span></div>`;
       const rows = items().map((it,i) => {
         const brk = (i>0 && pageOf[i] !== pageOf[i-1]) ? `<div class="pg-brk"><span><span class="ms" style="font-size:14px;vertical-align:-2px">insert_page_break</span> Page ${pageOf[i]+1}</span></div>` : '';
-        return brk + card(it,i);
-      }).join('');
+        return brk + ins(i) + card(it,i);
+      }).join('') + ins(items().length);
       canvas.innerHTML = `<div class="vb-page"><div class="doc-bg">${renderDocBg(DB.doc.bg,0)}</div><div class="doc-body">${furnSlot('header')}${rows}${furnSlot('footer',true)}</div></div>`;
     }
     const lc = $('lyr-count'); if(lc) lc.textContent = items().length;
     $('doc-count').textContent = items().length ? `- ${items().length} block${items().length>1?'s':''} - ${pageCount} A4 page${pageCount>1?'s':''}` : '';
     applyDocStyle();
     wire();
-    if(mode === 'preview') dbWireInline(canvas);      // content is editable straight on the page
+    dbWireInline(canvas);                              // words are editable straight on the page in both modes
   }
+  // An insert line marks where the next block from the palette lands.
+  let insertAt = null;
   function wire(){
     canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
       el.addEventListener('click', e => {
@@ -6310,14 +6327,15 @@ let DB = null;
         const dp = e.target.closest('.dp[data-pi]');
         // A second click inside the selected block picks the element under it.
         bsPick = (dp && selK === k) ? +dp.dataset.pi : 'block';
-        selK = k; render(); renderInspector();
+        selK = k; render(); renderInspector(); showLeftTab('style');
       });
     });
+    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); insertAt = (insertAt === +l.dataset.at) ? null : +l.dataset.at; render(); if(insertAt != null){ showLeftTab('blocks'); showToast('Pick a block - it goes in at the marked line'); } }));
     markPickedElement();
     canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
     canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));
     canvas.querySelectorAll('.doc-blk').forEach(el => {
-      el.addEventListener('click', e => { if(e.target.closest('.doc-tools')) return; selK = +el.dataset.k; render(); renderInspector(); });
+      el.addEventListener('click', e => { if(e.target.closest('.doc-tools') || e.target.closest('.pv-blk[data-k]')) return; selK = +el.dataset.k; render(); renderInspector(); showLeftTab('style'); });
       el.addEventListener('dragstart', e => { e.dataTransfer.setData('move', el.dataset.i); el.classList.add('dragging'); });
       el.addEventListener('dragend', () => el.classList.remove('dragging'));
       el.addEventListener('dragover', e => e.preventDefault());
@@ -6338,7 +6356,8 @@ let DB = null;
     if(dp) dp.classList.add('el-sel');
   }
   function addItem(tok){
-    const it = instFromToken(tok); items().push(it);
+    const it = instFromToken(tok);
+    if(insertAt != null){ items().splice(insertAt, 0, it); insertAt = null; } else items().push(it);
     selK = (mode === 'layout') ? it.k : null;
     markDirty(DB.doc); render(); renderInspector();
     showToast((it.t==='element' ? 'Added element: ' : 'Added block: ') + instLabel(it));
@@ -6372,8 +6391,7 @@ let DB = null;
   // ---- Left-panel tabs (Blocks / Layers) ----
   function showLeftTab(which){
     document.querySelectorAll('#db .lt-tab').forEach(x => x.classList.toggle('on', x.dataset.lt === which));
-    $('paneBlocks').style.display = which === 'blocks' ? '' : 'none';
-    $('paneLayers').style.display = which === 'layers' ? '' : 'none';
+    ({blocks:'paneBlocks', style:'paneStyle', ai:'paneAi', layers:'paneLayers'}) && Object.entries({blocks:'paneBlocks', style:'paneStyle', ai:'paneAi', layers:'paneLayers'}).forEach(([k,id]) => { $(id).style.display = k === which ? '' : 'none'; });
   }
   document.querySelectorAll('#db .lt-tab').forEach(t => t.addEventListener('click', () => showLeftTab(t.dataset.lt)));
   document.querySelectorAll('#db .acc-h').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('closed')));
@@ -6496,10 +6514,12 @@ let DB = null;
   document.querySelectorAll('#modeSeg button').forEach(x => x.addEventListener('click', () => setMode(x.dataset.mode)));
 
   // ---- Block inspector (per-block content + style) ----
+  window.dbSyncInspector = () => renderInspector();
   function renderInspector(){
     const it = items().find(x => x.k === selK), show = !!it;
     $('blockInspector').style.display = show ? '' : 'none';
     $('docSettings').style.display = show ? 'none' : '';
+    $('styleTarget').innerHTML = show ? `<span class="ms" style="color:var(--teal);font-size:16px;vertical-align:-3px">check_circle</span> Editing: ${esc(instLabel(it))}` : 'Style - whole document';
     if(show) fillInspector(it); else curItem = null;
   }
   function fillInspector(it){
@@ -6799,12 +6819,11 @@ let DB = null;
     }
   }
   wirePaint('bg'); wirePaint('bc');
-  $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); });
+  $('bi-close').addEventListener('click', () => { selK = null; renderInspector(); render(); showLeftTab('blocks'); });
   canvas.addEventListener('click', e => { if(!e.target.closest('.doc-blk') && !e.target.closest('.pv-blk[data-k]')){ selK = null; renderInspector(); render(); } });
 
   // ---- Responsive panels ----
   const ed3 = document.querySelector('#db .ed3');
-  $('dStyleBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('st-on')); });
   $('dElBtn').addEventListener('click', function(){ this.classList.toggle('on', ed3.classList.toggle('el-on')); });
 
   // ---- Open / save ----
