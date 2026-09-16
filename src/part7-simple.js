@@ -479,13 +479,12 @@ function smSidePanels(isResume){
         : 'Add blocks with the + bars. Reorder them with the handle on the left.'}</div>
     </div>
     <div class="card">
-      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">dashboard_customize</span> Blocks &amp; layers</h3>
-      <div class="fhint">Switch to <strong>Advanced</strong> for the full block palette, the Layers panel and per-block styling.</div>
-    </div>`;
-  document.getElementById('smRight').innerHTML = `
-    <div class="card">
       <h3 class="ed-h">Page</h3>
       <div class="fhint">Letterhead ${d.header ? 'set' : 'none'} &middot; footer ${d.footer ? 'set' : 'none'}</div>
       <div class="fhint" style="margin-top:8px">A4 &middot; ${d.items.length} block${d.items.length===1?'':'s'}</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">dashboard_customize</span> Blocks &amp; layers</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> for the full block palette, the Layers panel and per-block styling.</div>
     </div>`;
 }

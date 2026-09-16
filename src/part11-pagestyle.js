@@ -61,7 +61,7 @@ window.psPick = (which, v) => {
 window.psHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)) psPick(which, v); };
 window.psFont = v => { PS.doc.brand.font = PS.doc.brand.bodyFont = v; markDirty(PS.doc); psRenderAll(); };
 
-function psRenderAll(){ psHead(); psSide(); psStage(); psProps(); }
+function psRenderAll(){ psHead(); psSide(); psStage(); }
 
 function psHead(){
   document.getElementById('psHead').innerHTML = edHeadHtml({
@@ -98,6 +98,15 @@ function psSide(){
           <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
           <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
       </div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h">Reset</h3>
+      <button class="lbtn danger" style="width:100%" onclick="psRevert()">Revert to Original</button>
+      <div class="fhint" style="margin-top:10px">Restores the font and colours this ${PS.kind === 'cover' ? 'cover page' : 'contents page'} was opened with.</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h">Layout</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
     </div>`;
 }
 
@@ -112,22 +121,4 @@ function psStage(){
     <div class="note" style="width:700px;margin:0 auto 16px"><span class="ms">info</span> ${note}</div>
     <div class="vb-stage" id="psPages"></div>`;
   renderDocPages(document.getElementById('psPages'), PS.doc, {cls:'vb-page'});
-}
-/* Right: the same Properties panel Advanced shows, so it does not appear or
-   disappear across the toggle. */
-/* Right: only what live's dialog carries beyond the controls - Revert to
-   Original. Page geometry (padding, spacing, radius, page fill) is an Advanced
-   concern and is deliberately absent here; the column stays so the canvas does
-   not shift when you toggle. */
-function psProps(){
-  document.getElementById('psRight').innerHTML = `
-    <div class="card">
-      <h3 class="ed-h">Reset</h3>
-      <button class="lbtn danger" style="width:100%" onclick="psRevert()">Revert to Original</button>
-      <div class="fhint" style="margin-top:10px">Restores the font and colours this ${PS.kind === 'cover' ? 'cover page' : 'contents page'} was opened with.</div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">Layout</h3>
-      <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
-    </div>`;
 }

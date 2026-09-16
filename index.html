@@ -3272,6 +3272,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* === Simple mode ========================================================== */
 #sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 #sm.open,#ps.open{display:flex}
+#sm .ed3,#ps .ed3{grid-template-columns:380px minmax(0,1fr)}   /* the same two columns as Advanced, so the toggle does not jump */
 .sm-body{min-height:0;padding:0 0 24px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
@@ -3812,7 +3813,6 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed3 st-on el-on">
     <div class="ed3-col" id="psSide"></div>
     <div class="ed3-mid"><div class="vb-canvas" id="psCanvas"></div></div>
-    <div class="ed3-col" id="psRight"></div>
   </div>
 </div>
 
@@ -3822,7 +3822,6 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed3 st-on el-on">
     <div class="ed3-col" id="smSide"></div>
     <div class="ed3-mid"><div class="vb-canvas"><div class="sm-body" id="smBody"></div></div></div>
-    <div class="ed3-col" id="smRight"></div>
   </div>
 </div>
 
@@ -7634,14 +7633,13 @@ function smSidePanels(isResume){
         : 'Add blocks with the + bars. Reorder them with the handle on the left.'}</div>
     </div>
     <div class="card">
-      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">dashboard_customize</span> Blocks &amp; layers</h3>
-      <div class="fhint">Switch to <strong>Advanced</strong> for the full block palette, the Layers panel and per-block styling.</div>
-    </div>`;
-  document.getElementById('smRight').innerHTML = `
-    <div class="card">
       <h3 class="ed-h">Page</h3>
       <div class="fhint">Letterhead ${d.header ? 'set' : 'none'} &middot; footer ${d.footer ? 'set' : 'none'}</div>
       <div class="fhint" style="margin-top:8px">A4 &middot; ${d.items.length} block${d.items.length===1?'':'s'}</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h"><span class="ms" style="color:var(--live-cta)">dashboard_customize</span> Blocks &amp; layers</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> for the full block palette, the Layers panel and per-block styling.</div>
     </div>`;
 }
 
@@ -8835,7 +8833,7 @@ window.psPick = (which, v) => {
 window.psHex = (which, v) => { if(/^#[0-9a-f]{6}$/i.test(v)) psPick(which, v); };
 window.psFont = v => { PS.doc.brand.font = PS.doc.brand.bodyFont = v; markDirty(PS.doc); psRenderAll(); };
 
-function psRenderAll(){ psHead(); psSide(); psStage(); psProps(); }
+function psRenderAll(){ psHead(); psSide(); psStage(); }
 
 function psHead(){
   document.getElementById('psHead').innerHTML = edHeadHtml({
@@ -8872,6 +8870,15 @@ function psSide(){
           <span class="ms" data-toast="Replace the logo" title="Replace">edit</span>
           <span class="ms" data-toast="Remove the logo" title="Remove">delete</span></div>
       </div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h">Reset</h3>
+      <button class="lbtn danger" style="width:100%" onclick="psRevert()">Revert to Original</button>
+      <div class="fhint" style="margin-top:10px">Restores the font and colours this ${PS.kind === 'cover' ? 'cover page' : 'contents page'} was opened with.</div>
+    </div>
+    <div class="card">
+      <h3 class="ed-h">Layout</h3>
+      <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
     </div>`;
 }
 
@@ -8886,24 +8893,6 @@ function psStage(){
     <div class="note" style="width:700px;margin:0 auto 16px"><span class="ms">info</span> ${note}</div>
     <div class="vb-stage" id="psPages"></div>`;
   renderDocPages(document.getElementById('psPages'), PS.doc, {cls:'vb-page'});
-}
-/* Right: the same Properties panel Advanced shows, so it does not appear or
-   disappear across the toggle. */
-/* Right: only what live's dialog carries beyond the controls - Revert to
-   Original. Page geometry (padding, spacing, radius, page fill) is an Advanced
-   concern and is deliberately absent here; the column stays so the canvas does
-   not shift when you toggle. */
-function psProps(){
-  document.getElementById('psRight').innerHTML = `
-    <div class="card">
-      <h3 class="ed-h">Reset</h3>
-      <button class="lbtn danger" style="width:100%" onclick="psRevert()">Revert to Original</button>
-      <div class="fhint" style="margin-top:10px">Restores the font and colours this ${PS.kind === 'cover' ? 'cover page' : 'contents page'} was opened with.</div>
-    </div>
-    <div class="card">
-      <h3 class="ed-h">Layout</h3>
-      <div class="fhint">Switch to <strong>Advanced</strong> to add, reorder or restyle the blocks on this page.</div>
-    </div>`;
 }
 
 /* \u2550\u2550\u2550 Creating, saving and remembering library records \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550

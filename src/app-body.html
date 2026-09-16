@@ -695,6 +695,7 @@ textarea.fin{resize:vertical;line-height:1.5}
 /* ═══ Simple mode ══════════════════════════════════════════════════════════ */
 #sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
 #sm.open,#ps.open{display:flex}
+#sm .ed3,#ps .ed3{grid-template-columns:380px minmax(0,1fr)}   /* the same two columns as Advanced, so the toggle does not jump */
 .sm-body{min-height:0;padding:0 0 24px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
@@ -1235,7 +1236,6 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed3 st-on el-on">
     <div class="ed3-col" id="psSide"></div>
     <div class="ed3-mid"><div class="vb-canvas" id="psCanvas"></div></div>
-    <div class="ed3-col" id="psRight"></div>
   </div>
 </div>
 
@@ -1245,7 +1245,6 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed3 st-on el-on">
     <div class="ed3-col" id="smSide"></div>
     <div class="ed3-mid"><div class="vb-canvas"><div class="sm-body" id="smBody"></div></div></div>
-    <div class="ed3-col" id="smRight"></div>
   </div>
 </div>
 
