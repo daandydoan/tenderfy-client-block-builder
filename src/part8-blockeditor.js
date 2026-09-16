@@ -72,7 +72,7 @@ function beNewBlock(){
 
   const elDef = () => ({wmode:'fill',wpx:240,wmin:0,wmax:0,hmode:'fill',hpx:120,hmin:0,hmax:0,padH:0,padV:0,padSides:false,padT:0,padR:0,padB:0,padL:0,marH:0,marV:0,marSides:false,marT:0,marR:0,marB:0,marL:0,bg:'',bgBind:'',bgA:100,bgVis:true,font:'',weight:'',size:0,lh:0,color:'',align:'',rad:0,radSides:false,radTL:0,radTR:0,radBR:0,radBL:0,bw:0,bstyle:'solid',bcolor:'#38988a',bcolorBind:'',bcolorA:100,bcolorVis:true,bpos:'inside'});
   const mkEl = pid => { const e = {id:pid, st:elDef()}; if(pid === 'field') e.field = 'client.name'; if(pid === 'image'){ e.src = 'placeholder'; e.img = ''; } return e; };
-  const normDoc = d => d.map(row => ({cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : (x.st = migrateSize(x.st), x)))}));
+  const normDoc = d => d.map(row => ({repeat: row.repeat, cols: row.cols.map(col => col.map(x => typeof x === 'string' ? mkEl(x) : (x.st = migrateSize(x.st), x)))}));
   /* Min and Max used to be width/height modes sharing one value; they are their
      own fields now, so an older block's limit is moved across. */
   function migrateSize(st){
@@ -170,7 +170,8 @@ function beNewBlock(){
             <span class="rb" data-addcol title="Add column"><span class="ms">add</span></span>
             <span class="rb" data-delcol title="Remove column"><span class="ms">remove</span></span>
             <span class="rb del" data-delrow title="Delete row"><span class="ms">delete</span></span>
-          </div>
+            <span class="rb${row.repeat?' on':''}" data-repeat title="${row.repeat==='v'?'Repeats down - one per item; click for across':row.repeat==='h'?'Repeats across - one per item; click to stop':'Repeat this row - the estimator adds one per item'}"><span class="ms">${row.repeat==='h'?'view_column':'arrow_downward'}</span></span>
+          </div>${row.repeat?`<span class="vb-reptag"><span class="ms">${row.repeat==='h'?'view_column':'arrow_downward'}</span> Repeats ${row.repeat==='h'?'across':'down'}</span>`:''}
           ${row.cols.map((col,c) => `<div class="vb-col" data-r="${r}" data-c="${c}">
               ${col.length ? col.map((el,k) => elHtml(el,r,c,k)).join('') : '<div class="vb-colph"><span class="ms">add</span>Drop element</div>'}
             </div>`).join('')}
@@ -480,6 +481,7 @@ function beNewBlock(){
       rowEl.querySelector('[data-addcol]').addEventListener('click',e=>{e.stopPropagation();if(doc[r].cols.length<3){doc[r].cols.push([]);sel=null;render();commit();}else showToast('A row can have up to 3 columns');});
       rowEl.querySelector('[data-delcol]').addEventListener('click',e=>{e.stopPropagation();if(doc[r].cols.length>1){const last=doc[r].cols.pop();if(last.length)doc[r].cols[doc[r].cols.length-1].push(...last);sel=null;render();commit();}else showToast('A row needs at least one column');});
       rowEl.querySelector('[data-delrow]').addEventListener('click',e=>{e.stopPropagation();doc.splice(r,1);sel=null;render();commit();});
+      rowEl.querySelector('[data-repeat]').addEventListener('click',e=>{e.stopPropagation();doc[r].repeat=({undefined:'v',v:'h',h:undefined})[doc[r].repeat];render();commit();});
       const rh=rowEl.querySelector('[data-rhandle]');
       rh.addEventListener('mousedown',()=>{rowEl.draggable=true;});
       rowEl.addEventListener('mouseup',()=>{rowEl.draggable=false;});
@@ -747,9 +749,12 @@ function beNewBlock(){
         : renderPrimitive(el.id, br, (content||{})[n] || (el.id === 'image' && (el.src === 'custom' || el.src === 'client') ? {src:'custom', img:el.img} : undefined));
       return `<span class="dp" data-pi="${n}" data-perm="${el.perm||'fixed'}"${el.id==='field'?` data-field="${el.field||''}"`:''} style="${box}${typo}">${body}</span>`;
     };
-    const rows = (def.doc || []).map(row => row.cols.length > 1
+    const rowHtml = row => row.cols.length > 1
       ? `<div style="display:flex;gap:24px;width:100%">${row.cols.map(col=>`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">${col.map(one).join('')}</div>`).join('')}</div>`
-      : `<div style="width:100%;display:flex;flex-direction:column;gap:11px">${row.cols[0].map(one).join('')}</div>`).join('');
+      : `<div style="width:100%;display:flex;flex-direction:column;gap:11px">${row.cols[0].map(one).join('')}</div>`;
+    // ponytail: a repeating row renders twice as a stand-in for "one per item"; the fill view expands row.items for real
+    const rows = (def.doc || []).map(row => { if(!row.repeat || def.expanded) return rowHtml(row); const a = rowHtml(row), b = rowHtml(row);
+      return row.repeat === 'h' ? `<div style="display:flex;gap:24px;width:100%"><div style="flex:1;min-width:0">${a}</div><div style="flex:1;min-width:0">${b}</div></div>` : a + b; }).join('');
     return `<div style="${css}">${rows}</div>`;
   };
 

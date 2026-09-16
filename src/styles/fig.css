@@ -362,3 +362,5 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 /* Permission marker on the block-builder canvas: Editable / Locked parts wear it in their name chip */
 .vb-el.perm-editable>.vb-name::after,.vb-el.perm-locked>.vb-name::after{font-family:'Material Symbols Outlined';font-size:12px;margin-left:4px;vertical-align:-2px}
 .vb-el.perm-editable>.vb-name::after{content:'edit';color:var(--teal)} .vb-el.perm-locked>.vb-name::after{content:'lock';color:#B45309}
+.vb-rowtools .rb.on{background:var(--teal)}
+.vb-reptag{position:absolute;top:-10px;right:10px;z-index:4;display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#fff;background:var(--teal);border-radius:100px;padding:2px 8px} .vb-reptag .ms{font-size:12px}
