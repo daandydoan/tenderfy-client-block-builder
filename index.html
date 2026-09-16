@@ -2522,6 +2522,20 @@ textarea.ds-in{resize:vertical;line-height:1.5}
 .vb-rowtools .rb.on{background:var(--teal)}
 .vb-reptag{position:absolute;top:-10px;right:10px;z-index:4;display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#fff;background:var(--teal);border-radius:100px;padding:2px 8px} .vb-reptag .ms{font-size:12px}
 
+/* Insert lines and the in-place block picker (admin document-edit / components.css) */
+.el-pick{position:absolute;z-index:80;width:320px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 40px rgba(20,45,38,.18);overflow:hidden}
+.el-pick .pk-search{display:flex;align-items:center;gap:6px;margin:12px;border:1.5px solid var(--teal);border-radius:8px;padding:0 9px;height:34px} .el-pick .pk-search .ms{font-size:18px;color:var(--light)} .el-pick .pk-search input{flex:1;min-width:0;border:none;outline:none;font-family:inherit;font-size:13px;background:transparent}
+.el-pick .pk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 12px 12px;max-height:300px;overflow:auto}
+.el-pick .pal-tag{margin:6px 2px 2px}
+.el-pick .pk-it{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px 10px;border-radius:8px;cursor:pointer;font-size:12px;color:var(--ink);text-align:center} .el-pick .pk-it:hover{background:var(--teal-tint)} .el-pick .pk-it .ms{font-size:22px;color:var(--ink)}
+.el-pick .pk-empty{grid-column:1/-1;font-size:12px;color:var(--light);text-align:center;padding:14px 0}
+/* Insert line between stacked items: hover the gap -> a line with a + */
+.vb-ins{position:relative;height:16px;margin:0;cursor:pointer;z-index:2}
+.vb-ins::before{content:'';position:absolute;left:8px;right:8px;top:7px;height:2px;background:var(--teal);border-radius:2px;opacity:0;transition:opacity .12s}
+.vb-ins .ms{position:absolute;left:50%;top:-3px;transform:translateX(-50%);width:22px;height:22px;border-radius:6px;background:var(--teal);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.vb-ins:hover::before,.vb-ins:hover .ms,.vb-ins.open::before,.vb-ins.open .ms{opacity:1}
+#db .vb-canvas{position:relative}
+
 /* --- listing cards (tenderfy-admin/components.css) --- */
 .kebab-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;flex-direction:column;min-width:190px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.15);padding:6px;z-index:30}
 .kebab-menu.open{display:flex}
@@ -3801,6 +3815,7 @@ textarea.fin{resize:vertical;line-height:1.5}
             </div>
           </div>
           <div class="vb-stage" id="canvas"></div>
+          <div class="el-pick" id="docPick" style="display:none"><label class="pk-search"><span class="ms">search</span><input id="dpQ" placeholder="Search blocks"></label><div class="pk-grid" id="dpGrid"></div></div>
         </div>
       </div>
     </div>
@@ -6321,8 +6336,29 @@ let DB = null;
     wire();
     dbWireInline(canvas);                              // words are editable straight on the page in both modes
   }
-  // An insert line marks where the next block from the palette lands.
+  // An insert line opens the block picker in place; the pick lands at that line (admin document-edit).
   let insertAt = null;
+  const dPick = $('docPick'), dpQ = $('dpQ'), dpGrid = $('dpGrid'); let dpAt = null, dpAnchor = null;
+  function renderDocPick(q){
+    const blocks = BLOCKS.filter(b => b.kind === 'block' && b.cat !== 'Headers & Footers' && !b.slot && (!q || (b.label + ' ' + b.cat).toLowerCase().includes(q)));
+    const cats = BLOCK_CATS.filter(c => c !== 'Headers & Footers' && blocks.some(b => b.cat === c));
+    const els = PRIMITIVES.filter(p => !q || (p.name + ' ' + p.tag).toLowerCase().includes(q));
+    dpGrid.innerHTML = (cats.length || els.length)
+      ? cats.map(c => `<div class="pal-tag">${esc(c)}</div>` + blocks.filter(b => b.cat === c).map(b => `<div class="pk-it" data-tok="${b.id}" title="${esc(b.desc||'')}"><span class="ms">grid_view</span>${esc(b.label)}</div>`).join('')).join('')
+        + (els.length ? `<div class="pal-tag">Elements</div>` + els.map(p => `<div class="pk-it" data-tok="el:${p.id}" title="${esc(p.desc)}"><span class="ms">${PRIM_ICON[p.id]||'widgets'}</span>${esc(p.name)}</div>`).join('') : '')
+      : '<div class="pk-empty">No blocks match</div>';
+    dpGrid.querySelectorAll('.pk-it').forEach(it => it.addEventListener('click', () => { items().splice(dpAt, 0, instFromToken(it.dataset.tok)); closeDocPick(); markDirty(DB.doc); render(); renderInspector(); }));
+  }
+  function openDocPick(anchor, at){
+    dpAt = at; dpAnchor = anchor; dpQ.value = ''; renderDocPick('');
+    const wr = wrap.getBoundingClientRect(), r = anchor.getBoundingClientRect();
+    dPick.style.display = ''; dPick.style.left = Math.max(8, Math.min(wr.width - 328, r.left - wr.left + r.width/2 - 160 + wrap.scrollLeft)) + 'px'; dPick.style.top = (r.bottom - wr.top + 8 + wrap.scrollTop) + 'px';
+    anchor.classList.add('open'); dpQ.focus();
+  }
+  function closeDocPick(){ dPick.style.display = 'none'; if(dpAnchor) dpAnchor.classList.remove('open'); dpAnchor = null; }
+  dpQ.addEventListener('input', () => renderDocPick(dpQ.value.trim().toLowerCase()));
+  document.addEventListener('mousedown', e => { if(dPick.style.display !== 'none' && !e.target.closest('#docPick') && !e.target.closest('.doc-ins')) closeDocPick(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && dPick.style.display !== 'none') closeDocPick(); });
   function wire(){
     canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
       el.addEventListener('click', e => {
@@ -6335,7 +6371,7 @@ let DB = null;
         selK = k; render(); renderInspector(); showLeftTab('style');
       });
     });
-    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); insertAt = (insertAt === +l.dataset.at) ? null : +l.dataset.at; render(); if(insertAt != null){ showLeftTab('blocks'); showToast('Pick a block - it goes in at the marked line'); } }));
+    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); openDocPick(l, +l.dataset.at); }));
     markPickedElement();
     canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
     canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));

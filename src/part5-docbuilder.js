@@ -434,8 +434,29 @@ let DB = null;
     wire();
     dbWireInline(canvas);                              // words are editable straight on the page in both modes
   }
-  // An insert line marks where the next block from the palette lands.
+  // An insert line opens the block picker in place; the pick lands at that line (admin document-edit).
   let insertAt = null;
+  const dPick = $('docPick'), dpQ = $('dpQ'), dpGrid = $('dpGrid'); let dpAt = null, dpAnchor = null;
+  function renderDocPick(q){
+    const blocks = BLOCKS.filter(b => b.kind === 'block' && b.cat !== 'Headers & Footers' && !b.slot && (!q || (b.label + ' ' + b.cat).toLowerCase().includes(q)));
+    const cats = BLOCK_CATS.filter(c => c !== 'Headers & Footers' && blocks.some(b => b.cat === c));
+    const els = PRIMITIVES.filter(p => !q || (p.name + ' ' + p.tag).toLowerCase().includes(q));
+    dpGrid.innerHTML = (cats.length || els.length)
+      ? cats.map(c => `<div class="pal-tag">${esc(c)}</div>` + blocks.filter(b => b.cat === c).map(b => `<div class="pk-it" data-tok="${b.id}" title="${esc(b.desc||'')}"><span class="ms">grid_view</span>${esc(b.label)}</div>`).join('')).join('')
+        + (els.length ? `<div class="pal-tag">Elements</div>` + els.map(p => `<div class="pk-it" data-tok="el:${p.id}" title="${esc(p.desc)}"><span class="ms">${PRIM_ICON[p.id]||'widgets'}</span>${esc(p.name)}</div>`).join('') : '')
+      : '<div class="pk-empty">No blocks match</div>';
+    dpGrid.querySelectorAll('.pk-it').forEach(it => it.addEventListener('click', () => { items().splice(dpAt, 0, instFromToken(it.dataset.tok)); closeDocPick(); markDirty(DB.doc); render(); renderInspector(); }));
+  }
+  function openDocPick(anchor, at){
+    dpAt = at; dpAnchor = anchor; dpQ.value = ''; renderDocPick('');
+    const wr = wrap.getBoundingClientRect(), r = anchor.getBoundingClientRect();
+    dPick.style.display = ''; dPick.style.left = Math.max(8, Math.min(wr.width - 328, r.left - wr.left + r.width/2 - 160 + wrap.scrollLeft)) + 'px'; dPick.style.top = (r.bottom - wr.top + 8 + wrap.scrollTop) + 'px';
+    anchor.classList.add('open'); dpQ.focus();
+  }
+  function closeDocPick(){ dPick.style.display = 'none'; if(dpAnchor) dpAnchor.classList.remove('open'); dpAnchor = null; }
+  dpQ.addEventListener('input', () => renderDocPick(dpQ.value.trim().toLowerCase()));
+  document.addEventListener('mousedown', e => { if(dPick.style.display !== 'none' && !e.target.closest('#docPick') && !e.target.closest('.doc-ins')) closeDocPick(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && dPick.style.display !== 'none') closeDocPick(); });
   function wire(){
     canvas.querySelectorAll('.pv-blk[data-k]').forEach(el => {
       el.addEventListener('click', e => {
@@ -448,7 +469,7 @@ let DB = null;
         selK = k; render(); renderInspector(); showLeftTab('style');
       });
     });
-    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); insertAt = (insertAt === +l.dataset.at) ? null : +l.dataset.at; render(); if(insertAt != null){ showLeftTab('blocks'); showToast('Pick a block - it goes in at the marked line'); } }));
+    canvas.querySelectorAll('.doc-ins').forEach(l => l.addEventListener('click', e => { e.stopPropagation(); openDocPick(l, +l.dataset.at); }));
     markPickedElement();
     canvas.querySelectorAll('.doc-furn').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); selK = null; renderInspector(); showLeftTab('layers'); }));
     canvas.querySelectorAll('[data-rm]').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); const [rm] = items().splice(+x.dataset.rm,1); if(rm && rm.k===selK) selK=null; markDirty(DB.doc); render(); renderInspector(); }));
