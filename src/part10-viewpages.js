@@ -17,6 +17,7 @@ function vheadHtml(cfg){
     <div class="vacts">
       <button class="vbtn red" onclick="${cfg.del}">Delete</button>
       <button class="vbtn amber" onclick="${cfg.edit}">${esc(cfg.editLabel)}</button>
+      ${cfg.fill ? `<button class="vbtn plain" onclick="${cfg.fill}"><span class="ms">edit_note</span> Fill In</button>` : ''}
       <button class="vbtn teal" onclick="a2tOpen('${esc(cfg.title).replace(/'/g,'')}')">Add To Tender</button>
       ${cfg.panel ? `<button class="vchev" onclick="viewPanel=!viewPanel;renderRoute()" title="${viewPanel?'Hide':'Show'} details"><span class="ms">${viewPanel?'chevron_right':'chevron_left'}</span></button>` : ''}
     </div>
@@ -31,7 +32,7 @@ function pgResumePreview(){
   setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   return vheadHtml({
     title:'Resume Preview', back:'/file-manager/resumes',
-    editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`,
+    editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`, fill:`flOpen('resume','${r.id}')`,
     del:`viewDelete('resume','${r.id}')`,
   }) + `<div class="vbody"><div class="vstage" id="vStage"></div></div>`;
 }
@@ -46,7 +47,7 @@ function pgCaseStudyView(){
   const fld = (k,v) => `<div class="vfld"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`;
   return vheadHtml({
     title:c.title, back:'/file-manager/case-studies', panel:true,
-    editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`,
+    editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`, fill:`flOpen('case-study','${c.id}')`,
     del:`viewDelete('case-study','${c.id}')`,
   }) + `<div class="vbody vsplit">
     <div class="vcard"><div class="vstage" id="vStage"></div></div>

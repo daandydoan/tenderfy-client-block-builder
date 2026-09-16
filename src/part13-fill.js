@@ -1,4 +1,4 @@
-/* ═══ Fill In — the estimator's side of a tender attachment ═══════════════
+/* ═══ Fill In — the estimator's side of a document ═════════════════════════
    The owner marked parts of each block Fixed / Editable / Locked in the Block
    Builder. Here an estimator opens the attachment in the same shell and can
    only change the Editable parts, add one-per-item rows where a row Repeats,
@@ -43,20 +43,18 @@ function flBake(it){
   it.content = content;
 }
 
-window.flOpen = () => {
-  const f = btCur(); if(!f) return;
-  const doc = btDocOf(f);
-  f.prev = {kind:'blocks', doc};                    // the attachment now carries its own copy
-  f.fill = f.fill || {merge:{}, status:'draft'};
+window.flOpen = (kind, id) => {
+  const doc = docFor(kind, id);                     // the document's own block copies; the library block is never written
+  doc.fill = doc.fill || {merge:{}, status:'draft'};
   flMaterialise(doc); doc.items.forEach(it => it.src && flBake(it));
-  FL = {f, doc, fill:f.fill, back:'/tenders/build-tender/?tender=' + encodeURIComponent(q('tender') || '')};
+  FL = {doc, fill:doc.fill, back: kind === 'resume' ? '/file-manager/resumes/resume-preview/?id=' + id : '/file-manager/case-studies/case-study/?id=' + id};
   document.getElementById('fl').classList.add('open');
   flRenderAll();
 };
-window.flClose = () => { document.getElementById('fl').classList.remove('open'); FL = null; btRerender(); };
+window.flClose = () => { document.getElementById('fl').classList.remove('open'); FL = null; };
 window.flExit  = () => exitEditor(FL.doc, FL.back, () => flClose(), window.flSave);
-window.flSave  = () => { FL.doc.dirty = false; flAudit('Filled by ' + FL_USER); showToast('Saved - ' + FL.doc.name); flClose(); };
-window.flReady = () => { FL.fill.status = 'ready'; FL.doc.dirty = false; flAudit('Marked ready for PDF'); showToast('Queued for PDF - the backend renders this exact layout'); flHead(); };
+window.flSave  = () => { FL.doc.dirty = false; flAudit('Filled by ' + FL_USER); persistLibrary(); showToast('Saved - ' + FL.doc.name); const back = FL.back; flClose(); go(back); renderRoute(); };
+window.flReady = () => { FL.fill.status = 'ready'; FL.doc.dirty = false; flAudit('Marked ready for PDF'); persistLibrary(); showToast('Queued for PDF - the backend renders this exact layout'); flHead(); };
 function flAudit(what){ (FL.doc.audit = FL.doc.audit || []).push({date: new Date().toISOString().slice(0,16).replace('T',' '), by: FL_USER, what}); }
 
 function flRenderAll(){ flHead(); flSide(); flStage(); flRight(); }
@@ -66,7 +64,7 @@ function flHead(){
     doc: FL.doc, mode:'block',                       // no Simple/Advanced here - the estimator doesn't restructure
     sub: `Filling in as <strong>${esc(FL_USER)}</strong> (estimator) - only the parts marked Editable can change.`,
     exit:'flExit()', save:'flSave()', saveLabel:'Save',
-    rename:"FL.doc.name=this.value;FL.f.n=this.value;markDirty(FL.doc)",
+    rename:"FL.doc.name=this.value;markDirty(FL.doc)",
     extras:`<button class="lbtn ${ready?'':'pri'}" onclick="flReady()"><span class="ms">${ready?'check_circle':'picture_as_pdf'}</span> ${ready?'Ready for PDF':'Mark ready for PDF'}</button>`,
   });
 }

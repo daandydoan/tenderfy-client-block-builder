@@ -5441,7 +5441,6 @@ window.btRowMenu = (ev,k,i) => {
   if(isCover) items.push({label:'Edit Cover Style', run:()=>{ btSel={k,i}; btRerender(); csOpen(); }});
   items.push({label:'Edit Information', run:()=>showToast('Edit information - ' + f.n)});
   items.push({label:'Advanced Editor', run:()=>{ btSel={k,i}; btRerender(); advOpen(); }});
-  items.push({label:'Fill In (estimator)', run:()=>{ btSel={k,i}; btRerender(); flOpen(); }});
   items.push({label:'Remove From Tender', run:()=>{ btAdded[k].splice(i,1); if(btSel&&btSel.k===k&&btSel.i===i) btSel=null; btRerender(); showToast('Removed from tender'); }});
   openMenu(ev, items);
 };
@@ -5876,6 +5875,7 @@ window.fmMenu = (ev, kind, id) => {
                                              : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
     {label:'Duplicate',      run:() => duplicateDoc(kind, id)},
     {label:'Add To Tender',  run:() => a2tOpen(name)},
+    {label:'Fill In (estimator)', run:() => flOpen(kind, id)},
     {label:docFor(isR ? 'resume' : 'case-study', id).locked ? 'Unlock' : 'Lock (head office)', run:() => { toggleLock(docFor(isR ? 'resume' : 'case-study', id), name); persistLibrary(); renderRoute(); }},
     {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
@@ -8664,6 +8664,7 @@ function vheadHtml(cfg){
     <div class="vacts">
       <button class="vbtn red" onclick="${cfg.del}">Delete</button>
       <button class="vbtn amber" onclick="${cfg.edit}">${esc(cfg.editLabel)}</button>
+      ${cfg.fill ? `<button class="vbtn plain" onclick="${cfg.fill}"><span class="ms">edit_note</span> Fill In</button>` : ''}
       <button class="vbtn teal" onclick="a2tOpen('${esc(cfg.title).replace(/'/g,'')}')">Add To Tender</button>
       ${cfg.panel ? `<button class="vchev" onclick="viewPanel=!viewPanel;renderRoute()" title="${viewPanel?'Hide':'Show'} details"><span class="ms">${viewPanel?'chevron_right':'chevron_left'}</span></button>` : ''}
     </div>
@@ -8678,7 +8679,7 @@ function pgResumePreview(){
   setTimeout(() => { const h = document.getElementById('vStage'); if(h) renderDocPages(h, d); }, 0);
   return vheadHtml({
     title:'Resume Preview', back:'/file-manager/resumes',
-    editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`,
+    editLabel:'Edit Resume', edit:`go('/file-manager/resumes/add-resume?id=${r.id}')`, fill:`flOpen('resume','${r.id}')`,
     del:`viewDelete('resume','${r.id}')`,
   }) + `<div class="vbody"><div class="vstage" id="vStage"></div></div>`;
 }
@@ -8693,7 +8694,7 @@ function pgCaseStudyView(){
   const fld = (k,v) => `<div class="vfld"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`;
   return vheadHtml({
     title:c.title, back:'/file-manager/case-studies', panel:true,
-    editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`,
+    editLabel:'Edit Case Study', edit:`go('/file-manager/case-studies/add-edit-case-study/?id=${c.id}')`, fill:`flOpen('case-study','${c.id}')`,
     del:`viewDelete('case-study','${c.id}')`,
   }) + `<div class="vbody vsplit">
     <div class="vcard"><div class="vstage" id="vStage"></div></div>
@@ -9023,7 +9024,7 @@ window.persistLibrary = persistLibrary;
 window.resetLibrary = () => { try{ localStorage.removeItem(LIB_KEY); localStorage.removeItem('tf_custom_blocks'); }catch(e){} location.reload(); };
 restoreLibrary();
 
-/* \u2550\u2550\u2550 Fill In \u2014 the estimator's side of a tender attachment \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+/* \u2550\u2550\u2550 Fill In \u2014 the estimator's side of a document \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
    The owner marked parts of each block Fixed / Editable / Locked in the Block
    Builder. Here an estimator opens the attachment in the same shell and can
    only change the Editable parts, add one-per-item rows where a row Repeats,
@@ -9068,20 +9069,18 @@ function flBake(it){
   it.content = content;
 }
 
-window.flOpen = () => {
-  const f = btCur(); if(!f) return;
-  const doc = btDocOf(f);
-  f.prev = {kind:'blocks', doc};                    // the attachment now carries its own copy
-  f.fill = f.fill || {merge:{}, status:'draft'};
+window.flOpen = (kind, id) => {
+  const doc = docFor(kind, id);                     // the document's own block copies; the library block is never written
+  doc.fill = doc.fill || {merge:{}, status:'draft'};
   flMaterialise(doc); doc.items.forEach(it => it.src && flBake(it));
-  FL = {f, doc, fill:f.fill, back:'/tenders/build-tender/?tender=' + encodeURIComponent(q('tender') || '')};
+  FL = {doc, fill:doc.fill, back: kind === 'resume' ? '/file-manager/resumes/resume-preview/?id=' + id : '/file-manager/case-studies/case-study/?id=' + id};
   document.getElementById('fl').classList.add('open');
   flRenderAll();
 };
-window.flClose = () => { document.getElementById('fl').classList.remove('open'); FL = null; btRerender(); };
+window.flClose = () => { document.getElementById('fl').classList.remove('open'); FL = null; };
 window.flExit  = () => exitEditor(FL.doc, FL.back, () => flClose(), window.flSave);
-window.flSave  = () => { FL.doc.dirty = false; flAudit('Filled by ' + FL_USER); showToast('Saved - ' + FL.doc.name); flClose(); };
-window.flReady = () => { FL.fill.status = 'ready'; FL.doc.dirty = false; flAudit('Marked ready for PDF'); showToast('Queued for PDF - the backend renders this exact layout'); flHead(); };
+window.flSave  = () => { FL.doc.dirty = false; flAudit('Filled by ' + FL_USER); persistLibrary(); showToast('Saved - ' + FL.doc.name); const back = FL.back; flClose(); go(back); renderRoute(); };
+window.flReady = () => { FL.fill.status = 'ready'; FL.doc.dirty = false; flAudit('Marked ready for PDF'); persistLibrary(); showToast('Queued for PDF - the backend renders this exact layout'); flHead(); };
 function flAudit(what){ (FL.doc.audit = FL.doc.audit || []).push({date: new Date().toISOString().slice(0,16).replace('T',' '), by: FL_USER, what}); }
 
 function flRenderAll(){ flHead(); flSide(); flStage(); flRight(); }
@@ -9091,7 +9090,7 @@ function flHead(){
     doc: FL.doc, mode:'block',                       // no Simple/Advanced here - the estimator doesn't restructure
     sub: `Filling in as <strong>${esc(FL_USER)}</strong> (estimator) - only the parts marked Editable can change.`,
     exit:'flExit()', save:'flSave()', saveLabel:'Save',
-    rename:"FL.doc.name=this.value;FL.f.n=this.value;markDirty(FL.doc)",
+    rename:"FL.doc.name=this.value;markDirty(FL.doc)",
     extras:`<button class="lbtn ${ready?'':'pri'}" onclick="flReady()"><span class="ms">${ready?'check_circle':'picture_as_pdf'}</span> ${ready?'Ready for PDF':'Mark ready for PDF'}</button>`,
   });
 }

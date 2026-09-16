@@ -404,7 +404,6 @@ window.btRowMenu = (ev,k,i) => {
   if(isCover) items.push({label:'Edit Cover Style', run:()=>{ btSel={k,i}; btRerender(); csOpen(); }});
   items.push({label:'Edit Information', run:()=>showToast('Edit information - ' + f.n)});
   items.push({label:'Advanced Editor', run:()=>{ btSel={k,i}; btRerender(); advOpen(); }});
-  items.push({label:'Fill In (estimator)', run:()=>{ btSel={k,i}; btRerender(); flOpen(); }});
   items.push({label:'Remove From Tender', run:()=>{ btAdded[k].splice(i,1); if(btSel&&btSel.k===k&&btSel.i===i) btSel=null; btRerender(); showToast('Removed from tender'); }});
   openMenu(ev, items);
 };
@@ -839,6 +838,7 @@ window.fmMenu = (ev, kind, id) => {
                                              : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
     {label:'Duplicate',      run:() => duplicateDoc(kind, id)},
     {label:'Add To Tender',  run:() => a2tOpen(name)},
+    {label:'Fill In (estimator)', run:() => flOpen(kind, id)},
     {label:docFor(isR ? 'resume' : 'case-study', id).locked ? 'Unlock' : 'Lock (head office)', run:() => { toggleLock(docFor(isR ? 'resume' : 'case-study', id), name); persistLibrary(); renderRoute(); }},
     {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
