@@ -676,6 +676,7 @@ let DB = null;
      edited on that copy. */
   /* Every block can be restyled where it sits, not just the ones built here:
      a built-in gets a definition synthesised from its P2DOC layout. */
+  window.docBlockDefOf = it => blockDefOf(it);   // the fill view materialises the same definition
   function blockDefOf(it){
     if(it.t !== 'block') return null;
     const p = instObj(it).p;

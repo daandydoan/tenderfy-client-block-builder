@@ -404,15 +404,16 @@ window.btRowMenu = (ev,k,i) => {
   if(isCover) items.push({label:'Edit Cover Style', run:()=>{ btSel={k,i}; btRerender(); csOpen(); }});
   items.push({label:'Edit Information', run:()=>showToast('Edit information - ' + f.n)});
   items.push({label:'Advanced Editor', run:()=>{ btSel={k,i}; btRerender(); advOpen(); }});
+  items.push({label:'Fill In (estimator)', run:()=>{ btSel={k,i}; btRerender(); flOpen(); }});
   items.push({label:'Remove From Tender', run:()=>{ btAdded[k].splice(i,1); if(btSel&&btSel.k===k&&btSel.i===i) btSel=null; btRerender(); showToast('Removed from tender'); }});
   openMenu(ev, items);
 };
 
 /* Advanced Editor — the same Document Builder used for Resumes, Case Studies
    and the Block Builder section, opened against this tender attachment. */
-window.advOpen = () => {
-  const f = btCur();
-  if(!f) return;
+/* The document behind a tender attachment: the one it was built into, else a
+   fresh one seeded from the library record. Shared by Advanced and Fill. */
+function btDocOf(f){
   let doc;
   if(f.prev && f.prev.kind === 'blocks'){
     doc = f.prev.doc;
@@ -437,6 +438,12 @@ window.advOpen = () => {
     }
     doc.name = f.n;
   }
+  return doc;
+}
+window.advOpen = () => {
+  const f = btCur();
+  if(!f) return;
+  const doc = btDocOf(f);
   const target = {k:btSel.k, i:btSel.i};
   dbOpen({
     doc, backLabel:'Back to tender',

@@ -747,7 +747,7 @@ function beNewBlock(){
       const body = el.id === 'field'
         ? `<span style="background:var(--teal-tint);color:var(--teal);border:1px solid #bfe0d9;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${esc(fieldLabel(el.field))} }}</span>`
         : renderPrimitive(el.id, br, (content||{})[n] || (el.id === 'image' && (el.src === 'custom' || el.src === 'client') ? {src:'custom', img:el.img} : undefined));
-      return `<span class="dp" data-pi="${n}" data-perm="${el.perm||'fixed'}"${el.id==='field'?` data-field="${el.field||''}"`:''} style="${box}${typo}">${body}</span>`;
+      return `<span class="dp" data-pi="${n}" data-u="${el.u||''}" data-perm="${el.perm||'fixed'}"${el.id==='field'?` data-field="${el.field||''}"`:''} style="${box}${typo}">${body}</span>`;
     };
     const rowHtml = row => row.cols.length > 1
       ? `<div style="display:flex;gap:24px;width:100%">${row.cols.map(col=>`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">${col.map(one).join('')}</div>`).join('')}</div>`

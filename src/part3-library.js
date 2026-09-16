@@ -181,7 +181,7 @@ function renderRoute(){
   document.querySelectorAll('.ov.open').forEach(o => o.classList.remove('open'));
   // An editor belongs to the screen that opened it too. The editor routes open
   // theirs on the next tick, so closing here never fights them.
-  ['db','be','sm','ps'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('open'); });
+  ['db','be','sm','ps','fl'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('open'); });
   closeMenu();
   const r = ROUTES.find(x => x.path === path);
   renderNav(path);
