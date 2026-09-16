@@ -465,7 +465,7 @@ textarea.fin{resize:vertical;line-height:1.5}
   display:flex;align-items:center;justify-content:center;z-index:120;padding:0}
 .ray-fab:hover{filter:brightness(1.04)}
 .ray-fab img{width:60px;height:60px;display:block}
-#sm.open ~ .ray-fab,#ps.open ~ .ray-fab,#fl.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
+#sm.open ~ .ray-fab,#ps.open ~ .ray-fab,.db.open ~ .ray-fab,.be.open ~ .ray-fab{display:none!important}
 .ray-panel{position:fixed;right:24px;bottom:24px;width:423px;max-width:92vw;height:576px;max-height:86vh;
   background:#fff;z-index:125;border-radius:12px;box-shadow:0 18px 50px rgba(20,45,38,.28);
   display:none;flex-direction:column;overflow:hidden}
@@ -677,14 +677,8 @@ textarea.fin{resize:vertical;line-height:1.5}
 @media(max-width:1280px){ .ed3{grid-template-columns:1fr} }
 
 /* ═══ Simple mode ══════════════════════════════════════════════════════════ */
-#sm,#ps,#fl{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
-#sm.open,#ps.open,#fl.open{display:flex}
-/* Fill In: which parts respond */
-.fl-ed{outline:1.5px dashed rgba(56,152,138,.55);outline-offset:2px;border-radius:4px;cursor:text} .fl-ed:focus-within{outline:2px solid var(--teal)}
-.fl-lk{cursor:not-allowed} .fl-lk:hover{outline:1.5px dotted #B45309;outline-offset:2px;border-radius:4px}
-.fl-key{display:inline-block;padding:0 6px;font-weight:600;color:#2E3C3B}
-.fl-rep{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #E3E8E6;font-size:12.5px} .fl-rep:last-child{border-bottom:0} .fl-rep .n{margin-left:auto;color:#596262} .fl-rep .ms{font-size:16px}
-.fl-aud{padding:7px 0;border-bottom:1px solid #E3E8E6;font-size:12.5px;font-weight:600} .fl-aud:last-child{border-bottom:0}
+#sm,#ps{position:fixed;inset:0;background:var(--live-page);z-index:135;display:none;flex-direction:column}
+#sm.open,#ps.open{display:flex}
 .sm-body{min-height:0;padding:0 0 24px}
 .sm-grid{display:grid;grid-template-columns:minmax(0,660px) minmax(0,1fr);gap:22px;align-items:start}
 .sm-col{min-width:0}
@@ -1224,16 +1218,6 @@ textarea.fin{resize:vertical;line-height:1.5}
     <div class="ed3-col" id="psSide"></div>
     <div class="ed3-mid"><div class="vb-canvas" id="psCanvas"></div></div>
     <div class="ed3-col" id="psRight"></div>
-  </div>
-</div>
-
-<!-- Fill In — the estimator's view of a tender attachment (same shell as the editors) -->
-<div id="fl">
-  <div class="ed-top" id="flHead"></div>
-  <div class="ed3 st-on el-on">
-    <div class="ed3-col" id="flSide"></div>
-    <div class="ed3-mid"><div class="vb-canvas" id="flCanvas"></div></div>
-    <div class="ed3-col" id="flRight"></div>
   </div>
 </div>
 

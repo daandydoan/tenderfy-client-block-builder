@@ -838,7 +838,6 @@ window.fmMenu = (ev, kind, id) => {
                                              : '/file-manager/case-studies/add-edit-case-study/?id='+id)},
     {label:'Duplicate',      run:() => duplicateDoc(kind, id)},
     {label:'Add To Tender',  run:() => a2tOpen(name)},
-    {label:'Fill In (estimator)', run:() => flOpen(kind, id)},
     {label:docFor(isR ? 'resume' : 'case-study', id).locked ? 'Unlock' : 'Lock (head office)', run:() => { toggleLock(docFor(isR ? 'resume' : 'case-study', id), name); persistLibrary(); renderRoute(); }},
     {label:'Delete',         run:() => viewDelete(kind, id)},
   ]);
