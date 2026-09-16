@@ -141,7 +141,7 @@ function beNewBlock(){
   }
   function elHtml(el,r,c,k){
     const on = sel && sel.r===r && sel.c===c && sel.k===k;
-    return `<div class="vb-el${on?' selected':''}" data-r="${r}" data-c="${c}" data-k="${k}">
+    return `<div class="vb-el${on?' selected':''}${el.perm&&el.perm!=='fixed'?' perm-'+el.perm:''}" data-r="${r}" data-c="${c}" data-k="${k}">
       <div class="vb-name"><span class="ms" style="font-size:12px">${PRIM_ICON[el.id]||'widgets'}</span>${esc(ELEMS[el.id]||el.id)}</div>
       <div class="vb-tools">
         <span class="tb grab" data-handle title="Drag to move"><span class="ms">drag_indicator</span></span>
@@ -258,6 +258,7 @@ function beNewBlock(){
     const ag = document.getElementById('blockAlign'); if(ag) ag.style.display = sel ? 'none' : '';
     $('sec-field').style.display = id==='field'?'':'none';
     $('sec-imgsrc').style.display = id==='image'?'':'none';
+    $('sec-perm').style.display = sel?'':'none';
     $('s-preset').style.display = sel?'':'none';
   }
 
@@ -375,6 +376,7 @@ function beNewBlock(){
     document.querySelectorAll('#s-align3 button').forEach(b=>b.classList.toggle('on', b.dataset.h===(blockStyle.alH||'left') && b.dataset.v===(blockStyle.alV||'top')));
     const e=selEl();
     if(e){ if(e.id==='field') $('s-field').value=e.field;
+      document.querySelectorAll('#s-perm button').forEach(b=>b.classList.toggle('on', b.dataset.perm === (e.perm||'fixed')));
       const src = e.src === 'client' ? 'custom' : (e.src || 'placeholder');   // 'client' is the old name
       document.querySelectorAll('#s-imgsrc button').forEach(b=>b.classList.toggle('on', b.dataset.src === src));
       if(e.id === 'image'){
@@ -427,6 +429,7 @@ function beNewBlock(){
     document.querySelectorAll('#s-align3 button').forEach(b=>b.addEventListener('click',()=>{ blockStyle.alH=b.dataset.h; blockStyle.alV=b.dataset.v; document.querySelectorAll('#s-align3 button').forEach(x=>x.classList.toggle('on',x===b)); applyActive(); commitStyle(); }));
     $('s-field').addEventListener('change',e=>{ if(selEl()){ selEl().field=e.target.value; render(); commit(); } });
     document.querySelectorAll('#s-imgsrc button').forEach(b=>b.addEventListener('click',()=>{ if(selEl()){ selEl().src=b.dataset.src; render(); commit(); } }));
+    document.querySelectorAll('#s-perm button').forEach(b=>b.addEventListener('click',()=>{ if(selEl()){ selEl().perm=b.dataset.perm; render(); commit(); } }));
     // A custom asset is read straight into the block, so it travels with it.
     $('s-imgfile').addEventListener('change', ev => {
       const f = ev.target.files && ev.target.files[0], el = selEl();
@@ -742,7 +745,7 @@ function beNewBlock(){
       const body = el.id === 'field'
         ? `<span style="background:var(--teal-tint);color:var(--teal);border:1px solid #bfe0d9;border-radius:5px;padding:1px 8px;font-size:12.5px;font-weight:600">{{ ${esc(fieldLabel(el.field))} }}</span>`
         : renderPrimitive(el.id, br, (content||{})[n] || (el.id === 'image' && (el.src === 'custom' || el.src === 'client') ? {src:'custom', img:el.img} : undefined));
-      return `<span class="dp" data-pi="${n}" style="${box}${typo}">${body}</span>`;
+      return `<span class="dp" data-pi="${n}" data-perm="${el.perm||'fixed'}"${el.id==='field'?` data-field="${el.field||''}"`:''} style="${box}${typo}">${body}</span>`;
     };
     const rows = (def.doc || []).map(row => row.cols.length > 1
       ? `<div style="display:flex;gap:24px;width:100%">${row.cols.map(col=>`<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:11px">${col.map(one).join('')}</div>`).join('')}</div>`
