@@ -449,7 +449,8 @@ function beNewBlock(){
   }
 
   // ---- Selection ----
-  function selectEl(r,c,k){ sel={r,c,k}; applySelection(); syncInspector(); }
+  function selectEl(r,c,k){ sel={r,c,k}; applySelection(); syncInspector(); setMode('style'); }
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && BE && sel){ sel=null; applySelection(); syncInspector(); setMode('visual'); } });
   function applySelection(){
     page.querySelectorAll('.vb-el.selected').forEach(e=>e.classList.remove('selected'));
     if(sel){ const node=page.querySelector(`.vb-el[data-r="${sel.r}"][data-c="${sel.c}"][data-k="${sel.k}"]`); if(node) node.classList.add('selected'); else sel=null; }
@@ -541,16 +542,23 @@ function beNewBlock(){
   function renderCode(){ codePrev.innerHTML = codeArea.value.trim() || '<div style="color:#9aa5a3;text-align:center;padding:50px 0">Preview appears as you type</div>'; }
   codeArea.addEventListener('input',()=>{ renderCode(); markDirty(BE.block); autosave(); });
   $('genBtn').addEventListener('click',()=>{ codeArea.value=docToHtml(); renderCode(); markDirty(BE.block); showToast('Generated code from the visual layout'); });
+  // Four panel tabs. `mode` stays visual|code for the canvas; Style and AI Draft are visual-mode panes.
+  let tab='visual';
   function setMode(m){
-    if(m===mode) return; mode=m;
+    tab=m; const cm = m==='code' ? 'code' : 'visual';
     document.querySelectorAll('#be .vb-modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
     $('elementsCard').style.display = m==='visual'?'':'none';
+    $('styleWrap').style.display    = m==='style'?'':'none';
+    $('aiCard').style.display       = m==='ai'?'':'none';
     $('codeCard').style.display     = m==='code'?'':'none';
-    $('visualPanel').style.display  = m==='visual'?'':'none';
-    $('codePanel').style.display    = m==='code'?'':'none';
-    $('styleCard').style.display    = m==='visual'?'':'none';
+    if(cm===mode) return; mode=cm;
+    $('visualPanel').style.display  = cm==='visual'?'':'none';
+    $('codePanel').style.display    = cm==='code'?'':'none';
   }
   document.querySelectorAll('#be .vb-modes button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  document.querySelectorAll('#beModeSeg button').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('#beModeSeg button').forEach(x=>x.classList.toggle('on',x===b)); page.classList.toggle('preview', b.dataset.view==='preview'); if(b.dataset.view==='preview'){ sel=null; applySelection(); syncInspector(); } }));
+  // ponytail: AI Draft lays out from keywords in the description - table / list / quote / image - the real build reads an image
+  $('aiDraftBtn').addEventListener('click',()=>{ const d=($('aiDesc').value||'').toLowerCase(); const els=['heading','paragraph']; if(/table|stat|number|figure/.test(d)) els.push('table'); if(/list|bullet|step/.test(d)) els.push('list'); if(/quote|testimon/.test(d)) els.push('quote'); if(/photo|image|picture/.test(d)) els.push('image'); doc=els.map(id=>({cols:[[mkEl(id)]]})); sel=null; render(); commit(); setMode('visual'); showToast('Ray drafted '+els.length+' elements - fix the words on the page'); });
 
   // ---- Undo / redo / history / autosave ----
   let history=[], hidx=-1, restoring=false, autoT=null, styleT=null;
@@ -599,7 +607,6 @@ function beNewBlock(){
   // ---- Responsive panels ----
   const ed3 = document.querySelector('#be .ed3');
   $('elBtn').addEventListener('click',function(){ this.classList.toggle('on', ed3.classList.toggle('el-on')); });
-  $('styleBtn').addEventListener('click',function(){ this.classList.toggle('on', ed3.classList.toggle('st-on')); });
 
   // ---- Open / save ----
   window.beOpen = block => {

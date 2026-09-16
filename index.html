@@ -3435,7 +3435,9 @@ textarea.fin{resize:vertical;line-height:1.5}
 .be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr) 300px}
 .be .ed3:not(.st-on){grid-template-columns:272px minmax(0,1fr)}
 .be .ed3:not(.el-on):not(.st-on){grid-template-columns:minmax(0,1fr)}
-.be .ed3:not(.el-on) #leftCol,.be .ed3:not(.st-on) #rightCol{display:none}
+.be .ed3{grid-template-columns:380px minmax(0,1fr)} .be .ed3:not(.el-on){grid-template-columns:minmax(0,1fr)} .be .ed3:not(.el-on) #leftCol{display:none}
+.be .vb-page.preview .vb-el,.be .vb-page.preview .vb-row{pointer-events:none;border-color:transparent!important;box-shadow:none!important}
+.be .vb-page.preview .vb-name,.be .vb-page.preview .vb-tools,.be .vb-page.preview .vb-rowtools,.be .vb-page.preview .vb-reptag{display:none!important}
 .be .vb-toolbar{padding:9px 14px;margin:0;border-bottom:1px solid #E3E8E7;background:#fff;flex-shrink:0;gap:10px}
 .be .tb-btn{width:auto;height:32px;padding:0 13px;gap:7px;font-size:12.5px;font-weight:600;border-radius:7px;
   border:1px solid #E3E8E7;background:#fff;color:#6B7674;display:inline-flex;align-items:center;
@@ -3857,61 +3859,13 @@ textarea.fin{resize:vertical;line-height:1.5}
   <div class="ed-top" id="beHead"></div>
 <div class="ed3 st-on el-on">
       <div class="ed3-col" id="leftCol">
-        <div class="vb-modes">
-          <button data-mode="visual" class="on"><span class="ms">dashboard_customize</span> Visual</button>
-          <button data-mode="code"><span class="ms">code</span> Code</button>
-        </div>
+        <div class="ws-tabs vb-modes"><button data-mode="visual" class="on">Elements</button><button data-mode="style">Style</button><button data-mode="ai">AI Draft</button><button data-mode="code">Code</button></div>
         <div class="card" id="elementsCard">
           <h3 class="ed-h">Elements</h3>
           <div class="vb-pal" id="palette"></div>
           <div class="fhint" style="margin-top:10px">Drag onto the page, or click to add.</div>
         </div>
-        <div class="card" id="codeCard" style="display:none">
-          <h3 class="ed-h">Custom code</h3>
-          <a class="lbtn sm" id="genBtn" style="width:100%;justify-content:center;margin-bottom:14px"><span class="ms" style="font-size:16px">bolt</span> Generate from visual layout</a>
-          <div class="fhint" style="line-height:1.7"><code style="font-size:11px">var(--brand-primary)</code> &#xB7; headings<br><code style="font-size:11px">var(--brand-secondary)</code> &#xB7; accents<br><code style="font-size:11px">{{client.name}}</code> &#xB7; merge field</div>
-        </div>
-      </div>
-
-      <div class="ed3-mid">
-        <div id="visualPanel">
-          <div class="vb-toolbar">
-            <button class="tb-btn tb-lbl" id="elBtn" title="Toggle Elements panel"><span class="ms">widgets</span> Elements</button>
-            <span class="sel-pill" id="selPill"></span>
-            <span class="tb-group">
-              <button class="tb-btn" id="undoBtn" title="Undo (Ctrl+Z)"><span class="ms">undo</span></button>
-              <button class="tb-btn" id="redoBtn" title="Redo (Ctrl+Y)"><span class="ms">redo</span></button>
-              <button class="tb-btn" id="histBtn" title="Version history"><span class="ms">history</span></button>
-            </span>
-            <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
-              <span class="autosave" id="autosave"></span>
-              <button class="tb-btn tb-lbl on" id="styleBtn" title="Toggle Style panel"><span class="ms">tune</span> Style</button>
-            </span>
-          </div>
-          <div class="vb-canvas" id="cvWrap">
-            <div class="vb-bar">
-              <span class="ms" style="font-size:16px;color:var(--teal)">web</span>
-              <span id="bar-name">Untitled block</span>
-              <span class="muted" id="bar-count" style="font-weight:400"></span>
-            </div>
-            <div class="vb-page" id="page"></div>
-          </div>
-        </div>
-        <div id="codePanel" style="display:none">
-          <div class="code-split">
-            <div class="code-pane">
-              <div class="ph"><span class="ms" style="font-size:15px">code</span> HTML</div>
-              <textarea id="codeArea" class="code-ta" spellcheck="false" placeholder="<div>Your block markup&#x2026;</div>"></textarea>
-            </div>
-            <div class="code-pane">
-              <div class="ph"><span class="ms" style="font-size:15px">visibility</span> Live preview</div>
-              <div class="code-prev"><div class="code-prev-page" id="codePrev"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ed3-col" id="rightCol">
+        <div id="styleWrap" style="display:none">
         <div class="card" id="styleCard">
           <h3 class="ed-h">Style</h3>
           <div id="styleTarget"></div>
@@ -4039,7 +3993,59 @@ textarea.fin{resize:vertical;line-height:1.5}
             </div>
           </div>
         </div>
+        </div>
+        <div class="card" id="aiCard" style="display:none">
+          <h3 class="ed-h"><span class="ms" style="color:var(--teal);font-size:18px;vertical-align:-3px">auto_awesome</span> Draft with Ray</h3>
+          <div class="fhint" style="margin:0 0 10px">Describe the section - a stats table, a quote, a photo with caption - and Ray lays it out as elements. Fix the words on the page after.</div>
+          <textarea class="fin" id="aiDesc" rows="3" placeholder="e.g. our safety commitment with a stats table"></textarea>
+          <button class="lbtn pri" id="aiDraftBtn" style="width:100%;justify-content:center;margin-top:10px"><span class="ms">auto_awesome</span> Draft block</button>
+          <div class="fhint" style="margin-top:8px">Prototype: the layout follows the words in the description. The real build reads a pasted screenshot too.</div>
+        </div>
+        <div class="card" id="codeCard" style="display:none">
+          <h3 class="ed-h">Custom code</h3>
+          <a class="lbtn sm" id="genBtn" style="width:100%;justify-content:center;margin-bottom:14px"><span class="ms" style="font-size:16px">bolt</span> Generate from visual layout</a>
+          <div class="fhint" style="line-height:1.7"><code style="font-size:11px">var(--brand-primary)</code> &#xB7; headings<br><code style="font-size:11px">var(--brand-secondary)</code> &#xB7; accents<br><code style="font-size:11px">{{client.name}}</code> &#xB7; merge field</div>
+        </div>
       </div>
+
+      <div class="ed3-mid">
+        <div id="visualPanel">
+          <div class="vb-toolbar">
+            <button class="tb-btn tb-lbl on" id="elBtn" title="Show / hide the side panel"><span class="ms">layers</span> Panel</button>
+            <span class="sel-pill" id="selPill"></span>
+            <span class="tb-group">
+              <button class="tb-btn" id="undoBtn" title="Undo (Ctrl+Z)"><span class="ms">undo</span></button>
+              <button class="tb-btn" id="redoBtn" title="Redo (Ctrl+Y)"><span class="ms">redo</span></button>
+              <button class="tb-btn" id="histBtn" title="Version history"><span class="ms">history</span></button>
+            </span>
+            <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+              <span class="autosave" id="autosave"></span>
+            </span>
+          </div>
+          <div class="vb-canvas" id="cvWrap">
+            <div class="vb-bar">
+              <span class="ms" style="font-size:16px;color:var(--teal)">web</span>
+              <span id="bar-name">Untitled block</span>
+              <span class="muted" id="bar-count" style="font-weight:400"></span>
+              <div class="mode-seg" id="beModeSeg"><button data-view="build" class="on"><span class="ms">grid_view</span> Build</button><button data-view="preview"><span class="ms">visibility</span> Preview</button></div>
+            </div>
+            <div class="vb-page" id="page"></div>
+          </div>
+        </div>
+        <div id="codePanel" style="display:none">
+          <div class="code-split">
+            <div class="code-pane">
+              <div class="ph"><span class="ms" style="font-size:15px">code</span> HTML</div>
+              <textarea id="codeArea" class="code-ta" spellcheck="false" placeholder="<div>Your block markup&#x2026;</div>"></textarea>
+            </div>
+            <div class="code-pane">
+              <div class="ph"><span class="ms" style="font-size:15px">visibility</span> Live preview</div>
+              <div class="code-prev"><div class="code-prev-page" id="codePrev"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 </div>
 
@@ -8090,7 +8096,8 @@ function beNewBlock(){
   }
 
   // ---- Selection ----
-  function selectEl(r,c,k){ sel={r,c,k}; applySelection(); syncInspector(); }
+  function selectEl(r,c,k){ sel={r,c,k}; applySelection(); syncInspector(); setMode('style'); }
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && BE && sel){ sel=null; applySelection(); syncInspector(); setMode('visual'); } });
   function applySelection(){
     page.querySelectorAll('.vb-el.selected').forEach(e=>e.classList.remove('selected'));
     if(sel){ const node=page.querySelector(`.vb-el[data-r="${sel.r}"][data-c="${sel.c}"][data-k="${sel.k}"]`); if(node) node.classList.add('selected'); else sel=null; }
@@ -8182,16 +8189,23 @@ function beNewBlock(){
   function renderCode(){ codePrev.innerHTML = codeArea.value.trim() || '<div style="color:#9aa5a3;text-align:center;padding:50px 0">Preview appears as you type</div>'; }
   codeArea.addEventListener('input',()=>{ renderCode(); markDirty(BE.block); autosave(); });
   $('genBtn').addEventListener('click',()=>{ codeArea.value=docToHtml(); renderCode(); markDirty(BE.block); showToast('Generated code from the visual layout'); });
+  // Four panel tabs. `mode` stays visual|code for the canvas; Style and AI Draft are visual-mode panes.
+  let tab='visual';
   function setMode(m){
-    if(m===mode) return; mode=m;
+    tab=m; const cm = m==='code' ? 'code' : 'visual';
     document.querySelectorAll('#be .vb-modes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
     $('elementsCard').style.display = m==='visual'?'':'none';
+    $('styleWrap').style.display    = m==='style'?'':'none';
+    $('aiCard').style.display       = m==='ai'?'':'none';
     $('codeCard').style.display     = m==='code'?'':'none';
-    $('visualPanel').style.display  = m==='visual'?'':'none';
-    $('codePanel').style.display    = m==='code'?'':'none';
-    $('styleCard').style.display    = m==='visual'?'':'none';
+    if(cm===mode) return; mode=cm;
+    $('visualPanel').style.display  = cm==='visual'?'':'none';
+    $('codePanel').style.display    = cm==='code'?'':'none';
   }
   document.querySelectorAll('#be .vb-modes button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
+  document.querySelectorAll('#beModeSeg button').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('#beModeSeg button').forEach(x=>x.classList.toggle('on',x===b)); page.classList.toggle('preview', b.dataset.view==='preview'); if(b.dataset.view==='preview'){ sel=null; applySelection(); syncInspector(); } }));
+  // ponytail: AI Draft lays out from keywords in the description - table / list / quote / image - the real build reads an image
+  $('aiDraftBtn').addEventListener('click',()=>{ const d=($('aiDesc').value||'').toLowerCase(); const els=['heading','paragraph']; if(/table|stat|number|figure/.test(d)) els.push('table'); if(/list|bullet|step/.test(d)) els.push('list'); if(/quote|testimon/.test(d)) els.push('quote'); if(/photo|image|picture/.test(d)) els.push('image'); doc=els.map(id=>({cols:[[mkEl(id)]]})); sel=null; render(); commit(); setMode('visual'); showToast('Ray drafted '+els.length+' elements - fix the words on the page'); });
 
   // ---- Undo / redo / history / autosave ----
   let history=[], hidx=-1, restoring=false, autoT=null, styleT=null;
@@ -8240,7 +8254,6 @@ function beNewBlock(){
   // ---- Responsive panels ----
   const ed3 = document.querySelector('#be .ed3');
   $('elBtn').addEventListener('click',function(){ this.classList.toggle('on', ed3.classList.toggle('el-on')); });
-  $('styleBtn').addEventListener('click',function(){ this.classList.toggle('on', ed3.classList.toggle('st-on')); });
 
   // ---- Open / save ----
   window.beOpen = block => {
