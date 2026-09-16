@@ -775,7 +775,7 @@ function beNewBlock(){
 window.beOpenExisting = id => {
   const b = BLOCK_BY_ID[id];
   if(!b) return;
-  if(CUSTOM_BLOCK_DEF[id]){ beOpen(Object.assign(beNewBlock(), {id, name:b.name, cat:b.cat, isNew:false})); return; }
+  if(CUSTOM_BLOCK_DEF[id]){ beOpen(Object.assign(beNewBlock(), {id, name:b.name, cat:b.cat, desc:b.desc, isNew:false, locked:b.locked||null})); return; }
   beOpen(Object.assign(beNewBlock(), {name:b.name, cat:b.cat, seed: JSON.parse(JSON.stringify(P2DOC[b.p] || [{cols:[[b.p]]}]))}));
   showToast('Editing a copy of "' + b.name + '"');
 };

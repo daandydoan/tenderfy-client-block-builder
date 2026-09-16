@@ -176,7 +176,7 @@ function pgTocEdit(){
    Documents are created from Resumes / Case Studies / Build Tender, so there is
    no separate documents listing; this is just the palette's source of truth.  */
 
-let bbTab = 'All Blocks', bbQuery = '', bbFilters = false;
+let bbTab = 'All Blocks', bbQuery = '', bbFilters = false, bbOwner = 'all';   // all | mine | tenderfy
 
 /* Mirrors tenderfy-admin/blocks.html: category tabs, a collapsible filter row,
    and .lst-card tiles (name + element count, schematic, description, footer
@@ -203,6 +203,7 @@ function pgBBBlocks(){
       <div class="lst-filters" ${bbFilters?'':'hidden'}>
         <span class="lst-search"><span class="ms">search</span>
           <input id="bbQ" placeholder="Search blocks..." value="${esc(bbQuery)}" oninput="bbSearch(this.value)"></span>
+        <div class="lst-pills">${[['all','All'],['mine','Yours'],['tenderfy','Tenderfy']].map(([k,l]) => `<span class="lst-pill ${bbOwner===k?'on':''}" onclick="bbOwner='${k}';renderRoute()">${l} <span class="n">${BLOCKS.filter(b => (bbTab==='All Blocks'||b.cat===bbTab) && (k==='all'||(k==='mine')===!!b.custom)).length}</span></span>`).join('')}</div>
       </div>
       <div class="lst-grid" id="bbGrid">${bbCards()}</div>
     </div>`;
@@ -211,6 +212,7 @@ function bbList(){
   const q = bbQuery.trim().toLowerCase();
   return BLOCKS.filter(b =>
     (bbTab === 'All Blocks' || b.cat === bbTab) &&
+    (bbOwner === 'all' || (bbOwner === 'mine') === !!b.custom) &&
     (!q || (b.name + ' ' + b.label + ' ' + (b.desc||'') + ' ' + b.cat).toLowerCase().includes(q)));
 }
 function bbCards(){
@@ -229,6 +231,7 @@ function bbCards(){
       <div class="lst-prev">${blockSchematic(b)}</div>
       <div class="lst-desc">${esc(b.desc || '')}</div>
       <div class="lst-foot">
+        ${b.locked ? `<span class="lst-cat" style="color:#B45309" title="Locked by ${esc(b.locked.by)} - ${esc(b.locked.date)}"><span class="ms" style="font-size:13px;vertical-align:-2px">lock</span> Locked</span>` : b.custom ? `<span class="lst-cat">Yours</span>` : ''}
         <span class="lst-cat">${esc(b.cat)}</span>
         <span class="lst-kebwrap">
           <button class="lst-kebab" onclick="bbKebab(event,'${b.id}')" aria-label="Actions"><span class="ms">more_vert</span></button>
